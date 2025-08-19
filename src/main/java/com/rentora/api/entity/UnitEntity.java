@@ -2,6 +2,7 @@ package com.rentora.api.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,7 @@ public class UnitEntity {
     private String status;
 
     @Column
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @ManyToOne
