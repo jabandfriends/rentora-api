@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS apartments (
     payment_due_date DATETIME, 
     late_fee NUMERIC(10,2), 
     address TEXT,
-    created_by INT REFERENCES users(id), -- creator, admin
+    created_by INT REFERENCES users(id) ON DELETE CASCADE, -- creator, admin
     created_at TIMESTAMP DEFAULT NOW()
 );
 
