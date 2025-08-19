@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS apartment_admins (
 CREATE TABLE IF NOT EXISTS units (
     id SERIAL PRIMARY KEY,
     apartment_id INT REFERENCES apartments(id) ON DELETE CASCADE,
-    name VARCHAR(50), -- e.g., Room 101
+    name VARCHAR(50) UNIQUE, -- e.g., Room 101
     floor INT,
     status VARCHAR(20) DEFAULT 'available', -- 'available' or 'occupied'
     created_at TIMESTAMP DEFAULT NOW()
