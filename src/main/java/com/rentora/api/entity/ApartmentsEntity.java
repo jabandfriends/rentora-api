@@ -21,6 +21,21 @@ public class ApartmentsEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String logo_url;
+
+    @Column
+    private String phone;
+
+    @Column
+    private String tax_id;
+
+    @Column
+    private Long late_fee;
+
+    @Column
+    private LocalDateTime payment_due_date;
+
     @Column()
     private String address;
 

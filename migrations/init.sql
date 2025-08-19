@@ -20,11 +20,11 @@ ON CONFLICT (email) DO NOTHING;
 CREATE TABLE IF NOT EXISTS apartments (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    logo_url TEXT, -- new
-    phone CHAR(10), -- new
-    tax_id CHAR(13), -- new
-    payment_due_date DATETIME, -- new
-    late_fee NUMERIC(10,2), -- new
+    logo_url TEXT, 
+    phone CHAR(10), 
+    tax_id CHAR(13), 
+    payment_due_date DATETIME, 
+    late_fee NUMERIC(10,2), 
     address TEXT,
     created_by INT REFERENCES users(id), -- creator, admin
     created_at TIMESTAMP DEFAULT NOW()
