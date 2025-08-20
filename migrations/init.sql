@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS apartments (
     logo_url TEXT, 
     phone CHAR(10), 
     tax_id CHAR(13), 
-    payment_due_date DATETIME, 
+    payment_due_date TIMESTAMP, 
     late_fee NUMERIC(10,2), 
     address TEXT,
     created_by INT REFERENCES users(id) ON DELETE CASCADE, -- creator, admin
