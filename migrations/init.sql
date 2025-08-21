@@ -69,14 +69,14 @@ CREATE TABLE IF NOT EXISTS extra_services (
 
 CREATE TABLE IF NOT EXISTS units_services (
     id SERIAL PRIMARY KEY,
-    service_id INT REFERENCES extra_service(id) ON DELETE CASCADE,
+    service_id INT REFERENCES extra_services(id) ON DELETE CASCADE,
     unit_id INT REFERENCES units(id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     end_date DATE,
-    active BOOLEAN DEFAULT TRUE
-    created_at TIMESTAMP DEFAULT NOW()
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(unit_id, service_id)
-)
+);
 
 CREATE TABLE IF NOT EXISTS apartment_payments (
     id SERIAL PRIMARY KEY,
