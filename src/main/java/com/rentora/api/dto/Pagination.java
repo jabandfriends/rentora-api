@@ -1,4 +1,4 @@
-package com.rentora.api.model;
+package com.rentora.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,6 +11,4 @@ public class Pagination {
     private int size;
     private int totalPages;
     private long totalElements;
-
-
 }

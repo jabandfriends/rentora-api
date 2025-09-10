@@ -1,4 +1,4 @@
-package com.rentora.api.model;
+package com.rentora.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
