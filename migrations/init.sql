@@ -15,11 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'tenant' CHECK (role IN ('super_admin', 'tenant', 'sub_admin', 'maintenance_staff')),
     must_change_password BOOLEAN DEFAULT false,
     is_active BOOLEAN DEFAULT true,
-    email_verified BOOLEAN DEFAULT false,
-    email_verification_token VARCHAR(255),
     reset_password_token VARCHAR(255),
     reset_password_expires TIMESTAMPTZ,
     national_id CHAR(13),
@@ -89,7 +86,7 @@ CREATE TABLE IF NOT EXISTS apartment_users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     apartment_id UUID REFERENCES apartments(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL DEFAULT 'tenant' CHECK (role IN ('tenant', 'admin', 'sub_admin', 'maintenance_staff')),
+    role VARCHAR(20) NOT NULL DEFAULT 'tenant' CHECK (role IN ('tenant', 'admin')),
     permissions JSONB DEFAULT '[]', -- Store specific permissions
     created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     joined_at TIMESTAMPTZ DEFAULT NOW(),
@@ -574,6 +571,121 @@ CREATE TABLE IF NOT EXISTS system_settings (
 CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_settings
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TABLE IF NOT EXISTS adhoc_invoices (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    adhoc_number VARCHAR(50) UNIQUE,
+    
+    -- References
+    apartment_id UUID REFERENCES apartments(id) ON DELETE CASCADE,
+    unit_id UUID REFERENCES units(id) ON DELETE CASCADE,
+    tenant_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    
+    -- Invoice details
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    category VARCHAR(30) DEFAULT 'miscellaneous', -- penalty , miscellaneous
+    
+    -- Amount details
+    final_amount NUMERIC(10,2) NOT NULL, -- total_amount + tax_amount
+    
+    -- Dates
+    invoice_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    due_date DATE,
+    
+    -- Monthly invoice integration
+    include_in_monthly BOOLEAN DEFAULT true,
+    target_monthly_invoice_month DATE, -- Which month's invoice to include this in
+    monthly_invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL, -- Set when included
+    included_at TIMESTAMPTZ, -- When it was included in monthly invoice
+    
+    -- Payment tracking
+    payment_status VARCHAR(20) DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'cancelled')),
+    paid_amount NUMERIC(10,2) DEFAULT 0,
+    paid_at TIMESTAMPTZ,
+    
+    -- Admin details
+    created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    approved_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    approved_at TIMESTAMPTZ,
+    
+    -- Status and notes
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('draft', 'active', 'cancelled', 'included')),
+    priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    
+    -- Attachments and documentation
+    receipt_urls JSONB DEFAULT '[]', -- Array of receipt/document URLs
+    images JSONB DEFAULT '[]', -- Array of image URLs (for proof of purchase, etc.)
+    notes TEXT,
+    
+    -- Metadata
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT check_adhoc_amounts CHECK (
+        total_amount >= 0 AND 
+        tax_amount >= 0 AND 
+        final_amount >= 0 AND
+        paid_amount >= 0 AND 
+        paid_amount <= final_amount AND
+        quantity > 0 AND
+        unit_price >= 0
+    ),
+    CONSTRAINT check_adhoc_dates CHECK (
+        due_date IS NULL OR due_date >= invoice_date
+    )
+);
+-- Generate ad-hoc invoice number trigger
+CREATE OR REPLACE FUNCTION generate_adhoc_number()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.adhoc_number IS NULL THEN
+        NEW.adhoc_number := 'AH-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('adhoc_sequence'), 4, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE SEQUENCE IF NOT EXISTS adhoc_sequence START 1;
+
+CREATE TRIGGER set_adhoc_number BEFORE INSERT ON adhoc_invoices
+FOR EACH ROW EXECUTE FUNCTION generate_adhoc_number();
+
+-- Updated at trigger
+CREATE TRIGGER update_adhoc_invoices_updated_at BEFORE UPDATE ON adhoc_invoices
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Auto-calculate final amount trigger
+CREATE OR REPLACE FUNCTION calculate_adhoc_final_amount()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Calculate total amount from quantity and unit price
+    NEW.total_amount := NEW.quantity * NEW.unit_price;
+    
+    -- Calculate tax amount
+    NEW.tax_amount := NEW.total_amount * (COALESCE(NEW.tax_percentage, 0) / 100);
+    
+    -- Calculate final amount
+    NEW.final_amount := NEW.total_amount + NEW.tax_amount;
+    
+    -- Update payment status based on paid amount
+    IF NEW.paid_amount >= NEW.final_amount THEN
+        NEW.payment_status := 'paid';
+        IF OLD.payment_status != 'paid' THEN
+            NEW.paid_at := NOW();
+        END IF;
+    ELSIF NEW.paid_amount > 0 THEN
+        NEW.payment_status := 'unpaid'; -- Could be 'partially_paid' if you want to track partial payments
+    ELSE
+        NEW.payment_status := 'unpaid';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER calculate_adhoc_amounts BEFORE INSERT OR UPDATE ON adhoc_invoices
+FOR EACH ROW EXECUTE FUNCTION calculate_adhoc_final_amount();
 -- =========================================
 -- 19. ENHANCED INDEXES
 -- =========================================
@@ -650,6 +762,18 @@ CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
 -- Apartment status index
 CREATE INDEX idx_apartments_status ON apartments(status);
 
+-- ad-hoc invoice
+CREATE INDEX idx_adhoc_invoices_apartment ON adhoc_invoices(apartment_id);
+CREATE INDEX idx_adhoc_invoices_unit ON adhoc_invoices(unit_id);
+CREATE INDEX idx_adhoc_invoices_tenant ON adhoc_invoices(tenant_user_id);
+CREATE INDEX idx_adhoc_invoices_number ON adhoc_invoices(adhoc_number);
+CREATE INDEX idx_adhoc_invoices_status ON adhoc_invoices(status);
+CREATE INDEX idx_adhoc_invoices_payment_status ON adhoc_invoices(payment_status);
+CREATE INDEX idx_adhoc_invoices_category ON adhoc_invoices(category);
+CREATE INDEX idx_adhoc_invoices_date ON adhoc_invoices(invoice_date);
+CREATE INDEX idx_adhoc_invoices_monthly_target ON adhoc_invoices(target_monthly_invoice_month, include_in_monthly) WHERE include_in_monthly = true;
+CREATE INDEX idx_adhoc_invoices_pending_inclusion ON adhoc_invoices(apartment_id, target_monthly_invoice_month, include_in_monthly, status) WHERE include_in_monthly = true AND monthly_invoice_id IS NULL AND status = 'active';
+
 -- =========================================
 -- 20. VIEWS FOR COMMON QUERIES
 -- =========================================
@@ -712,6 +836,42 @@ LEFT JOIN (
     WHERE payment_status = 'completed'
     GROUP BY invoice_id
 ) p ON i.id = p.invoice_id;
+
+-- View for ad-hoc invoice details with related information
+CREATE OR REPLACE VIEW v_adhoc_invoice_details AS
+SELECT 
+    ah.*,
+    CONCAT(t.first_name, ' ', t.last_name) as tenant_name,
+    t.email as tenant_email,
+    t.phone_number as tenant_phone,
+    vud.unit_name,
+    vud.building_name,
+    vud.apartment_name,
+    CONCAT(c.first_name, ' ', c.last_name) as created_by_name,
+    CONCAT(a.first_name, ' ', a.last_name) as approved_by_name,
+    mi.invoice_number as monthly_invoice_number,
+    (ah.final_amount - ah.paid_amount) as balance_due
+FROM adhoc_invoices ah
+LEFT JOIN users t ON ah.tenant_user_id = t.id
+LEFT JOIN v_unit_details vud ON ah.unit_id = vud.id
+LEFT JOIN users c ON ah.created_by_user_id = c.id
+LEFT JOIN users a ON ah.approved_by_user_id = a.id
+LEFT JOIN invoices mi ON ah.monthly_invoice_id = mi.id;
+
+-- View for pending ad-hoc invoices to be included in monthly invoices
+CREATE OR REPLACE VIEW v_pending_adhoc_for_monthly AS
+SELECT 
+    ah.*,
+    vud.unit_name,
+    vud.building_name,
+    CONCAT(t.first_name, ' ', t.last_name) as tenant_name
+FROM adhoc_invoices ah
+LEFT JOIN users t ON ah.tenant_user_id = t.id
+LEFT JOIN v_unit_details vud ON ah.unit_id = vud.id
+WHERE ah.include_in_monthly = true 
+AND ah.monthly_invoice_id IS NULL 
+AND ah.status = 'active'
+AND ah.target_monthly_invoice_month IS NOT NULL;
 
 -- =========================================
 -- 21. SAMPLE DATA AND FUNCTIONS
@@ -949,6 +1109,317 @@ BEGIN
     RETURN invoices_created;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- =========================================
+-- FUNCTIONS FOR AD-HOC INVOICE INTEGRATION
+-- =========================================
+
+-- Function to include ad-hoc invoices in monthly invoice generation
+CREATE OR REPLACE FUNCTION include_adhoc_in_monthly_invoice(
+    monthly_invoice_id UUID,
+    billing_month DATE
+)
+RETURNS INTEGER AS $$
+DECLARE
+    adhoc_record RECORD;
+    updated_count INTEGER := 0;
+    monthly_invoice_record RECORD;
+    updated_line_items JSONB;
+    additional_amount NUMERIC(10,2) := 0;
+BEGIN
+    -- Get the monthly invoice details
+    SELECT * INTO monthly_invoice_record
+    FROM invoices 
+    WHERE id = monthly_invoice_id;
+    
+    IF monthly_invoice_record.id IS NULL THEN
+        RAISE EXCEPTION 'Monthly invoice not found';
+    END IF;
+    
+    -- Get current line items
+    updated_line_items := COALESCE(monthly_invoice_record.line_items, '[]'::jsonb);
+    
+    -- Find matching ad-hoc invoices
+    FOR adhoc_record IN
+        SELECT * FROM adhoc_invoices
+        WHERE unit_id = monthly_invoice_record.unit_id
+        AND include_in_monthly = true
+        AND monthly_invoice_id IS NULL
+        AND status = 'active'
+        AND (target_monthly_invoice_month = billing_month 
+             OR (target_monthly_invoice_month IS NULL AND invoice_date <= (billing_month + INTERVAL '1 month' - INTERVAL '1 day')))
+    LOOP
+        -- Add ad-hoc invoice as line item
+        updated_line_items := updated_line_items || jsonb_build_object(
+            'type', 'adhoc',
+            'adhoc_id', adhoc_record.id,
+            'description', adhoc_record.title,
+            'category', adhoc_record.category,
+            'amount', adhoc_record.final_amount,
+            'quantity', adhoc_record.quantity,
+            'rate', adhoc_record.unit_price,
+            'tax_amount', adhoc_record.tax_amount,
+            'invoice_date', adhoc_record.invoice_date
+        );
+        
+        additional_amount := additional_amount + adhoc_record.final_amount;
+        
+        -- Update ad-hoc invoice to mark it as included
+        UPDATE adhoc_invoices 
+        SET 
+            monthly_invoice_id = monthly_invoice_id,
+            included_at = NOW(),
+            status = 'included',
+            updated_at = NOW()
+        WHERE id = adhoc_record.id;
+        
+        updated_count := updated_count + 1;
+    END LOOP;
+    
+    -- Update monthly invoice with new line items and total
+    IF updated_count > 0 THEN
+        UPDATE invoices 
+        SET 
+            line_items = updated_line_items,
+            total_amount = total_amount + additional_amount,
+            updated_at = NOW()
+        WHERE id = monthly_invoice_id;
+    END IF;
+    
+    RETURN updated_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Enhanced monthly invoice generation function to include ad-hoc invoices
+CREATE OR REPLACE FUNCTION generate_monthly_invoices_with_adhoc(
+    target_apartment_id UUID,
+    billing_month DATE
+)
+RETURNS JSONB AS $$
+DECLARE
+    contract_record RECORD;
+    utility_record RECORD;
+    service_record RECORD;
+    invoice_id UUID;
+    line_items JSONB := '[]';
+    total_rental NUMERIC(10,2) := 0;
+    total_utilities NUMERIC(10,2) := 0;
+    total_services NUMERIC(10,2) := 0;
+    total_adhoc NUMERIC(10,2) := 0;
+    total_amount NUMERIC(10,2) := 0;
+    invoices_created INTEGER := 0;
+    adhoc_included INTEGER := 0;
+    billing_start DATE;
+    billing_end DATE;
+    due_date DATE;
+    result JSONB;
+BEGIN
+    -- Calculate billing period
+    billing_start := DATE_TRUNC('month', billing_month);
+    billing_end := billing_start + INTERVAL '1 month' - INTERVAL '1 day';
+    
+    -- Get payment due date from apartment settings
+    SELECT payment_due_day INTO due_date
+    FROM apartments 
+    WHERE id = target_apartment_id;
+    
+    due_date := DATE_TRUNC('month', billing_month + INTERVAL '1 month') + (due_date - 1) * INTERVAL '1 day';
+    
+    -- Loop through active contracts for the apartment
+    FOR contract_record IN 
+        SELECT c.*, u.id as unit_id, au.apartment_id
+        FROM contracts c
+        JOIN units u ON c.unit_id = u.id
+        JOIN floors f ON u.floor_id = f.id
+        JOIN buildings b ON f.building_id = b.id
+        JOIN apartments au ON b.apartment_id = au.id
+        WHERE au.id = target_apartment_id
+        AND c.status = 'active'
+        AND c.start_date <= billing_end
+        AND (c.end_date IS NULL OR c.end_date >= billing_start)
+    LOOP
+        -- Reset totals for this invoice
+        line_items := '[]';
+        total_rental := 0;
+        total_utilities := 0;
+        total_services := 0;
+        total_adhoc := 0;
+        
+        -- Add rental amount
+        total_rental := contract_record.rental_price;
+        line_items := line_items || jsonb_build_object(
+            'type', 'rental',
+            'description', 'Monthly Rent',
+            'amount', total_rental,
+            'quantity', 1
+        );
+        
+        -- Add utilities if not included in rent
+        IF NOT contract_record.utilities_included THEN
+            FOR utility_record IN
+                SELECT uu.*, ut.utility_name, ut.utility_type, ut.unit_price, ut.fixed_price
+                FROM unit_utilities uu
+                JOIN utilities ut ON uu.utility_id = ut.id
+                WHERE uu.unit_id = contract_record.unit_id
+                AND uu.usage_month = billing_start
+            LOOP
+                IF utility_record.utility_type = 'fixed' THEN
+                    total_utilities := total_utilities + utility_record.fixed_price;
+                ELSE
+                    total_utilities := total_utilities + (utility_record.usage_amount * utility_record.unit_price);
+                END IF;
+                
+                line_items := line_items || jsonb_build_object(
+                    'type', 'utility',
+                    'description', utility_record.utility_name,
+                    'amount', CASE 
+                        WHEN utility_record.utility_type = 'fixed' THEN utility_record.fixed_price
+                        ELSE utility_record.usage_amount * utility_record.unit_price
+                    END,
+                    'quantity', COALESCE(utility_record.usage_amount, 1),
+                    'rate', COALESCE(utility_record.unit_price, utility_record.fixed_price)
+                );
+            END LOOP;
+        END IF;
+        
+        -- Add extra services
+        FOR service_record IN
+            SELECT us.*, es.service_name, es.price
+            FROM unit_services us
+            JOIN extra_services es ON us.service_id = es.id
+            WHERE us.unit_id = contract_record.unit_id
+            AND us.is_active = true
+            AND us.start_date <= billing_end
+            AND (us.end_date IS NULL OR us.end_date >= billing_start)
+        LOOP
+            total_services := total_services + (service_record.price * service_record.quantity);
+            line_items := line_items || jsonb_build_object(
+                'type', 'service',
+                'description', service_record.service_name,
+                'amount', service_record.price * service_record.quantity,
+                'quantity', service_record.quantity,
+                'rate', service_record.price
+            );
+        END LOOP;
+        
+        total_amount := total_rental + total_utilities + total_services;
+        
+        -- Create invoice
+        INSERT INTO invoices (
+            apartment_id,
+            unit_id,
+            contract_id,
+            tenant_user_id,
+            billing_period_start,
+            billing_period_end,
+            generation_month,
+            due_date,
+            rental_amount,
+            utilities_amount,
+            services_amount,
+            total_amount,
+            line_items
+        ) VALUES (
+            contract_record.apartment_id,
+            contract_record.unit_id,
+            contract_record.id,
+            contract_record.tenant_user_id,
+            billing_start,
+            billing_end,
+            billing_start,
+            due_date,
+            total_rental,
+            total_utilities,
+            total_services,
+            total_amount,
+            line_items
+        ) ON CONFLICT (unit_id, generation_month) DO UPDATE SET
+            rental_amount = EXCLUDED.rental_amount,
+            utilities_amount = EXCLUDED.utilities_amount,
+            services_amount = EXCLUDED.services_amount,
+            total_amount = EXCLUDED.total_amount,
+            line_items = EXCLUDED.line_items,
+            updated_at = NOW()
+        RETURNING id INTO invoice_id;
+        
+        IF invoice_id IS NOT NULL THEN
+            invoices_created := invoices_created + 1;
+            
+            -- Include ad-hoc invoices
+            SELECT include_adhoc_in_monthly_invoice(invoice_id, billing_start) INTO total_adhoc;
+            adhoc_included := adhoc_included + total_adhoc;
+        END IF;
+    END LOOP;
+    
+    -- Return result summary
+    result := jsonb_build_object(
+        'invoices_created', invoices_created,
+        'adhoc_invoices_included', adhoc_included,
+        'billing_month', billing_start,
+        'apartment_id', target_apartment_id
+    );
+    
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to remove ad-hoc invoice from monthly invoice
+CREATE OR REPLACE FUNCTION remove_adhoc_from_monthly_invoice(
+    adhoc_invoice_id UUID
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    adhoc_record RECORD;
+    monthly_invoice_record RECORD;
+    updated_line_items JSONB;
+    item JSONB;
+BEGIN
+    -- Get the ad-hoc invoice details
+    SELECT * INTO adhoc_record
+    FROM adhoc_invoices 
+    WHERE id = adhoc_invoice_id
+    AND monthly_invoice_id IS NOT NULL;
+    
+    IF adhoc_record.id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Get the monthly invoice
+    SELECT * INTO monthly_invoice_record
+    FROM invoices 
+    WHERE id = adhoc_record.monthly_invoice_id;
+    
+    -- Remove the ad-hoc item from line items and update total
+    updated_line_items := '[]'::jsonb;
+    FOR item IN SELECT * FROM jsonb_array_elements(monthly_invoice_record.line_items)
+    LOOP
+        IF NOT (item->>'type' = 'adhoc' AND (item->>'adhoc_id')::UUID = adhoc_invoice_id) THEN
+            updated_line_items := updated_line_items || item;
+        END IF;
+    END LOOP;
+    
+    -- Update monthly invoice
+    UPDATE invoices 
+    SET 
+        line_items = updated_line_items,
+        total_amount = total_amount - adhoc_record.final_amount,
+        updated_at = NOW()
+    WHERE id = adhoc_record.monthly_invoice_id;
+    
+    -- Reset ad-hoc invoice status
+    UPDATE adhoc_invoices 
+    SET 
+        monthly_invoice_id = NULL,
+        included_at = NULL,
+        status = 'active',
+        updated_at = NOW()
+    WHERE id = adhoc_invoice_id;
+    
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Function to update unit status based on contracts
 CREATE OR REPLACE FUNCTION update_unit_status()
