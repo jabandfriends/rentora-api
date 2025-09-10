@@ -39,7 +39,6 @@ dependencies {
 
     //db
     runtimeOnly 'org.postgresql:postgresql'
-    implementation 'org.flywaydb:flyway-core'
 
     //lombok
     compileOnly 'org.projectlombok:lombok'
