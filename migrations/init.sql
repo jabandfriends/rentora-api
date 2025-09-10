@@ -45,8 +45,8 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Default super admin with proper password hashing
-INSERT INTO users (first_name, last_name, email, password_hash, role, email_verified)
-VALUES ('Super', 'Admin', 'admin@example.com', crypt('admin123', gen_salt('bf')), 'super_admin', true)
+INSERT INTO users (first_name, last_name, email, password_hash)
+VALUES ('Super', 'Admin', 'admin@example.com', crypt('admin123', gen_salt('bf')))
 ON CONFLICT (email) DO NOTHING;
 
 -- =========================================
@@ -586,7 +586,8 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     category VARCHAR(30) DEFAULT 'miscellaneous', -- penalty , miscellaneous
     
     -- Amount details
-    final_amount NUMERIC(10,2) NOT NULL, -- total_amount + tax_amount
+    final_amount NUMERIC(10,2) NOT NULL, -- already includes total + tax
+    paid_amount NUMERIC(10,2) DEFAULT 0,
     
     -- Dates
     invoice_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -600,7 +601,6 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     
     -- Payment tracking
     payment_status VARCHAR(20) DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'cancelled')),
-    paid_amount NUMERIC(10,2) DEFAULT 0,
     paid_at TIMESTAMPTZ,
     
     -- Admin details
@@ -623,76 +623,21 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     
     -- Constraints
     CONSTRAINT check_adhoc_amounts CHECK (
-        total_amount >= 0 AND 
-        tax_amount >= 0 AND 
         final_amount >= 0 AND
         paid_amount >= 0 AND 
-        paid_amount <= final_amount AND
-        quantity > 0 AND
-        unit_price >= 0
+        paid_amount <= final_amount
     ),
     CONSTRAINT check_adhoc_dates CHECK (
         due_date IS NULL OR due_date >= invoice_date
     )
 );
--- Generate ad-hoc invoice number trigger
-CREATE OR REPLACE FUNCTION generate_adhoc_number()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.adhoc_number IS NULL THEN
-        NEW.adhoc_number := 'AH-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('adhoc_sequence'), 4, '0');
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
-CREATE SEQUENCE IF NOT EXISTS adhoc_sequence START 1;
-
-CREATE TRIGGER set_adhoc_number BEFORE INSERT ON adhoc_invoices
-FOR EACH ROW EXECUTE FUNCTION generate_adhoc_number();
-
--- Updated at trigger
-CREATE TRIGGER update_adhoc_invoices_updated_at BEFORE UPDATE ON adhoc_invoices
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Auto-calculate final amount trigger
-CREATE OR REPLACE FUNCTION calculate_adhoc_final_amount()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Calculate total amount from quantity and unit price
-    NEW.total_amount := NEW.quantity * NEW.unit_price;
-    
-    -- Calculate tax amount
-    NEW.tax_amount := NEW.total_amount * (COALESCE(NEW.tax_percentage, 0) / 100);
-    
-    -- Calculate final amount
-    NEW.final_amount := NEW.total_amount + NEW.tax_amount;
-    
-    -- Update payment status based on paid amount
-    IF NEW.paid_amount >= NEW.final_amount THEN
-        NEW.payment_status := 'paid';
-        IF OLD.payment_status != 'paid' THEN
-            NEW.paid_at := NOW();
-        END IF;
-    ELSIF NEW.paid_amount > 0 THEN
-        NEW.payment_status := 'unpaid'; -- Could be 'partially_paid' if you want to track partial payments
-    ELSE
-        NEW.payment_status := 'unpaid';
-    END IF;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER calculate_adhoc_amounts BEFORE INSERT OR UPDATE ON adhoc_invoices
-FOR EACH ROW EXECUTE FUNCTION calculate_adhoc_final_amount();
 -- =========================================
 -- 19. ENHANCED INDEXES
 -- =========================================
 
 -- Users indexes
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_active ON users(is_active);
 CREATE INDEX idx_users_last_login ON users(last_login);
 
