@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_active BOOLEAN DEFAULT true,
     reset_password_token VARCHAR(255),
     reset_password_expires TIMESTAMPTZ,
-    national_id CHAR(13),
+    national_id VARCHAR(13),
     birth_date DATE,
     phone_number VARCHAR(15), -- Support international formats
     emergency_contact_name VARCHAR(100),
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS apartments (
     name VARCHAR(100) NOT NULL,
     logo_url TEXT,
     phone_number VARCHAR(15),
-    tax_id CHAR(13),
+    tax_id VARCHAR(13),
     payment_due_day INTEGER CHECK (payment_due_day BETWEEN 1 AND 31) DEFAULT 30,
     late_fee NUMERIC(10,2) DEFAULT 0,
     late_fee_type VARCHAR(10) DEFAULT 'fixed' CHECK (late_fee_type IN ('fixed', 'percentage')),
