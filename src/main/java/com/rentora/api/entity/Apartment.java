@@ -40,7 +40,11 @@ public class Apartment {
     private BigDecimal lateFee;
 
     @Column(name = "late_fee_type", length = 10)
-    private String lateFeeType; // "fixed" or "percentage"
+    private LateFeeType lateFeeType; // "fixed" or "percentage"
+
+    public enum LateFeeType {
+        FIXED,PERCENTAGE
+    }
 
     @Column(name = "grace_period_days")
     private Integer gracePeriodDays;
@@ -72,7 +76,11 @@ public class Apartment {
     private User createdBy;
 
     @Column(name = "status", length = 20)
-    private String status; // setup_incomplete, setup_in_progress, active, inactive
+    private ApartmentStatus status = ApartmentStatus.SETUP_INCOMPLETE; // setup_incomplete, setup_in_progress, active, inactive
+
+    public enum ApartmentStatus {
+        SETUP_INCOMPLETE,SETUP_IN_PROGRESS,ACTIVE,INACTIVE
+    }
 
     @Column(name = "settings", columnDefinition = "jsonb")
     private String settings;
