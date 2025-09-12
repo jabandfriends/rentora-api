@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -44,10 +45,10 @@ public class Contract {
     private RentalType rentalType;
 
     @Column(name = "start_date", nullable = false)
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @Column(name = "rental_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal rentalPrice;
@@ -80,7 +81,7 @@ public class Contract {
     private Integer renewalNoticeDays = 30;
 
     @Column(name = "termination_date")
-    private LocalDateTime terminationDate;
+    private LocalDate terminationDate;
 
     @Column(name = "termination_reason", columnDefinition = "TEXT")
     private String terminationReason;

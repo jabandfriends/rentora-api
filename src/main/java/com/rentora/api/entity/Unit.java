@@ -31,6 +31,7 @@ public class Unit {
     @Column(name = "unit_name")
     private String unitName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "unit_type")
     private UnitType unitType = UnitType.apartment;
 
@@ -40,7 +41,7 @@ public class Unit {
 
     private Integer bedrooms = 1;
 
-    private Integer bathrooms = 1;
+    private BigDecimal bathrooms;
 
     @Column(name = "square_meters")
     private BigDecimal squareMeters;
@@ -51,8 +52,10 @@ public class Unit {
     @Column(name = "parking_spaces")
     private Integer parkingSpaces = 0;
 
+    @Enumerated(EnumType.STRING)
     private UnitStatus status = UnitStatus.available;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "furnishing_status")
     private FurnishingStatus furnishingStatus;
 

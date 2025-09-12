@@ -31,9 +31,11 @@ public class Building {
     @Column(name = "total_floors")
     private Integer totalFloors;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "building_type")
     private BuildingType buildingType = BuildingType.residential;
 
+    @Enumerated(EnumType.STRING)
     private BuildingStatus status = BuildingStatus.active;
 
     @CreationTimestamp

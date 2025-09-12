@@ -24,7 +24,7 @@ public class Floor {
     private Building building;
 
     @Column(name = "floor_number", nullable = false)
-    private String floorNumber;
+    private Integer floorNumber;
 
     @Column(name="floor_name")
     private String floorName;

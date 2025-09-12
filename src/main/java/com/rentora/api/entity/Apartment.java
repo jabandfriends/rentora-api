@@ -39,6 +39,7 @@ public class Apartment {
     @Column(name = "late_fee", precision = 10, scale = 2)
     private BigDecimal lateFee;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "late_fee_type", length = 10)
     private LateFeeType lateFeeType; // "fixed" or "percentage"
 
@@ -81,6 +82,7 @@ public class Apartment {
     @JoinColumn(name = "created_by_user_id", referencedColumnName = "id")
     private User createdBy;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
     private ApartmentStatus status = ApartmentStatus.SETUP_INCOMPLETE; // setup_incomplete, setup_in_progress, active, inactive
 
