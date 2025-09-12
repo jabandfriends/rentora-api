@@ -172,7 +172,7 @@ public class AuthService {
                         role.setApartmentName(au.getApartment().getName());
                     }
                     role.setRole(au.getRole() != null ? au.getRole().name() : null);
-                    role.setPermissions(parsePermissions(au.getPermissions()));
+                    
                     return role;
                 })
                 .collect(Collectors.toList())

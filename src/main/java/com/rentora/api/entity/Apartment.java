@@ -44,7 +44,7 @@ public class Apartment {
     private LateFeeType lateFeeType; // "fixed" or "percentage"
 
     public enum LateFeeType {
-        FIXED,PERCENTAGE
+        fixed,percentage
     }
 
     @Column(name = "grace_period_days")
@@ -84,20 +84,17 @@ public class Apartment {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
-    private ApartmentStatus status = ApartmentStatus.SETUP_INCOMPLETE; // setup_incomplete, setup_in_progress, active, inactive
+    private ApartmentStatus status = ApartmentStatus.setup_incomplete; // setup_incomplete, setup_in_progress, active, inactive
 
     public enum ApartmentStatus {
-        SETUP_INCOMPLETE,SETUP_IN_PROGRESS,ACTIVE,INACTIVE
+        setup_incomplete,setup_in_progress,active,inactive
     }
 
-    @Column(name = "settings", columnDefinition = "jsonb")
-    private String settings;
+
 
     @CreationTimestamp
-    @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 }

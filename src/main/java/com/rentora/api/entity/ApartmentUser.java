@@ -31,10 +31,9 @@ public class ApartmentUser {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private UserRole role = UserRole.TENANT;
+    private UserRole role = UserRole.tenant;
 
-    @Column(name = "permissions", columnDefinition = "jsonb")
-    private String permissions = "[]";
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")

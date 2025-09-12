@@ -30,7 +30,7 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
             "AND (:unitType IS NULL OR u.unitType = :unitType)")
     Page<Unit> findByApartmentIdAndFilters(@Param("apartmentId") UUID apartmentId,
                                            @Param("status") Unit.UnitStatus status,
-                                           @Param("unitType") String unitType,
+                                           @Param("unitType") Unit.UnitType unitType,
                                            Pageable pageable);
 
     @Query("SELECT u FROM Unit u " +
@@ -53,6 +53,16 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
             "WHERE b.apartment.id = :apartmentId AND u.status = :status")
     long countByApartmentIdAndStatus(@Param("apartmentId") UUID apartmentId,
                                      @Param("status") Unit.UnitStatus status);
+    @Query("SELECT COUNT(u) FROM Unit u " +
+            "JOIN u.floor f " +
+            "WHERE f.building.id = :buildingId")
+    long countByBuildingId(@Param("buildingId") UUID buildingId);
+
+    @Query("SELECT COUNT(u) FROM Unit u " +
+            "JOIN u.floor f " +
+            "WHERE f.building.id = :buildingId AND u.status = :status")
+    long countByBuildingIdAndStatus(@Param("buildingId") UUID buildingId,
+                                    @Param("status") Unit.UnitStatus status);
 
     boolean existsByFloorIdAndUnitName(UUID floorId, String unitName);
 }

@@ -9,7 +9,7 @@ public class BuildingSummaryDto {
     private String name;
     private String description;
     private Integer totalFloors;
-    private String buildingType;
+    private Building.BuildingType buildingType;
     private Building.BuildingStatus status;
     private String apartmentName;
     private String createdAt;

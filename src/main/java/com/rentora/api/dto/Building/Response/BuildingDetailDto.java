@@ -1,13 +1,15 @@
 package com.rentora.api.dto.Building.Response;
 
 import com.rentora.api.entity.Building;
+import lombok.Data;
 
+@Data
 public class BuildingDetailDto {
     private String id;
     private String name;
     private String description;
     private Integer totalFloors;
-    private String buildingType;
+    private Building.BuildingType buildingType;
     private Building.BuildingStatus status;
     private String apartmentId;
     private String apartmentName;

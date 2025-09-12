@@ -29,7 +29,7 @@ public class CreateApartmentRequest {
     @DecimalMin(value = "0.0", message = "Late fee cannot be negative")
     private BigDecimal lateFee = BigDecimal.ZERO;
 
-    private Apartment.LateFeeType lateFeeType = Apartment.LateFeeType.FIXED;
+    private Apartment.LateFeeType lateFeeType = Apartment.LateFeeType.fixed;
 
     @Min(value = 0, message = "Grace period days cannot be negative")
     private Integer gracePeriodDays = 3;

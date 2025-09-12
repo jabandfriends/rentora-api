@@ -56,6 +56,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfo>> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        
         UserInfo userInfo = authService.getCurrentUser(userPrincipal.getId());
         ApiResponse<UserInfo> response = new ApiResponse<>(true, "User information retrieved successfully", userInfo);
 

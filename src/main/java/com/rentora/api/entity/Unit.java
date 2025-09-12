@@ -1,7 +1,9 @@
 package com.rentora.api.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,10 +35,20 @@ public class Unit {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "unit_type")
-    private UnitType unitType = UnitType.apartment;
+    private UnitType unitType = UnitType.APARTMENT;
 
     public enum UnitType {
-        apartment,studio,penthouse,commercial
+        APARTMENT,STUDIO,PENTHOUSE,COMMERCIAL;
+
+        @JsonValue
+        public String toValue() {
+            return name().toLowerCase();
+        }
+
+        @JsonCreator
+        public static UnitType fromValue(String value) {
+            return UnitType.valueOf(value.toUpperCase());
+        }
     }
 
     private Integer bedrooms = 1;

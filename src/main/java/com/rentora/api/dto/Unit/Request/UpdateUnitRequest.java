@@ -13,7 +13,7 @@ public class UpdateUnitRequest {
     @Size(max = 50, message = "Unit name cannot exceed 50 characters")
     private String unitName;
 
-    private String unitType;
+    private Unit.UnitType unitType;
 
     @Min(value = 0, message = "Bedrooms cannot be negative")
     private Integer bedrooms;

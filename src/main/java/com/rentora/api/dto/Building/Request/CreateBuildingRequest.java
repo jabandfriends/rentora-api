@@ -1,6 +1,7 @@
 package com.rentora.api.dto.Building.Request;
 
 
+import com.rentora.api.entity.Building;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 
@@ -20,5 +21,5 @@ public class CreateBuildingRequest {
     @Min(value = 1, message = "Total floors must be at least 1")
     private Integer totalFloors;
 
-    private String buildingType = "residential";
+    private Building.BuildingType buildingType = Building.BuildingType.residential;
 }

@@ -21,6 +21,5 @@ public class UserInfo {
         private String apartmentId;
         private String apartmentName;
         private String role;
-        private List<String> permissions;
     }
 }

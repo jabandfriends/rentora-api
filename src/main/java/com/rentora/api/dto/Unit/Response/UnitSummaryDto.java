@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public class UnitSummaryDto {
     private String id;
     private String unitName;
-    private String unitType;
+    private Unit.UnitType unitType;
     private Integer bedrooms;
     private BigDecimal bathrooms;
     private BigDecimal squareMeters;

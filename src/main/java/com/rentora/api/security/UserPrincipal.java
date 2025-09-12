@@ -1,5 +1,6 @@
 package com.rentora.api.security;
 
+import com.rentora.api.entity.ApartmentUser;
 import com.rentora.api.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,7 +28,7 @@ public class UserPrincipal implements UserDetails {  // ✅ implement UserDetail
 
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = user.getApartmentUsers().stream()
-                .filter(apartmentUser -> apartmentUser.getIsActive())
+                .filter(ApartmentUser::getIsActive)
                 .map(apartmentUser -> new SimpleGrantedAuthority("ROLE_" + apartmentUser.getRole().name()))
                 .collect(Collectors.toList());
 

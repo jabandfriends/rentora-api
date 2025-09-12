@@ -1,11 +1,10 @@
 package com.rentora.api.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
 
-import lombok.Setter;
-
-@Getter @Setter @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Pagination {
     private int page;
     private int size;
