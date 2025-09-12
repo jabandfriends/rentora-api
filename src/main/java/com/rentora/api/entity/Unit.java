@@ -51,7 +51,7 @@ public class Unit {
     @Column(name = "parking_spaces")
     private Integer parkingSpaces = 0;
 
-    private UnitStatus unitStatus = UnitStatus.available;
+    private UnitStatus status = UnitStatus.available;
 
     @Column(name = "furnishing_status")
     private FurnishingStatus furnishingStatus;
