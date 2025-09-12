@@ -8,6 +8,9 @@ build/
 ## docker db ##
 /db
 
+##log
+/logs
+
 .env
 
 ### STS ###
