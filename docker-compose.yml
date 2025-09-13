@@ -12,4 +12,17 @@ services:
       - ./db:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
 
-
+  app:
+    build:
+      context: .          # build Dockerfile อยู่ใน project folder
+      dockerfile: Dockerfile
+    container_name: apartment-api-app
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - database
