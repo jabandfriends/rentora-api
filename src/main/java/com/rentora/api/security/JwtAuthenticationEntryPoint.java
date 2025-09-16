@@ -1,7 +1,7 @@
 package com.rentora.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rentora.api.dto.ApiResponse;
+import com.rentora.api.model.dto.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

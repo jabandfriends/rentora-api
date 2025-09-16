@@ -1,9 +1,8 @@
 package com.rentora.api.security;
 
-import com.rentora.api.entity.User;
+import com.rentora.api.model.entity.User;
 import com.rentora.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,10 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
 
     @Override
     @Transactional

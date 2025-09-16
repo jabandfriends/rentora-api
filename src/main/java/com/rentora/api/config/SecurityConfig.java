@@ -3,6 +3,7 @@ package com.rentora.api.config;
 import com.rentora.api.security.CustomUserDetailsService;
 import com.rentora.api.security.JwtAuthenticationEntryPoint;
 import com.rentora.api.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,13 +25,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
 
-    @Autowired
-    private JwtAuthenticationEntryPoint unauthorizedHandler;
+    private final CustomUserDetailsService customUserDetailsService;
+
+    private final JwtAuthenticationEntryPoint unauthorizedHandler;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {

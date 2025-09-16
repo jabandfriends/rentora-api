@@ -1,6 +1,7 @@
 package com.rentora.api.security;
 
-import com.rentora.api.entity.User;
+import com.rentora.api.model.entity.ApartmentUser;
+import com.rentora.api.model.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
-public class UserPrincipal implements UserDetails {  // ✅ implement UserDetails
+public class UserPrincipal implements UserDetails {  
     private UUID id;
     private String firstName;
     private String lastName;
@@ -27,7 +28,7 @@ public class UserPrincipal implements UserDetails {  // ✅ implement UserDetail
 
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = user.getApartmentUsers().stream()
-                .filter(apartmentUser -> apartmentUser.getIsActive())
+                .filter(ApartmentUser::getIsActive)
                 .map(apartmentUser -> new SimpleGrantedAuthority("ROLE_" + apartmentUser.getRole().name()))
                 .collect(Collectors.toList());
 

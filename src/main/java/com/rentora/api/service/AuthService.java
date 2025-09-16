@@ -1,13 +1,14 @@
 package com.rentora.api.service;
 
-import com.rentora.api.dto.Authentication.*;
-import com.rentora.api.entity.User;
+import com.rentora.api.model.dto.Authentication.*;
+import com.rentora.api.model.entity.User;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.UserRepository;
 import com.rentora.api.security.JwtService;
 import com.rentora.api.security.UserPrincipal;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,19 +28,20 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AuthService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private JwtService jwtService;
+    private final UserRepository userRepository;
+
+
+    private final  PasswordEncoder passwordEncoder;
+
+
+    private  final  JwtService jwtService;
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final int LOCKOUT_DURATION_MINUTES = 15;
@@ -172,7 +174,7 @@ public class AuthService {
                         role.setApartmentName(au.getApartment().getName());
                     }
                     role.setRole(au.getRole() != null ? au.getRole().name() : null);
-                    role.setPermissions(parsePermissions(au.getPermissions()));
+                    
                     return role;
                 })
                 .collect(Collectors.toList())
