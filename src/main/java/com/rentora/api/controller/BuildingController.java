@@ -35,22 +35,23 @@ public class BuildingController {
     public ResponseEntity<ApiResponse<PaginatedResponse<BuildingSummaryDto>>> getBuildings(
             @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search) {
 
+        int requestPage = Math.max(page-1,0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<BuildingSummaryDto> buildings = buildingService.getBuildingsByApartment(apartmentId, search, pageable);
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(buildings)));
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(buildings,page)));
     }
 
     @GetMapping("/{buildingId}")

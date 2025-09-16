@@ -36,20 +36,21 @@ public class ContractController {
     public ResponseEntity<ApiResponse<PaginatedResponse<ContractSummaryDto>>> getContracts(
             @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
 
+        int requestPage = Math.max(page-1,0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<ContractSummaryDto> contracts = contractService.getContractsByApartment(apartmentId, pageable);
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(contracts)));
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(contracts,page)));
     }
 
     @GetMapping("/{contractId}")
