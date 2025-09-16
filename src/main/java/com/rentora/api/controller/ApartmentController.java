@@ -1,11 +1,11 @@
 package com.rentora.api.controller;
 
-import com.rentora.api.dto.Apartment.Request.CreateApartmentRequest;
-import com.rentora.api.dto.Apartment.Request.UpdateApartmentRequest;
-import com.rentora.api.dto.Apartment.Response.ApartmentDetailDTO;
-import com.rentora.api.dto.Apartment.Response.ApartmentSummaryDTO;
-import com.rentora.api.dto.ApiResponse;
-import com.rentora.api.dto.PaginatedResponse;
+import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
+import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ApartmentService;
 import jakarta.validation.Valid;

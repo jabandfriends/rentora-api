@@ -1,7 +1,7 @@
 package com.rentora.api.repository;
 
-import com.rentora.api.entity.Floor;
-import com.rentora.api.entity.Unit;
+import com.rentora.api.model.entity.Floor;
+import com.rentora.api.model.entity.Unit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,9 +1,8 @@
 package com.rentora.api.utility;
 
-import com.rentora.api.entity.Unit;
+import com.rentora.api.model.entity.Unit;
 
 public class EnumUtils {
-
 
     public static Unit.UnitType parseUnitType(String unitType) {
         if (unitType == null || unitType.isEmpty()) {

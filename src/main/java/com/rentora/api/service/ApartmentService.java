@@ -1,13 +1,14 @@
 package com.rentora.api.service;
 
-import com.rentora.api.dto.Apartment.Request.CreateApartmentRequest;
-import com.rentora.api.dto.Apartment.Request.UpdateApartmentRequest;
-import com.rentora.api.dto.Apartment.Response.ApartmentDetailDTO;
-import com.rentora.api.dto.Apartment.Response.ApartmentSummaryDTO;
-import com.rentora.api.entity.Apartment;
-import com.rentora.api.entity.ApartmentUser;
-import com.rentora.api.entity.User;
-import com.rentora.api.enums.UserRole;
+import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
+
+import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.model.entity.ApartmentUser;
+import com.rentora.api.model.entity.User;
+import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;

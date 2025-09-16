@@ -1,12 +1,12 @@
 package com.rentora.api.controller;
 
-import com.rentora.api.dto.ApiResponse;
-import com.rentora.api.dto.PaginatedResponse;
-import com.rentora.api.dto.Unit.Request.CreateUnitRequest;
-import com.rentora.api.dto.Unit.Request.UpdateUnitRequest;
-import com.rentora.api.dto.Unit.Response.UnitDetailDto;
-import com.rentora.api.dto.Unit.Response.UnitSummaryDto;
-import com.rentora.api.entity.Unit;
+import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.Unit.Request.CreateUnitRequest;
+import com.rentora.api.model.dto.Unit.Request.UpdateUnitRequest;
+import com.rentora.api.model.dto.Unit.Response.UnitDetailDto;
+import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
+import com.rentora.api.model.entity.Unit;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.UnitService;
 import com.rentora.api.utility.EnumUtils;

@@ -1,6 +1,8 @@
 # Rentora API Documentation
 
 ## Table of Contents
+1. [Development Setup](#development-setup)
+2. [Introduction](#introduction)
 1. [Introduction](#introduction)
 2. [Authentication](#authentication)
 3. [Base URL](#base-url)
@@ -16,6 +18,32 @@
 8. [Sorting](#sorting)
 9. [Status Codes](#status-codes)
 10. [Examples](#examples)
+
+## Development Setup
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Environment Variables
+Create a `.env` file in the root directory with the following variables:
+
+```env
+POSTGRES_DB=apartment_db
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=admin
+SPRING_DATASOURCE_HOST=localhost
+```
+
+### Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| `make api/build/up` | Build and start the API and database containers |
+| `make api/up` | Start the existing API and database containers |
+| `make db/up` | Start only the database container |
+| `make docker/down` | Stop and remove all containers |
+| `make ps` | List running containers |
 
 ## Introduction
 Welcome to the Rentora API documentation. This API allows you to manage properties, buildings, units, and rental contracts programmatically.

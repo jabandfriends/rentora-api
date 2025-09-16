@@ -1,11 +1,12 @@
 package com.rentora.api.controller;
 
-import com.rentora.api.dto.ApiResponse;
-import com.rentora.api.dto.Authentication.*;
+import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.exception.BadRequestException;
+import com.rentora.api.model.dto.Authentication.*;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.AuthService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    private AuthService authService;
+
+
+    private final AuthService authService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest)  {
@@ -49,18 +52,21 @@ public class AuthController {
         log.info("Password change request for user: {}", userPrincipal.getEmail());
 
         authService.changePassword(userPrincipal.getId(), changePasswordRequest);
-        ApiResponse<Object> response = new ApiResponse<>(true, "Password changed successfully", null);
 
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                "Password changed successfully", null
+        ));
     }
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfo>> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         
         UserInfo userInfo = authService.getCurrentUser(userPrincipal.getId());
-        ApiResponse<UserInfo> response = new ApiResponse<>(true, "User information retrieved successfully", userInfo);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(
+                "User information retrieved successfully", userInfo
+        ));
     }
 
 

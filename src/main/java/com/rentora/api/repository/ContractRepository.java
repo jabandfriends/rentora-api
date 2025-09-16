@@ -1,6 +1,6 @@
 package com.rentora.api.repository;
 
-import com.rentora.api.entity.Contract;
+import com.rentora.api.model.entity.Contract;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

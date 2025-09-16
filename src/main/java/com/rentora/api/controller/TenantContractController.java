@@ -1,8 +1,8 @@
 package com.rentora.api.controller;
 
-import com.rentora.api.dto.ApiResponse;
-import com.rentora.api.dto.Contract.Response.ContractSummaryDto;
-import com.rentora.api.dto.PaginatedResponse;
+import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
+import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ContractService;
 import lombok.RequiredArgsConstructor;
