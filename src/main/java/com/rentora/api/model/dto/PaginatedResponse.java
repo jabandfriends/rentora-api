@@ -11,9 +11,9 @@ public class PaginatedResponse<T> {
     private List<T> data;
     private Pagination pagination;
 
-    public static <T> PaginatedResponse<T> of(Page<T> page) {
+    public static <T> PaginatedResponse<T> of(Page<T> page , int requestPage) {
         Pagination pagination = new Pagination(
-                page.getNumber(),
+                requestPage,
                 page.getSize(),
                 page.getTotalPages(),
                 page.getTotalElements()

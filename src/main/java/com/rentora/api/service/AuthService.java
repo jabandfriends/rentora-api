@@ -7,16 +7,16 @@ import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.UserRepository;
 import com.rentora.api.security.JwtService;
 import com.rentora.api.security.UserPrincipal;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,11 +40,12 @@ public class AuthService {
 
     private final  PasswordEncoder passwordEncoder;
 
-
+    private final LoginAttemptService loginAttemptService;
     private  final  JwtService jwtService;
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final int LOCKOUT_DURATION_MINUTES = 15;
+
 
     public LoginResponse login(LoginRequest loginRequest) throws BadRequestException {
         User user = userRepository.findByEmailWithApartments(loginRequest.getEmail())
@@ -76,7 +77,6 @@ public class AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String jwt = jwtService.generateToken(authentication);
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
             UserInfo userInfo = createUserInfo(user);
 
@@ -84,15 +84,7 @@ public class AuthService {
 
         } catch (Exception e) {
             // Increment login attempts
-            int attempts = user.getLoginAttempts() + 1;
-            user.setLoginAttempts(attempts);
-            log.info("Login attempt failed for user {}. Attempts: {}", user.getEmail(), attempts);
-
-            if (attempts >= MAX_LOGIN_ATTEMPTS) {
-                user.setLockedUntil(LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
-            }
-
-            userRepository.save(user);
+            loginAttemptService.saveFailedAttempt(user, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES);
             throw new BadRequestException("Invalid email or password");
         }
     }
@@ -148,7 +140,7 @@ public class AuthService {
     public UserInfo getCurrentUser(UUID userId) {
         User user = userRepository.findByIdWithApartments(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
+        
         return createUserInfo(user);
     }
 

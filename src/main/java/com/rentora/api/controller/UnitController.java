@@ -38,7 +38,7 @@ public class UnitController {
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
             @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "unitName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
@@ -46,6 +46,7 @@ public class UnitController {
             @RequestParam(required = false) String unitType,
             @RequestParam(required = false) UUID floorId) {
 
+        int requestPage = Math.max(page-1,0);
         Unit.UnitType type = null;
         try {
             type = EnumUtils.parseUnitType(unitType);
@@ -57,12 +58,12 @@ public class UnitController {
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<UnitSummaryDto> units = unitService.getUnitsByApartment(
                 apartmentId, status, type, floorId, pageable);
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units)));
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
 
     @GetMapping("/{unitId}")
