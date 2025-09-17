@@ -48,7 +48,7 @@ public class AuthService {
 
 
     public LoginResponse login(LoginRequest loginRequest) throws BadRequestException {
-        User user = userRepository.findByEmailWithApartments(loginRequest.getEmail())
+        User user = userRepository.findByEmailWithApartments(loginRequest.getEmail().toLowerCase().trim())
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
 
         // Check if account is locked
@@ -59,7 +59,7 @@ public class AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
+                            loginRequest.getEmail().toLowerCase().trim(),
                             loginRequest.getPassword()
                     )
             );
@@ -91,14 +91,14 @@ public class AuthService {
 
     public UserInfo createUser(CreateUserRequest request) throws BadRequestException {
         // Check if user already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
             throw new BadRequestException("Email is already in use");
         }
 
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().toLowerCase().trim());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setPhoneNumber(request.getPhoneNumber());
         user.setNationalId(request.getNationalId());

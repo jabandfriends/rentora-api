@@ -80,7 +80,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return !mustChangePassword;
+        return true;
     }
 
     @Override
