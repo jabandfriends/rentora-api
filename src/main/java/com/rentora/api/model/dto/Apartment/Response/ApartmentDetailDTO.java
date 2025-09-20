@@ -26,7 +26,7 @@ public class ApartmentDetailDTO {
     private Apartment.ApartmentStatus status;
     private String createdAt;
     private String updatedAt;
-
+    private String logoPresignedUrl;
     // Statistics
     private Long buildingCount;
     private Long unitCount;

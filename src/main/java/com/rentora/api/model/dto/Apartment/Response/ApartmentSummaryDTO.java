@@ -16,6 +16,8 @@ public class ApartmentSummaryDTO {
     private String createdAt;
     private String updatedAt;
 
+    private String logoPresignedUrl;
+
     // Building count
     private Long buildingCount;
     private Long unitCount;

@@ -13,7 +13,8 @@ public class CreateApartmentRequest {
     @Size(max = 100, message = "Apartment name cannot exceed 100 characters")
     private String name;
 
-    private String logoUrl;
+    private String logoFileName;
+
 
     @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Invalid phone number format")
     @Size(max = 15, message = "Phone number cannot exceed 15 characters")
@@ -44,4 +45,5 @@ public class CreateApartmentRequest {
     private String country = "Thailand";
     private String timezone = "Asia/Bangkok";
     private String currency = "THB";
+
 }
