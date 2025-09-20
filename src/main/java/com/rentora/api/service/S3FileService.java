@@ -2,7 +2,6 @@ package com.rentora.api.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -14,15 +13,14 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.Calendar;
-import java.util.Date;
+
 
 @Service
 @RequiredArgsConstructor
 public class S3FileService {
 
-    private final S3Presigner presigner; // inject S3Presigner, not S3Client
-    private final S3Client s3Client;     // for S3 operations like delete
+    private final S3Presigner presigner;
+    private final S3Client s3Client;
     @Value("${cloud.aws.s3.bucket-name}")
     private String bucketName;
 
