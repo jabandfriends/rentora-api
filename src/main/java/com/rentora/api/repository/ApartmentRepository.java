@@ -31,7 +31,7 @@ public interface ApartmentRepository extends JpaRepository<Apartment, UUID> {
     @Query("SELECT a FROM Apartment a " +
             "JOIN a.apartmentUsers au " +
             "WHERE au.user.id = :userId AND au.isActive = true " +
-            "AND a.name LIKE %:name%")
+            "AND LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     Page<Apartment> findByUserIdAndNameContaining(@Param("userId") UUID userId,
                                                   @Param("name") String name,
                                                   Pageable pageable);
