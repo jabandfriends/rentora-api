@@ -14,6 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -95,4 +96,7 @@ public class Unit {
     public enum UnitStatus {
         available,occupied,maintenance,reserved
     }
+
+    @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Maintenance> unitMaintenance;
 }

@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -84,6 +85,12 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ApartmentUser> apartmentUsers;
+
+    @OneToMany(mappedBy = "tenantUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Maintenance> tenantMaintenance;
+
+    @OneToMany(mappedBy = "assignedToUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Maintenance> assignedMaintenance;
 
     // Helper methods
     public String getFullName() {
