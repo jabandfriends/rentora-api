@@ -8,7 +8,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -21,8 +23,7 @@ public class Maintenance {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-
-    @Column(name = "ticket_number", length = 50)
+    @Column(name = "ticket_number", length = 50, unique = true)
     private String ticketNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -65,19 +66,19 @@ public class Maintenance {
     }
 
     @Column(name = "requested_date")
-    private java.time.LocalDate requestedDate;
+    private LocalDate requestedDate;
 
     @Column(name = "appointment_date")
-    private java.time.OffsetDateTime appointmentDate;
+    private OffsetDateTime appointmentDate;
 
     @Column(name = "started_at")
-    private java.time.OffsetDateTime startedAt;
+    private OffsetDateTime startedAt;
 
     @Column(name = "completed_at")
-    private java.time.OffsetDateTime completedAt;
+    private OffsetDateTime completedAt;
 
     @Column(name = "due_date")
-    private java.time.OffsetDateTime dueDate;
+    private OffsetDateTime dueDate;
 
     @Column(name = "estimated_hours", precision = 4, scale = 1)
     private BigDecimal estimatedHours;

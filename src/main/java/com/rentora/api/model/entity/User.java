@@ -85,6 +85,12 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ApartmentUser> apartmentUsers;
 
+    @OneToMany(mappedBy = "tenantUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Maintenance> tenantMaintenance;
+
+    @OneToMany(mappedBy = "assignedToUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Maintenance> assignedMaintenance;
+
     // Helper methods
     public String getFullName() {
         return firstName + " " + lastName;
