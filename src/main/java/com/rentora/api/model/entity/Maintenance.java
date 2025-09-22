@@ -104,11 +104,16 @@ public class Maintenance {
     @Column(name = "is_emergency")
     private Boolean isEmergency = false;
 
+
     @Column(name = "is_recurring")
     private Boolean isRecurring = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "recurring_schedule", length = 20)
-    private String recurringSchedule;
+    private RecurringSchedule recurringSchedule;
+    public enum RecurringSchedule {
+        weekly,monthly,quarterly
+    }
 
     @CreationTimestamp
     @Column(name = "created_at")
