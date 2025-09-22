@@ -4,6 +4,7 @@ import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.security.UserPrincipal;
@@ -64,22 +65,22 @@ public class ApartmentController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ApartmentDetailDTO>> createApartment(
+    public ResponseEntity<ApiResponse<ExecuteApartmentResponse>> createApartment(
             @Valid @RequestBody CreateApartmentRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ApartmentDetailDTO apartment = apartmentService.createApartment(request, currentUser.getId());
+        ExecuteApartmentResponse apartment = apartmentService.createApartment(request, currentUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Apartment created successfully", apartment));
     }
 
     @PutMapping("/{apartmentId}")
-    public ResponseEntity<ApiResponse<ApartmentDetailDTO>> updateApartment(
+    public ResponseEntity<ApiResponse<ExecuteApartmentResponse>> updateApartment(
             @PathVariable UUID apartmentId,
             @Valid @RequestBody UpdateApartmentRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ApartmentDetailDTO apartment = apartmentService.updateApartment(apartmentId, request, currentUser.getId());
+        ExecuteApartmentResponse apartment = apartmentService.updateApartment(apartmentId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Apartment updated successfully", apartment));
     }
 

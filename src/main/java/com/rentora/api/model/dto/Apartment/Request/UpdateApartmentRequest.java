@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 public class UpdateApartmentRequest {
     @Size(max = 100, message = "Apartment name cannot exceed 100 characters")
     private String name;
-
+    private String logoFileName;
     private String logoUrl;
 
     @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Invalid phone number format")

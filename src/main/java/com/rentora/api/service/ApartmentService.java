@@ -5,6 +5,7 @@ import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.ApartmentUser;
 import com.rentora.api.model.entity.User;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
 import java.util.UUID;
 
 @Slf4j
@@ -40,6 +42,8 @@ public class ApartmentService {
 
     private final UnitRepository unitRepository;
 
+    private final S3FileService s3FileService;
+
 
     private final ContractRepository contractRepository;
     private final ApartmentUserRepository apartmentUserRepository;
@@ -47,32 +51,68 @@ public class ApartmentService {
     public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Pageable pageable) {
         Page<Apartment> apartments;
 
-
         if (search != null && !search.trim().isEmpty()) {
-
             apartments = apartmentRepository.findByUserIdAndNameContaining(userId, search.trim(), pageable);
         } else {
-
             apartments = apartmentRepository.findByUserId(userId, pageable);
         }
 
-        return apartments.map(this::toApartmentSummaryDto);
+        return apartments.map(apartment -> {
+            ApartmentSummaryDTO dto = toApartmentSummaryDto(apartment);
+
+            // Generate GET presigned URL for download if logo exists
+            if (apartment.getLogoUrl() != null && !apartment.getLogoUrl().isBlank()) {
+                try {
+                    URL presignedUrl = s3FileService.generatePresignedUrlForGet(apartment.getLogoUrl());
+                    dto.setLogoPresignedUrl(presignedUrl.toString());
+                } catch (Exception e) {
+                    log.warn("Failed to generate presigned URL for apartment logo: {}", e.getMessage());
+                }
+            }
+
+            return dto;
+        });
     }
 
     public ApartmentDetailDTO getApartmentById(UUID apartmentId, UUID userId) {
         Apartment apartment = apartmentRepository.findByIdAndUserId(apartmentId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Apartment not found or access denied"));
 
-        return toApartmentDetailDto(apartment);
+        ApartmentDetailDTO dto = toApartmentDetailDto(apartment);
+
+        if (apartment.getLogoUrl() != null && !apartment.getLogoUrl().isBlank()) {
+            try {
+                URL presignedUrl = s3FileService.generatePresignedUrlForGet(apartment.getLogoUrl());
+                dto.setLogoPresignedUrl(presignedUrl.toString());
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for apartment logo: {}", e.getMessage());
+            }
+        }
+
+        return dto;
     }
 
-    public ApartmentDetailDTO createApartment(CreateApartmentRequest request, UUID createdByUserId) {
+
+    public ExecuteApartmentResponse createApartment(CreateApartmentRequest request, UUID createdByUserId) {
         User createdByUser = userRepository.findById(createdByUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        String logoImgKey = null;
+        String presignedUrlStr = null;
+
+        if (request.getLogoFileName() != null) {
+            logoImgKey = "apartments/logo/" + UUID.randomUUID() + "-" + request.getLogoFileName();
+            try {
+                URL presignedUrl = s3FileService.generatePresignedUrlForPut(logoImgKey);
+                presignedUrlStr = presignedUrl.toString();
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned PUT URL for apartment logo: {}", e.getMessage());
+            }
+        }
+
         Apartment apartment = new Apartment();
         apartment.setName(request.getName());
-        apartment.setLogoUrl(request.getLogoUrl());
+        apartment.setLogoUrl(logoImgKey);
         apartment.setPhoneNumber(request.getPhoneNumber());
         apartment.setTaxId(request.getTaxId());
         apartment.setPaymentDueDay(request.getPaymentDueDay());
@@ -91,7 +131,6 @@ public class ApartmentService {
 
         Apartment savedApartment = apartmentRepository.save(apartment);
 
-        // Create apartment user relationship with admin role
         ApartmentUser apartmentUser = new ApartmentUser();
         apartmentUser.setApartment(savedApartment);
         apartmentUser.setUser(createdByUser);
@@ -102,10 +141,10 @@ public class ApartmentService {
 
         log.info("Apartment created: {} by user: {}", savedApartment.getName(), createdByUser.getEmail());
 
-        return toApartmentDetailDto(savedApartment);
+        return new ExecuteApartmentResponse(apartment.getId(), presignedUrlStr, logoImgKey);
     }
 
-    public ApartmentDetailDTO updateApartment(UUID apartmentId, UpdateApartmentRequest request, UUID userId) {
+    public ExecuteApartmentResponse updateApartment(UUID apartmentId, UpdateApartmentRequest request, UUID userId) {
         Apartment apartment = apartmentRepository.findByIdAndUserId(apartmentId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Apartment not found or access denied"));
 
@@ -125,11 +164,22 @@ public class ApartmentService {
         if (request.getTimezone() != null) apartment.setTimezone(request.getTimezone());
         if (request.getCurrency() != null) apartment.setCurrency(request.getCurrency());
 
+        String logoImgKey = null;
+        String presignedUrlStr = null;
+        if (request.getLogoFileName() != null) {
+            logoImgKey = "apartments/logo/" + UUID.randomUUID() + "-" + request.getLogoFileName();
+            try {
+                URL presignedUrl = s3FileService.generatePresignedUrlForPut(logoImgKey);
+                presignedUrlStr = presignedUrl.toString();
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned PUT URL for apartment logo: {}", e.getMessage());
+            }
+        }
         Apartment savedApartment = apartmentRepository.save(apartment);
 
         log.info("Apartment updated: {}", savedApartment.getName());
 
-        return toApartmentDetailDto(savedApartment);
+        return new ExecuteApartmentResponse(apartment.getId(),presignedUrlStr,logoImgKey);
     }
 
     public void deleteApartment(UUID apartmentId, UUID userId) {
@@ -140,6 +190,14 @@ public class ApartmentService {
         long activeContracts = contractRepository.countActiveByApartmentId(apartmentId);
         if (activeContracts > 0) {
             throw new BadRequestException("Cannot delete apartment with active contracts");
+        }
+
+        if (apartment.getLogoUrl() != null && !apartment.getLogoUrl().isBlank()) {
+            try {
+                s3FileService.deleteFile(apartment.getLogoUrl());
+            } catch (Exception e) {
+                log.warn("Failed to delete apartment logo from S3: {}", e.getMessage());
+            }
         }
 
         apartmentRepository.delete(apartment);
