@@ -1,6 +1,7 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
@@ -91,5 +92,11 @@ public class ApartmentController {
 
         apartmentService.deleteApartment(apartmentId, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Apartment deleted successfully", null));
+    }
+
+    @PostMapping("/setup/{apartmentId}")
+    public ResponseEntity<ApiResponse<Void>> setupApartment(@PathVariable UUID apartmentId , @Valid @RequestBody SetupApartmentRequest request, @AuthenticationPrincipal UserPrincipal currentUser) {
+        apartmentService.apartmentSetup(apartmentId, request, currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.success("Apartment setup successfully", null));
     }
 }

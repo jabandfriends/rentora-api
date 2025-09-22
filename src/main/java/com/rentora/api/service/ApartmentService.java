@@ -1,14 +1,13 @@
 package com.rentora.api.service;
 
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
-import com.rentora.api.model.entity.Apartment;
-import com.rentora.api.model.entity.ApartmentUser;
-import com.rentora.api.model.entity.User;
+import com.rentora.api.model.entity.*;
 import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
@@ -20,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 
 import java.net.URL;
 import java.util.UUID;
@@ -33,20 +33,23 @@ public class ApartmentService {
 
     private final ApartmentRepository apartmentRepository;
 
-
     private final UserRepository userRepository;
 
-
     private final BuildingRepository buildingRepository;
-
 
     private final UnitRepository unitRepository;
 
     private final S3FileService s3FileService;
 
-
     private final ContractRepository contractRepository;
+
     private final ApartmentUserRepository apartmentUserRepository;
+
+    private final ServiceRepository serviceRepository;
+
+    private final UtilityRepository utilityRepository;
+
+    private final ApartmentPaymentRepository apartmentPaymentRepository;
 
     public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Pageable pageable) {
         Page<Apartment> apartments;
@@ -204,6 +207,68 @@ public class ApartmentService {
 
         log.info("Apartment deleted: {}", apartment.getName());
     }
+    //setup
+    public void apartmentSetup(UUID apartmentId, SetupApartmentRequest request, UUID userId) {
+        User createdByUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        //check apartment first
+        Apartment apartment = apartmentRepository.findByIdAndUserId(apartmentId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Apartment not found or access denied"));
+
+        //save service
+        request.getServices().forEach(serviceItem -> {
+            ServiceEntity service = new ServiceEntity();
+            //save apartment fk first
+            service.setApartment(apartment);
+            service.setServiceName(serviceItem.getName());
+            service.setPrice(serviceItem.getPrice());
+            serviceRepository.save(service);
+        });
+
+        //apartment water utility
+        Utility waterUtility = new Utility();
+        waterUtility.setApartment(apartment);
+        waterUtility.setUtilityName("Water Utility");
+        waterUtility.setUtilityType(request.getWaterType());
+        waterUtility.setCategory(Utility.Category.utility);
+        waterUtility.setUnitPrice(request.getWaterPrice());
+        waterUtility.setFixedPrice(request.getWaterFlat());
+        utilityRepository.save(waterUtility);
+
+        //apartment electric utility
+        Utility electricityUtility = new Utility();
+        electricityUtility.setApartment(apartment);
+        electricityUtility.setUtilityName("Electricity Utility");
+        electricityUtility.setUtilityType(request.getElectricityType());
+        electricityUtility.setCategory(Utility.Category.utility);
+        electricityUtility.setUnitPrice(request.getElectricityPrice());
+        electricityUtility.setFixedPrice(request.getElectricityFlat());
+        utilityRepository.save(electricityUtility);
+
+        //save building
+        request.getBuildings().forEach(buildingItem -> {
+            Building building = new Building();
+            building.setApartment(apartment);
+            building.setName(buildingItem.getBuildingName());
+            building.setTotalFloors(buildingItem.getTotalFloors());
+            buildingRepository.save(building);
+        });
+
+        //payment
+        ApartmentPayment payment = new ApartmentPayment();
+        payment.setApartment(apartment);
+        payment.setMethodName(ApartmentPayment.MethodType.bank_transfer);
+        payment.setBankName(request.getBankName());
+        payment.setBankAccountNumber(request.getBankAccountNumber());
+        payment.setAccountHolderName(request.getBankAccountHolder());
+        payment.setCreatedBy(createdByUser);
+        apartmentPaymentRepository.save(payment);
+
+        apartment.setStatus(Apartment.ApartmentStatus.active);
+        apartmentRepository.save(apartment);
+
+        log.info("Apartment {} create a service successfully", apartment.getName());
+    }
 
     private ApartmentSummaryDTO toApartmentSummaryDto(Apartment apartment) {
         ApartmentSummaryDTO dto = new ApartmentSummaryDTO();
@@ -256,4 +321,6 @@ public class ApartmentService {
 
         return dto;
     }
+
+
 }
