@@ -112,8 +112,7 @@ CREATE TABLE IF NOT EXISTS buildings (
     building_type VARCHAR(20) DEFAULT 'residential',
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'maintenance')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(apartment_id, name)
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TRIGGER update_buildings_updated_at BEFORE UPDATE ON buildings
