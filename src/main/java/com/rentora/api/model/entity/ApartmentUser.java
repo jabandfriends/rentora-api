@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -44,6 +45,7 @@ public class ApartmentUser {
 
     @Column(name = "left_at")
     private LocalDateTime leftAt;
+
 
     @Column(name = "is_active")
     private Boolean isActive = true;
