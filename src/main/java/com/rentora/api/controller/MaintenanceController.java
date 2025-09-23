@@ -1,15 +1,26 @@
 package com.rentora.api.controller;
 
 
+import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
+import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.model.entity.Maintenance;
+import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.MaintenanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -21,6 +32,29 @@ import java.util.UUID;
 public class MaintenanceController {
 
     private final MaintenanceService maintenanceService;
+    @GetMapping
+    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceDetailDTO>>> getMaintenance(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Maintenance.Status status
+    ) {
+
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+
+        Page<MaintenanceDetailDTO> maintenance = maintenanceService.getMaintenance(
+                currentUser.getId(), search,status, pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenance,page)));
+    }
 
     @PutMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> updateMaintenance(

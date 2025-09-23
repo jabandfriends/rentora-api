@@ -1,17 +1,26 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
+import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
+import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.repository.MaintenanceRepository;
+import com.rentora.api.specifications.ApartmentSpecification;
+import com.rentora.api.specifications.MaintenanceSpecification;
 import com.sun.tools.javac.Main;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
 import java.util.UUID;
 
 
@@ -21,6 +30,19 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
+
+    public Page<MaintenanceDetailDTO> getMaintenance(UUID apartmentId, String search, Maintenance.Status status, Pageable pageable) {
+
+
+        Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(search)).and(MaintenanceSpecification.hasStatus(status));
+        Page<Maintenance> maintenance = maintenanceRepository.findAll(pageable);
+
+        return maintenance.map(apartment -> {
+            MaintenanceDetailDTO dto = toMaintenanceDetailDto(apartment);
+
+            return dto;
+        });
+    }
 
     public ExecuteMaintenanceResponse updateMaintenance(UUID maintenanceId, UpdateMaintenanceRequest request) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
@@ -53,5 +75,31 @@ public class MaintenanceService {
         maintenanceRepository.delete(maintenance);
 
         log.info("maintenance deleted: {}", maintenance.getTitle());
+    }
+
+    private MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
+        MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
+        dto.setId(maintenance.getId());
+        dto.setTicketNumber(maintenance.getTicketNumber());
+        dto.setTitle(maintenance.getTitle());
+        dto.setDescription(maintenance.getDescription());
+        dto.setCategory(maintenance.getCategory().name());
+        dto.setStatus(maintenance.getStatus().name());
+        dto.setPriority(maintenance.getPriority().name());
+        dto.setRequestedDate(maintenance.getRequestedDate());
+        dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+        dto.setStartedAt(maintenance.getStartedAt());
+        dto.setCompletedAt(maintenance.getCompletedAt());
+        dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        dto.setEstimatedHours(maintenance.getEstimatedHours());
+        dto.setActualHours(maintenance.getActualHours());
+        dto.setEstimatedCost(maintenance.getEstimatedCost());
+        dto.setActualCost(maintenance.getActualCost());
+        dto.setWorkSummary(maintenance.getWorkSummary());
+        dto.setTenantFeedback(maintenance.getTenantFeedback());
+        dto.setTenantRating(maintenance.getTenantRating());
+        dto.setIsEmergency(maintenance.getIsEmergency());
+        dto.setIsRecurring(maintenance.getIsRecurring());
+        return dto;
     }
 }
