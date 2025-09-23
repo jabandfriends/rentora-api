@@ -8,6 +8,7 @@ import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ApartmentService;
 import jakarta.validation.Valid;
@@ -41,7 +42,9 @@ public class ApartmentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Apartment.ApartmentStatus status
+    ) {
 
         int requestedPage = Math.max(page - 1, 0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -51,7 +54,7 @@ public class ApartmentController {
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
         Page<ApartmentSummaryDTO> apartments = apartmentService.getApartments(
-                currentUser.getId(), search, pageable);
+                currentUser.getId(), search,status, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(apartments,page)));
     }

@@ -12,12 +12,14 @@ import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ApartmentSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 
@@ -53,14 +55,11 @@ public class ApartmentService {
 
     private final FloorRepository floorRepository;
 
-    public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Pageable pageable) {
-        Page<Apartment> apartments;
+    public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Apartment.ApartmentStatus status, Pageable pageable) {
 
-        if (search != null && !search.trim().isEmpty()) {
-            apartments = apartmentRepository.findByUserIdAndNameContaining(userId, search.trim(), pageable);
-        } else {
-            apartments = apartmentRepository.findByUserId(userId, pageable);
-        }
+
+        Specification<Apartment> spec = ApartmentSpecification.hasUserId(userId).and(ApartmentSpecification.hasName(search)).and(ApartmentSpecification.hasStatus(status));
+        Page<Apartment> apartments = apartmentRepository.findAll(spec, pageable);
 
         return apartments.map(apartment -> {
             ApartmentSummaryDTO dto = toApartmentSummaryDto(apartment);
