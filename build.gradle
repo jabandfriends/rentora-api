@@ -25,6 +25,10 @@ repositories {
 }
 
 dependencies {
+    //AWS
+    implementation 'software.amazon.awssdk:s3:2.25.14'
+    implementation 'software.amazon.awssdk:core:2.20.64'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -46,6 +50,8 @@ dependencies {
 
     // Spring AOP for custom annotations
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+
 
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

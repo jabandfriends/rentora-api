@@ -4,6 +4,7 @@ import com.rentora.api.model.entity.Apartment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ApartmentRepository extends JpaRepository<Apartment, UUID> {
+public interface ApartmentRepository extends JpaRepository<Apartment, UUID>, JpaSpecificationExecutor<Apartment> {
 
     @Query("SELECT a FROM Apartment a " +
             "JOIN a.apartmentUsers au " +
@@ -31,7 +32,7 @@ public interface ApartmentRepository extends JpaRepository<Apartment, UUID> {
     @Query("SELECT a FROM Apartment a " +
             "JOIN a.apartmentUsers au " +
             "WHERE au.user.id = :userId AND au.isActive = true " +
-            "AND a.name LIKE %:name%")
+            "AND LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     Page<Apartment> findByUserIdAndNameContaining(@Param("userId") UUID userId,
                                                   @Param("name") String name,
                                                   Pageable pageable);

@@ -1,11 +1,14 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ApartmentService;
 import jakarta.validation.Valid;
@@ -39,7 +42,9 @@ public class ApartmentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Apartment.ApartmentStatus status
+    ) {
 
         int requestedPage = Math.max(page - 1, 0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -49,7 +54,7 @@ public class ApartmentController {
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
         Page<ApartmentSummaryDTO> apartments = apartmentService.getApartments(
-                currentUser.getId(), search, pageable);
+                currentUser.getId(), search,status, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(apartments,page)));
     }
@@ -64,22 +69,22 @@ public class ApartmentController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ApartmentDetailDTO>> createApartment(
+    public ResponseEntity<ApiResponse<ExecuteApartmentResponse>> createApartment(
             @Valid @RequestBody CreateApartmentRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ApartmentDetailDTO apartment = apartmentService.createApartment(request, currentUser.getId());
+        ExecuteApartmentResponse apartment = apartmentService.createApartment(request, currentUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Apartment created successfully", apartment));
     }
 
     @PutMapping("/{apartmentId}")
-    public ResponseEntity<ApiResponse<ApartmentDetailDTO>> updateApartment(
+    public ResponseEntity<ApiResponse<ExecuteApartmentResponse>> updateApartment(
             @PathVariable UUID apartmentId,
             @Valid @RequestBody UpdateApartmentRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ApartmentDetailDTO apartment = apartmentService.updateApartment(apartmentId, request, currentUser.getId());
+        ExecuteApartmentResponse apartment = apartmentService.updateApartment(apartmentId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Apartment updated successfully", apartment));
     }
 
@@ -90,5 +95,11 @@ public class ApartmentController {
 
         apartmentService.deleteApartment(apartmentId, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Apartment deleted successfully", null));
+    }
+
+    @PostMapping("/setup/{apartmentId}")
+    public ResponseEntity<ApiResponse<Void>> setupApartment(@PathVariable UUID apartmentId , @Valid @RequestBody SetupApartmentRequest request, @AuthenticationPrincipal UserPrincipal currentUser) {
+        apartmentService.apartmentSetup(apartmentId, request, currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.success("Apartment setup successfully", null));
     }
 }
