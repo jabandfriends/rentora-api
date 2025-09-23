@@ -29,7 +29,6 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class BuildingController {
 
-
     private final BuildingService buildingService;
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<BuildingSummaryDto>>> getBuildings(
