@@ -11,4 +11,8 @@ public class BuildingDto {
 
     @Min(value = 1, message = "Total floor must be at least 1.")
     private Integer totalFloors;
+
+    @Min(value = 1, message = "Total floor must be at least 1.")
+    private Integer totalUnitPerFloor;
+
 }

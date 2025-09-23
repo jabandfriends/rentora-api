@@ -137,6 +137,19 @@ public class AuthService {
         log.info("Password changed for user: {}", user.getEmail());
     }
 
+    public void resetPassword(UUID userId, FirstTimePasswordResetRequestDto request) throws BadRequestException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        //new password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+
+        log.info("Password reset for user: {}", user.getEmail());
+
+    }
+
     public UserInfo getCurrentUser(UUID userId) {
         User user = userRepository.findByIdWithApartments(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
