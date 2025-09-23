@@ -20,8 +20,8 @@ public class UpdateMaintenanceRequest {
     private Maintenance.Priority priority;
 
     private OffsetDateTime appointmentDate;
-    private OffsetDateTime startDate;
-    private OffsetDateTime endDate;
+    private OffsetDateTime startAt;
+    private OffsetDateTime completedAt;
 
     @DecimalMin(value = "0.0", message = "estimatedHours cannot be negative")
     private BigDecimal estimatedHours;
