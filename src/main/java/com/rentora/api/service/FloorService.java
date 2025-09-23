@@ -1,8 +1,8 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.model.dto.Floor.Request.CreateFloorDto;
-import com.rentora.api.model.dto.Floor.Response.CreateFloorResponse;
+import com.rentora.api.model.dto.Floor.Request.CreateFloorRequestDto;
+import com.rentora.api.model.dto.Floor.Response.CreateFloorResponseDto;
 import com.rentora.api.model.entity.Building;
 import com.rentora.api.model.entity.Floor;
 import com.rentora.api.repository.BuildingRepository;
@@ -20,7 +20,7 @@ public class FloorService {
     private final FloorRepository floorRepository;
     private final BuildingRepository buildingRepository;
 
-    public CreateFloorResponse createFloor(CreateFloorDto request) {
+    public CreateFloorResponseDto createFloor(CreateFloorRequestDto request) {
         Building building = buildingRepository.findById(request.getBuildingId())
                 .orElseThrow(() -> new ResourceNotFoundException("Building not found"));
 
@@ -32,6 +32,6 @@ public class FloorService {
 
         Floor savedFloor = floorRepository.save(floor);
 
-        return new CreateFloorResponse(savedFloor.getId());
+        return new CreateFloorResponseDto(savedFloor.getId());
     }
 }

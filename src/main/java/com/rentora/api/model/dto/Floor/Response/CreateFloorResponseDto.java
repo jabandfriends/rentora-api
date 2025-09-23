@@ -7,6 +7,6 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class CreateFloorResponse {
+public class CreateFloorResponseDto {
     private UUID id; //floor
 }

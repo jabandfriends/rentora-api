@@ -1,9 +1,8 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
-import com.rentora.api.model.dto.Contract.Request.CreateContractRequest;
-import com.rentora.api.model.dto.Floor.Request.CreateFloorDto;
-import com.rentora.api.model.dto.Floor.Response.CreateFloorResponse;
+import com.rentora.api.model.dto.Floor.Request.CreateFloorRequestDto;
+import com.rentora.api.model.dto.Floor.Response.CreateFloorResponseDto;
 import com.rentora.api.service.FloorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +24,9 @@ public class FloorController {
     final private FloorService floorService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<CreateFloorResponse>> createFloor(@Valid @RequestBody CreateFloorDto request){
+    public ResponseEntity<ApiResponse<CreateFloorResponseDto>> createFloor(@Valid @RequestBody CreateFloorRequestDto request){
 
-        CreateFloorResponse response = floorService.createFloor(request);
+        CreateFloorResponseDto response = floorService.createFloor(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Create floor success", response));
     }
