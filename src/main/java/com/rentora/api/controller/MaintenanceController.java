@@ -4,12 +4,14 @@ package com.rentora.api.controller;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
+import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.MaintenanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -30,5 +32,11 @@ public class MaintenanceController {
 
         ExecuteMaintenanceResponse response = maintenanceService.updateMaintenance(maintenanceId, request);
         return ResponseEntity.ok(ApiResponse.success("Maintenance update successfully", response));
+    }
+
+    @DeleteMapping("/{maintenanceId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMaintenance(@PathVariable UUID apartmentId, @PathVariable UUID maintenanceId) {
+        maintenanceService.deleteMaintenance(maintenanceId);
+        return ResponseEntity.ok(ApiResponse.success("Maintenance delete successfully", null));
     }
 }

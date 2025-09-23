@@ -5,6 +5,7 @@ import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.repository.MaintenanceRepository;
+import com.sun.tools.javac.Main;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,5 +45,13 @@ public class MaintenanceService {
         log.info("Maintenance updated: {}", savedMaintenance.getTitle());
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
+    }
+
+    public void deleteMaintenance(UUID maintenanceId) {
+        Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
+        
+        maintenanceRepository.delete(maintenance);
+
+        log.info("maintenance deleted: {}", maintenance.getTitle());
     }
 }
