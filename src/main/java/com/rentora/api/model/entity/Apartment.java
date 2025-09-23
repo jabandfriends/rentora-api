@@ -90,8 +90,6 @@ public class Apartment {
         setup_incomplete,setup_in_progress,active,inactive
     }
 
-
-
     @CreationTimestamp
     private OffsetDateTime createdAt;
 
