@@ -16,13 +16,15 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/maintenance")
+@RequestMapping("/api/apartment/{apartmentId}/maintenance")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class MaintenanceController {
+
     private final MaintenanceService maintenanceService;
 
-    @PutMapping("{maintenanceId}")
+    @PutMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> updateMaintenance(
+            @PathVariable UUID apartmentId,
             @PathVariable UUID maintenanceId,
             @RequestBody @Valid UpdateMaintenanceRequest request) {
 

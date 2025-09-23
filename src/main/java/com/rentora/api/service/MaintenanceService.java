@@ -19,7 +19,7 @@ import java.util.UUID;
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class MaintenanceService {
-    private MaintenanceRepository maintenanceRepository;
+    private final MaintenanceRepository maintenanceRepository;
 
     public ExecuteMaintenanceResponse updateMaintenance(UUID maintenanceId, UpdateMaintenanceRequest request) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
