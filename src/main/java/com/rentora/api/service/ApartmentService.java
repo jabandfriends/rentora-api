@@ -51,6 +51,8 @@ public class ApartmentService {
 
     private final ApartmentPaymentRepository apartmentPaymentRepository;
 
+    private final FloorRepository floorRepository;
+
     public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Pageable pageable) {
         Page<Apartment> apartments;
 
@@ -252,6 +254,19 @@ public class ApartmentService {
             building.setName(buildingItem.getBuildingName());
             building.setTotalFloors(buildingItem.getTotalFloors());
             buildingRepository.save(building);
+
+
+            Integer totalFloors = buildingItem.getTotalFloors();
+            //save floors
+            for (Integer i = 1; i <= totalFloors; i++) {
+                Floor floor = new Floor();
+                floor.setBuilding(building);
+                floor.setFloorNumber(i);
+                floor.setFloorName("Floor " + i);
+                floor.setTotalUnits(buildingItem.getTotalUnitPerFloor());
+                floorRepository.save(floor);
+            }
+
         });
 
         //payment
@@ -264,6 +279,7 @@ public class ApartmentService {
         payment.setCreatedBy(createdByUser);
         apartmentPaymentRepository.save(payment);
 
+        // activate apartment
         apartment.setStatus(Apartment.ApartmentStatus.active);
         apartmentRepository.save(apartment);
 
