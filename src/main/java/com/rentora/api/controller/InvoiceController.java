@@ -41,20 +41,19 @@ public class InvoiceController {
         @AuthenticationPrincipal UserPrincipal currentUser,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int size,
-        @RequestParam(defaultValue = "status") String sortBy,
-        @RequestParam(defaultValue = "asc") String sortDir,
+//      @RequestParam(defaultValue = "status") String sortBy,
         @RequestParam(required = false) String search,
         @RequestParam(required = false) Invoice.PaymentStatus status){
 
 
         int requestedPage = Math.max(page - 1, 0);
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
+//        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+////                Sort.by(sortBy).descending() :
+////                Sort.by(sortBy).ascending();
 
-        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+        Pageable pageable = PageRequest.of(requestedPage, size);
 
-        Page<InvoiceSummaryDTO> invoices = invoiceService.search(search, status,pageable);
+        Page<InvoiceSummaryDTO> invoices = invoiceService.search(search, status, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(invoices,page)));
     }

@@ -2,6 +2,7 @@ package com.rentora.api.service;
 
 import java.util.UUID;
 
+import com.rentora.api.repository.InvoiceRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +26,8 @@ import com.rentora.api.model.dto.Invoice.Response.InvoiceSummaryDTO;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class InvoiceService {
 
-    private final InvoiceRepository {}
+    private final InvoiceRepository invoiceRepository;
+
     public Page<InvoiceSummaryDTO> search(String invoiceNumber,
                                 Invoice.PaymentStatus status,
                                 Pageable pageable) {
@@ -88,7 +90,7 @@ public class InvoiceService {
         dto.setAmount(invoice.getTotalAmount());
         // dto.setIssueDate(invoice.getIssueDate());
         dto.setDueDate(invoice.getDueDate());
-        dto.setStatus(invoice.getPaymentStatus());
+//        dto.setStatus(invoice.getPaymentStatus());
 
         return dto;
     }
