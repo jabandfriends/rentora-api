@@ -4,7 +4,6 @@ package com.rentora.api.controller;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
-import com.rentora.api.repository.MaintenanceRepository;
 import com.rentora.api.service.MaintenanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
