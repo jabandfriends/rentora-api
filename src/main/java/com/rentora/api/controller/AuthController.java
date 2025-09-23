@@ -59,6 +59,18 @@ public class AuthController {
         ));
     }
 
+    @PostMapping("/first-password")
+    public ResponseEntity<ApiResponse<Object>> firstPassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                                             @Valid @RequestBody FirstTimePasswordResetRequestDto requestDto) throws BadRequestException {
+        log.info("First Password reset request for user: {}", userPrincipal.getEmail());
+
+        authService.resetPassword(userPrincipal.getId(),requestDto);
+
+        return  ResponseEntity.ok(ApiResponse.success(
+                "Password reset successfully", null
+        ));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfo>> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         
