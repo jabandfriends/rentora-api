@@ -116,6 +116,11 @@ public class MaintenanceService {
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
     }
+    public MaintenanceDetailDTO getMaintenanceById(UUID maintenanceId) {
+        Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
+        return toMaintenanceDetailDto(maintenance);
+    }
 
     public void deleteMaintenance(UUID maintenanceId) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
