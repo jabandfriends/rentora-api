@@ -59,22 +59,22 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
 
-    @GetMapping("/unit-utilities")
-    public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
-            @PathVariable UUID apartmentId,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
-    ) {
-        int requestPage = Math.max(page-1, 0);
-
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
-
-        Pageable pageable = PageRequest.of(requestPage, size, sort);
-
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units, page)));
-    }
+//    @GetMapping("/unit-utilities")
+//    public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
+//            @PathVariable UUID apartmentId,
+//            @RequestParam(defaultValue = "1") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(defaultValue = "createdAt") String sortBy,
+//            @RequestParam(defaultValue = "desc") String sortDir
+//    ) {
+//        int requestPage = Math.max(page-1, 0);
+//
+//        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+//                Sort.by(sortBy).descending() :
+//                Sort.by(sortBy).ascending();
+//
+//        Pageable pageable = PageRequest.of(requestPage, size, sort);
+//
+//
+//    }
 }

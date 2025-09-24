@@ -8,6 +8,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -26,9 +28,8 @@ public class UnitUtilities {
     @JoinColumn(name = "utility_id", nullable = false)
     private Utility utility;
 
-    @UpdateTimestamp
     @Column(name = "reading_date")
-    private LocalDateTime readingDate;
+    private LocalDate readingDate;
 
     @Column(name = "meter_start")
     private BigDecimal meterStart;
