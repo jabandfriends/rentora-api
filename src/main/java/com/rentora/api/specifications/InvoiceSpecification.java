@@ -4,21 +4,23 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.rentora.api.model.entity.Invoice;
 
+import java.util.UUID;
+
 public final class InvoiceSpecification {
 
     private InvoiceSpecification() {}
 
-    public static Specification<Invoice> invoiceNumberContains(String invoiceNumber) {
-        return (root, query, cd) -> {
+    public static Specification<Invoice> hasInvoiceNumber(String invoiceNumber) {
+        return (root, query, criteriaBuilder) -> {
             if (invoiceNumber == null || invoiceNumber.isBlank()) return null;
             String like = "%" + invoiceNumber.trim().toLowerCase() + "%";
-            return cd.like(cd.lower(root.get("invoiceNumber")), like);
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("invoiceNumber")), like);
         };
     }
 
-    public static Specification<Invoice> status(Invoice.PaymentStatus status) {
-        return (root, query, cb) -> (status == null) ? null
-                : cb.equal(root.get("paymentStatus"), status);
+    public static Specification<Invoice> hasStatus(Invoice.PaymentStatus status) {
+        return (root, query, criteriaBuilder) -> (status == null) ? null
+                : criteriaBuilder.equal(root.get("paymentStatus"), status);
     }
 
 }

@@ -93,7 +93,7 @@ public class Invoice {
     private Boolean isRecurring = Boolean.TRUE;
 
     @Column(name = "pdf_url")
-    private String pdfUrl;
+    private String pdf;
 
     @Column(name = "sent_at")
     private OffsetDateTime sentAt;

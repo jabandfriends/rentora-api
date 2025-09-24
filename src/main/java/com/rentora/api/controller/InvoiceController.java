@@ -41,7 +41,7 @@ public class InvoiceController {
         @AuthenticationPrincipal UserPrincipal currentUser,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int size,
-//      @RequestParam(defaultValue = "status") String sortBy,
+//      @RequestParam(defaultValue = "status") String status,
         @RequestParam(required = false) String search,
         @RequestParam(required = false) Invoice.PaymentStatus status){
 
@@ -58,14 +58,14 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(invoices,page)));
     }
 
-    // @GetMapping("/{invoiceId}")
-    // public ResponseEntity<ApiResponse<InvoiceDTO>> getInvoicesById(
-    //     @PathVariable UUID invoiceId,
-    //     @AuthenticationPrincipal UserPrincipal currentUser) {
+     @GetMapping("/{invoiceId}")
+     public ResponseEntity<ApiResponse<InvoiceDetailDTO>> getInvoicesById(
+         @PathVariable UUID invoiceId,
+         @AuthenticationPrincipal UserPrincipal currentUser) {
 
-    //     InvoiceDTO invoiceDTO = invoiceService.getInvoicesById(invoiceId, currentUser.getId());
-    //     return ResponseEntity.ok(ApiResponse.success(invoiceDTO));
-    // }
+         InvoiceDetailDTO invoice = invoiceService.getInvoicesById(invoiceId, currentUser.getId());
+         return ResponseEntity.ok(ApiResponse.success(invoice));
+     }
 
     // @DeleteMapping("/{invoiceId}")
     // public ResponseEntity<ApiResponse<Void>> deleteInvoice(

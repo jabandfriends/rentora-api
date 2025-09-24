@@ -3,6 +3,7 @@ package com.rentora.api.service;
 import java.util.UUID;
 
 import com.rentora.api.repository.InvoiceRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -32,32 +33,21 @@ public class InvoiceService {
                                 Invoice.PaymentStatus status,
                                 Pageable pageable) {
         Specification<Invoice> specification = Specification
-                .anyOf(InvoiceSpecification.invoiceNumberContains(invoiceNumber),InvoiceSpecification.status(status));
+                .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status));
 
-        Page<Invoice> InvoiceDetail = invoiceRepository.findAll(specification, pageable);
+        Page<Invoice> InvoiceSummary = invoiceRepository.findAll(specification, pageable);
 
-        return InvoiceDetail.map(this::toInvoicesSummaryDTO);
+        return InvoiceSummary.map(this::toInvoicesSummaryDTO);
     }
-        
-    // public Page<InvoiceDTO> getInvoices(UUID userId, String search, Pageable pageable) {
-    //     Page<Invoice> invoices;
 
-    //     if (search != null && !search.trim().isEmpty()) {
+    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId) {
+        Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found or access denied"));
 
-    //         invoices = Specification.where(InvoiceSpecification.invoiceNumberContains(search));
-    //     } else {
+        InvoiceDetailDTO dto = toInvoicesDetailDTO(invoice);
 
-    //         invoices = invoiceRepository.getAllInvoices(userId, pageable);
-    //     }
-    //     return invoices.map(this::toInvoicesDTO);
-    // }
-
-//    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId, String search) {
-//        Invoice invoice = invoiceRepository.findById(invoiceId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
-//
-//        return toInvoicesDetailDTO(invoice);
-//    }
+        return dto;
+    }
 
     private InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
         InvoiceSummaryDTO dto = new InvoiceSummaryDTO();
@@ -70,7 +60,6 @@ public class InvoiceService {
 
         dto.setRoom(invoice.getUnit().toString());
         dto.setAmount(invoice.getTotalAmount());
-        // dto.setIssueDate(invoice.getIssueDate());
         dto.setDueDate(invoice.getDueDate());
         dto.setStatus(invoice.getPaymentStatus());
 
@@ -81,16 +70,33 @@ public class InvoiceService {
         InvoiceDetailDTO dto = new InvoiceDetailDTO();
         dto.setId(invoice.getId().toString());
         dto.setInvoiceNumber(invoice.getInvoiceNumber());
+        dto.setContract(invoice.getContract().toString());
+        dto.setStatus(invoice.getPaymentStatus());
+
+        dto.setRentalAmount(invoice.getRentAmount());
+        dto.setUtilAmount(invoice.getUtilAmount());
+        dto.setServiceAmount(invoice.getServiceAmount());
+        dto.setFeesAmount(invoice.getFeesAmount());
+        dto.setDiscountAmount(invoice.getDiscountAmount());
+        dto.setTaxAmount(invoice.getTaxAmount());
+        dto.setTotalAmount(invoice.getTotalAmount());
+        dto.setBillStart(invoice.getBillStart());
+        dto.setDueDate(invoice.getDueDate());
+
+        if (invoice.getApartment() != null) {
+            dto.setApartment(invoice.getApartment().toString());
+            dto.setUnit(invoice.getUnit().toString());
+            dto.setRoom(invoice.getUnit().toString());
+        }
 
         if (invoice.getTenant() != null) {
             dto.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
+            dto.setEmail(invoice.getTenant().getEmail());
         }
-
-        dto.setRoom(invoice.getUnit().toString());
-        dto.setAmount(invoice.getTotalAmount());
-        // dto.setIssueDate(invoice.getIssueDate());
-        dto.setDueDate(invoice.getDueDate());
-//        dto.setStatus(invoice.getPaymentStatus());
+        dto.setPdf(invoice.getPdf());
+        dto.setNotes(invoice.getNotes());
+        dto.setCreatedAt(invoice.getCreatedAt());
+        dto.setUpdatedAt(invoice.getUpdatedAt());
 
         return dto;
     }
