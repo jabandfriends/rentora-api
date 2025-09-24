@@ -23,7 +23,7 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
 
     Page<Contract> findByTenantId(UUID tenantId, Pageable pageable);
 
-    @Query("SELECT c FROM Contract c WHERE c.unit.id = :unitId AND c.status = 'ACTIVE'")
+    @Query("SELECT c FROM Contract c WHERE c.unit.id = :unitId AND c.status = 'active'")
     Optional<Contract> findActiveContractByUnitId(@Param("unitId") UUID unitId);
 
     @Query("SELECT COUNT(c) FROM Contract c " +
@@ -31,5 +31,10 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
             "JOIN u.floor f " +
             "JOIN f.building b " +
             "WHERE b.apartment.id = :apartmentId AND c.status = 'ACTIVE'")
+
+
+
     long countActiveByApartmentId(@Param("apartmentId") UUID apartmentId);
+
+
 }

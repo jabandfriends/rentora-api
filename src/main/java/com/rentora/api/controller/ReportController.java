@@ -5,6 +5,7 @@ import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.security.UserPrincipal;
+import com.rentora.api.service.ReportService;
 import com.rentora.api.service.UnitService;
 import com.rentora.api.utility.EnumUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,12 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/apartments/{apartmentId}/report")
+@RequestMapping("/api/apartments/report")
 @RequiredArgsConstructor
 public class ReportController {
 
     private final UnitService unitService;
+    private final ReportService reportService;
 
     @GetMapping("/unit")
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
@@ -59,22 +61,22 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
 
-//    @GetMapping("/unit-utilities")
-//    public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
-//            @PathVariable UUID apartmentId,
-//            @RequestParam(defaultValue = "1") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            @RequestParam(defaultValue = "createdAt") String sortBy,
-//            @RequestParam(defaultValue = "desc") String sortDir
-//    ) {
-//        int requestPage = Math.max(page-1, 0);
-//
-//        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-//                Sort.by(sortBy).descending() :
-//                Sort.by(sortBy).ascending();
-//
-//        Pageable pageable = PageRequest.of(requestPage, size, sort);
-//
-//
-//    }
+    @GetMapping("/unittest")
+    public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnits(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        int requestPage = Math.max(page-1, 0);
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestPage, size, sort);
+
+        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(pageable);
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
+    }
 }
