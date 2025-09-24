@@ -36,20 +36,11 @@ public class Unit {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "unit_type")
-    private UnitType unitType = UnitType.APARTMENT;
+    private UnitType unitType = UnitType.apartment;
 
     public enum UnitType {
-        APARTMENT,STUDIO,PENTHOUSE,COMMERCIAL;
 
-        @JsonValue
-        public String toValue() {
-            return name().toLowerCase();
-        }
-
-        @JsonCreator
-        public static UnitType fromValue(String value) {
-            return UnitType.valueOf(value.toUpperCase());
-        }
+        apartment,studio,penthouse,commercial
     }
 
     private Integer bedrooms = 1;

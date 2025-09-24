@@ -32,4 +32,6 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
             "JOIN f.building b " +
             "WHERE b.apartment.id = :apartmentId AND c.status = 'ACTIVE'")
     long countActiveByApartmentId(@Param("apartmentId") UUID apartmentId);
+
+    Optional<Contract> findByUnitId(UUID unitId);
 }

@@ -72,7 +72,7 @@ public class Contract {
     private String specialConditions;
 
     @Enumerated(EnumType.STRING)
-    private ContractStatus status = ContractStatus.ACTIVE;
+    private ContractStatus status = ContractStatus.active;
 
     @Column(name = "auto_renewal")
     private Boolean autoRenewal = false;
@@ -109,10 +109,10 @@ public class Contract {
     private LocalDateTime updatedAt;
 
     public enum RentalType {
-        DAILY, MONTHLY, YEARLY
+        daily,monthly,yearly
     }
 
     public enum ContractStatus {
-        DRAFT, ACTIVE, TERMINATED, EXPIRED, RENEWED
+        draft,active,terminated,expired,renewed
     }
 }

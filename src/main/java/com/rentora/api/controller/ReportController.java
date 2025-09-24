@@ -5,6 +5,7 @@ import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.security.UserPrincipal;
+import com.rentora.api.service.ReportService;
 import com.rentora.api.service.UnitService;
 import com.rentora.api.utility.EnumUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -26,6 +29,7 @@ import java.util.UUID;
 public class ReportController {
 
     private final UnitService unitService;
+    private final ReportService reportService;
 
     @GetMapping("/unit")
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
@@ -59,8 +63,10 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
 
+
+
 //    @GetMapping("/unit-utilities")
-//    public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
+//    public ResponseEntity<ApiResponse<List<ReportService.ReportUntiltyDetailDto>>> getUnits(
 //            @PathVariable UUID apartmentId,
 //            @RequestParam(defaultValue = "1") int page,
 //            @RequestParam(defaultValue = "10") int size,
@@ -75,6 +81,8 @@ public class ReportController {
 //
 //        Pageable pageable = PageRequest.of(requestPage, size, sort);
 //
+//        List<ReportService.ReportUntiltyDetailDto> response = reportService.getAllUnitsUtility(pageable);
 //
+//        return ResponseEntity.ok(ApiResponse.success(response));
 //    }
 }
