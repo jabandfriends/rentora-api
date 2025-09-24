@@ -68,7 +68,7 @@ public class InvoiceService {
 
         private InvoiceDetailDTO toInvoicesDetailDTO(Invoice invoice) {
         InvoiceDetailDTO dto = new InvoiceDetailDTO();
-        dto.setId(invoice.getId().toString());
+        dto.setId(invoice.getId());
         dto.setInvoiceNumber(invoice.getInvoiceNumber());
         dto.setContract(invoice.getContract().toString());
         dto.setStatus(invoice.getPaymentStatus());
