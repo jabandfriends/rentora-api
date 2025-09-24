@@ -8,5 +8,5 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 public class ExecuteMaintenanceResponse {
-    private UUID apartmentId;
+    private UUID maintenanceId;
 }
