@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.Tenant.Response;
 
+import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Unit;
 import lombok.AllArgsConstructor;
@@ -14,10 +15,12 @@ import java.util.UUID;
 public class TenantInfoDto {
 
     private UUID userId;
+    private UUID apartmentUserId;
     private String fullName;
     private String email;
     private String phoneNumber;
     private LocalDateTime createdAt;
+    private UserRole role;
 
     private boolean occupiedStatus;
 
