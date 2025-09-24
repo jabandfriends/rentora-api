@@ -1,8 +1,11 @@
 package com.rentora.api.controller;
 
 
+import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
@@ -19,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +41,7 @@ public class MaintenanceController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Maintenance.Status status
@@ -54,6 +58,15 @@ public class MaintenanceController {
                 currentUser.getId(), search,status, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenance,page)));
+    }
+
+    @PostMapping("/users/create")
+    public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenance(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @Valid @RequestBody CreateMaintenanceRequest request) {
+
+        ExecuteMaintenanceResponse response = maintenanceService.createMaintenance(currentUser.getId(), request);
+        return new ResponseEntity<>(ApiResponse.success("Maintenance request created successfully", response), HttpStatus.CREATED);
     }
 
     @PutMapping("/{maintenanceId}")

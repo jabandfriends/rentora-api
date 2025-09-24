@@ -2,12 +2,17 @@ package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Maintenance;
+import com.rentora.api.model.entity.Unit;
+import com.rentora.api.model.entity.User;
 import com.rentora.api.repository.MaintenanceRepository;
+import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.repository.UserRepository;
 import com.rentora.api.specifications.ApartmentSpecification;
 import com.rentora.api.specifications.MaintenanceSpecification;
 import com.sun.tools.javac.Main;
@@ -30,6 +35,8 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
+    private final UserRepository userRepository;
+    private final UnitRepository unitRepository;
 
     public Page<MaintenanceDetailDTO> getMaintenance(UUID apartmentId, String search, Maintenance.Status status, Pageable pageable) {
 
@@ -37,11 +44,52 @@ public class MaintenanceService {
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(search)).and(MaintenanceSpecification.hasStatus(status));
         Page<Maintenance> maintenance = maintenanceRepository.findAll(pageable);
 
-        return maintenance.map(apartment -> {
-            MaintenanceDetailDTO dto = toMaintenanceDetailDto(apartment);
+        return maintenance.map(maintenances -> {
+            MaintenanceDetailDTO dto = toMaintenanceDetailDto(maintenances);
 
             return dto;
         });
+    }
+
+    public ExecuteMaintenanceResponse createMaintenance(UUID createByUserId, CreateMaintenanceRequest request) {
+        // 1. Fetch related entities from the database.
+//        User createdByUser = userRepository.findById(createByUserId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Creator user not found with ID: " + createByUserId));
+
+        Unit unit = unitRepository.findById(request.getUnitId())
+                .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
+
+        User tenantUser = userRepository.findById(request.getTenantUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + request.getTenantUserId()));
+
+        // 2. Create a new Maintenance entity and map data.
+        Maintenance maintenance = new Maintenance();
+
+        //  from the DTO.
+        maintenance.setTicketNumber(request.getTicketName()); // Implement your own logic for ticket number
+        maintenance.setTitle(request.getTitle());
+        maintenance.setDescription(request.getDescription());
+        maintenance.setCategory(request.getCategory());
+        maintenance.setPriority(request.getPriority());
+        maintenance.setAppointmentDate(request.getAppointmentDate());
+        maintenance.setEstimatedHours(request.getEstimatedHours());
+        maintenance.setEstimatedCost(request.getEstimatedCost());
+        maintenance.setIsEmergency(request.getIsEmergency());
+        maintenance.setIsRecurring(request.getIsRecurring());
+        maintenance.setRecurringSchedule(request.getRecurringSchedule());
+        if (request.getStatus() != null) {
+            maintenance.setStatus(request.getStatus());
+        }
+
+        Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
+
+       //connect to other
+//        maintenance.setUser(createdByUser);
+        maintenance.setUnit(unit);
+        maintenance.setTenantUser(tenantUser);
+
+        return new ExecuteMaintenanceResponse(savedMaintenance.getId());
+
     }
 
     public ExecuteMaintenanceResponse updateMaintenance(UUID maintenanceId, UpdateMaintenanceRequest request) {
@@ -87,10 +135,21 @@ public class MaintenanceService {
         dto.setStatus(maintenance.getStatus().name());
         dto.setPriority(maintenance.getPriority().name());
         dto.setRequestedDate(maintenance.getRequestedDate());
-        dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
-        dto.setStartedAt(maintenance.getStartedAt());
-        dto.setCompletedAt(maintenance.getCompletedAt());
-        dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        if (maintenance.getAppointmentDate() != null) {
+            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+        }
+        if (maintenance.getStartedAt() != null) {
+            dto.setStartedAt(maintenance.getStartedAt());
+        }
+
+        if (maintenance.getCompletedAt() != null) {
+            dto.setCompletedAt(maintenance.getCompletedAt());
+        }
+
+        // Add a null check for getDueDate() as well
+        if (maintenance.getDueDate() != null) {
+            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        }
         dto.setEstimatedHours(maintenance.getEstimatedHours());
         dto.setActualHours(maintenance.getActualHours());
         dto.setEstimatedCost(maintenance.getEstimatedCost());

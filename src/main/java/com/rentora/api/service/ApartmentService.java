@@ -12,6 +12,7 @@ import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;
+import com.rentora.api.repository.UserRepository;
 import com.rentora.api.specifications.ApartmentSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
