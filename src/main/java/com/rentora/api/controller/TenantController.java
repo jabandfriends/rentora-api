@@ -44,14 +44,16 @@ public class TenantController {
     private final ApartmentUserService  apartmentUserService;
     @GetMapping("/{apartmentId}")
     public ResponseEntity<ApiResponse<TenantPageResponse>> getTenants(@PathVariable UUID apartmentId, @RequestParam(defaultValue = "1") int page,
-                                                                                         @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir){
+                                                                                         @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir,@RequestParam(required = false) String isActive){
         int requestedPage = Math.max(page - 1, 0);
+
+
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(requestedPage, size,sort);
 
-        TenantPageResponse tenants = tenantService.getTenants(name,apartmentId, pageable);
+        TenantPageResponse tenants = tenantService.getTenants(isActive,name,apartmentId, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(tenants));
 

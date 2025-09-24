@@ -36,8 +36,13 @@ public class TenantService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public TenantPageResponse getTenants(String name,UUID apartmentId,Pageable pageable) {
-        Specification<ApartmentUser> spec = ApartmentUserSpecification.hasApartmentId(apartmentId).and(ApartmentUserSpecification.isActive()).and(ApartmentUserSpecification.hasName(name));
+    public TenantPageResponse getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
+
+        Specification<ApartmentUser> spec = ApartmentUserSpecification.hasApartmentId(apartmentId).and(ApartmentUserSpecification.hasName(name));
+        if(status != null) {
+            log.info("status:{}",status);
+            spec = spec.and(ApartmentUserSpecification.hasStatus(status.equals("active")));
+        }
         Page<ApartmentUser>  apartmentUsers = apartmentUserRepository.findAll(spec, pageable);
 
         List<TenantInfoDto> tenantDtos = apartmentUsers.map(TenantService::toTenantInfoDto).getContent();
@@ -76,6 +81,8 @@ public class TenantService {
         tenant.setUserId(user.getUser().getId());
         tenant.setApartmentUserId(user.getId());
         tenant.setRole(user.getRole());
+        tenant.setAccountStatus(user.getIsActive());
+
 
 
         List<Contract> contracts = user.getUser().getContracts();
