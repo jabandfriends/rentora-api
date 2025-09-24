@@ -69,9 +69,6 @@ public class Apartment {
     private String timezone = "Asia/Bangkok";
 
     @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private List<ApartmentUser> apartmentUsers;
 
     @Column(name = "currency", length = 3)
@@ -90,7 +87,8 @@ public class Apartment {
         setup_incomplete,setup_in_progress,active,inactive
     }
 
-
+    @OneToMany(mappedBy = "apartment", fetch = FetchType.LAZY)
+    List<Building> buildings;
 
     @CreationTimestamp
     private OffsetDateTime createdAt;
