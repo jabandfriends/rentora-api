@@ -120,6 +120,30 @@ public class AuthService {
         return createUserInfo(savedUser);
     }
 
+    public void updateUser(UUID userId,UpdateUserRequestDto request) throws BadRequestException {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            boolean isExistEmail = userRepository.existsByEmail(request.getEmail().toLowerCase().trim());
+            if (isExistEmail) {
+                throw new BadRequestException("Email is already in use");
+            }
+        }
+        if (request.getFirstName() != null && !request.getFirstName().isEmpty()) { user.setFirstName(request.getFirstName()); }
+        if (request.getLastName() != null && !request.getLastName().isEmpty()) { user.setLastName(request.getLastName()); }
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) { user.setEmail(request.getEmail()); }
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) { user.setPhoneNumber(request.getPhoneNumber()); }
+        if (request.getBirthDate() != null){ user.setBirthDate(request.getBirthDate()); }
+        if(request.getNationalId() != null && !request.getNationalId().isEmpty()){ user.setNationalId(request.getNationalId()); }
+        if(request.getPassword() != null && !request.getPassword().isEmpty()) { user.setPasswordHash(passwordEncoder.encode(request.getPassword()));}
+        if(request.getEmergencyContactName() != null && !request.getEmergencyContactName().isEmpty()) { user.setEmergencyContactName(request.getEmergencyContactName()); }
+        if(request.getEmergencyContactPhone() != null && !request.getEmergencyContactPhone().isEmpty()) { user.setEmergencyContactPhone(request.getEmergencyContactPhone()); }
+
+        User savedUser =userRepository.save(user);
+
+        log.info("User updated: {}", savedUser.getEmail());
+    }
+
     public void changePassword(UUID userId, ChangePasswordRequest request) throws BadRequestException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -166,6 +190,8 @@ public class AuthService {
         userInfo.setPhoneNumber(user.getPhoneNumber());
         userInfo.setProfileImageUrl(user.getProfileImageUrl());
         userInfo.setMustChangePassword(user.getMustChangePassword() != null && user.getMustChangePassword());
+        userInfo.setBirthDate(user.getBirthDate());
+        userInfo.setNationalId(user.getNationalId());
         userInfo.setLastLogin(user.getLastLogin() != null ? user.getLastLogin().toString() : null);
 
         // Map apartment roles

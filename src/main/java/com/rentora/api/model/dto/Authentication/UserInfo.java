@@ -2,6 +2,8 @@ package com.rentora.api.model.dto.Authentication;
 
 import lombok.Data;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -13,6 +15,8 @@ public class UserInfo {
     private String phoneNumber;
     private String profileImageUrl;
     private boolean mustChangePassword;
+    private LocalDate birthDate;
+    private String nationalId;
     private String lastLogin;
     private List<ApartmentRole> apartmentRoles;
 
