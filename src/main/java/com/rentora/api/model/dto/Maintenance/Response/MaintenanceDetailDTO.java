@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.Maintenance.Response;
 
+import com.rentora.api.model.entity.Maintenance;
 import lombok.Data;
 
 import java.util.UUID;
@@ -16,9 +17,9 @@ public class MaintenanceDetailDTO {
     private UUID assignedToUserId;
     private String title;
     private String description;
-    private String category;
-    private String status;
-    private String priority;
+    private Maintenance.Category category;
+    private Maintenance.Status status;
+    private Maintenance.Priority priority;
     private LocalDate requestedDate;
     private LocalDate appointmentDate;
     private OffsetDateTime startedAt;
