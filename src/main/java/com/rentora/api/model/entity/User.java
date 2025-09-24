@@ -75,6 +75,9 @@ public class User {
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
 
+    @OneToMany(mappedBy = "tenant",fetch = FetchType.LAZY)
+    List<Contract> contracts;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
