@@ -20,7 +20,7 @@ public class ApartmentUserSpecification {
         return (root,query,criteriaBuilder)-> name == null ? null : criteriaBuilder.like(root.get("user").get("firstName"), "%" + name + "%");
     }
 
-    public static Specification<ApartmentUser> isActive() {
-        return (root,query,criteriaBuilder)-> criteriaBuilder.equal(root.get("isActive"), true);
+    public static Specification<ApartmentUser> hasStatus(boolean active) {
+        return (root,query,criteriaBuilder)-> criteriaBuilder.equal(root.get("isActive"), active);
     }
 }

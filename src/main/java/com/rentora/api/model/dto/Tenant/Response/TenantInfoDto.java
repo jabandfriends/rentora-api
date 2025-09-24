@@ -21,6 +21,7 @@ public class TenantInfoDto {
     private String phoneNumber;
     private LocalDateTime createdAt;
     private UserRole role;
+    private boolean accountStatus;
 
     private boolean occupiedStatus;
 
