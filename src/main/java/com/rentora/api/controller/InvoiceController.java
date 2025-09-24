@@ -38,17 +38,18 @@ public class InvoiceController {
         @AuthenticationPrincipal UserPrincipal currentUser,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int size,
-//      @RequestParam(defaultValue = "status") String status,
         @RequestParam(required = false) String search,
+        @RequestParam(defaultValue = "desc") String sortDir,
+        @RequestParam(defaultValue = "createdAt") String sortBy,
         @RequestParam(required = false) Invoice.PaymentStatus status){
 
 
         int requestedPage = Math.max(page - 1, 0);
-//        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-////                Sort.by(sortBy).descending() :
-////                Sort.by(sortBy).ascending();
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
 
-        Pageable pageable = PageRequest.of(requestedPage, size);
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
         Page<InvoiceSummaryDTO> invoices = invoiceService.search(search, status, pageable);
 
@@ -58,18 +59,10 @@ public class InvoiceController {
      @GetMapping("/{invoiceId}")
      public ResponseEntity<ApiResponse<InvoiceDetailDTO>> getInvoicesById(
          @PathVariable UUID invoiceId,
-         @Valid @RequestBody UpdateApartmentRequest request,
          @AuthenticationPrincipal UserPrincipal currentUser) {
 
          InvoiceDetailDTO invoice = invoiceService.getInvoicesById(invoiceId, currentUser.getId());
          return ResponseEntity.ok(ApiResponse.success(invoice));
      }
 
-    // @DeleteMapping("/{invoiceId}")
-    // public ResponseEntity<ApiResponse<Void>> deleteInvoice(
-    //     @PathVariable UUID invoiceId,
-    //     @AuthenticationPrincipal UserPrincipal currentUser) {
-    //     invoiceService.deleteInvoice(invoiceId, currentUser.getId());
-    //     return ResponseEntity.ok(ApiResponse.success("Invoice deleted successfully", null));
-    // }
 }

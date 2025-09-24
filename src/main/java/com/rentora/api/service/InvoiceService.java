@@ -35,9 +35,9 @@ public class InvoiceService {
         Specification<Invoice> specification = Specification
                 .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status));
 
-        Page<Invoice> InvoiceSummary = invoiceRepository.findAll(specification, pageable);
+        Page<Invoice> allInvoice = invoiceRepository.findAll(specification, pageable);
 
-        return InvoiceSummary.map(this::toInvoicesSummaryDTO);
+        return allInvoice.map(this::toInvoicesSummaryDTO);
     }
 
     public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId) {
@@ -51,15 +51,17 @@ public class InvoiceService {
 
     private InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
         InvoiceSummaryDTO dto = new InvoiceSummaryDTO();
-        dto.setId(invoice.getId().toString());
+        dto.setId(invoice.getId());
         dto.setInvoiceNumber(invoice.getInvoiceNumber());
+
 
         if (invoice.getTenant() != null) {
             dto.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
         }
 
-        dto.setRoom(invoice.getUnit().toString());
+        dto.setRoom(invoice.getUnit().getUnitName());
         dto.setAmount(invoice.getTotalAmount());
+        dto.setIssueDate(invoice.getBillStart());
         dto.setDueDate(invoice.getDueDate());
         dto.setStatus(invoice.getPaymentStatus());
 
@@ -70,7 +72,7 @@ public class InvoiceService {
         InvoiceDetailDTO dto = new InvoiceDetailDTO();
         dto.setId(invoice.getId());
         dto.setInvoiceNumber(invoice.getInvoiceNumber());
-        dto.setContract(invoice.getContract().toString());
+        dto.setContract(invoice.getContract().getContractNumber());
         dto.setStatus(invoice.getPaymentStatus());
 
         dto.setRentalAmount(invoice.getRentAmount());
@@ -84,9 +86,9 @@ public class InvoiceService {
         dto.setDueDate(invoice.getDueDate());
 
         if (invoice.getApartment() != null) {
-            dto.setApartment(invoice.getApartment().toString());
-            dto.setUnit(invoice.getUnit().toString());
-            dto.setRoom(invoice.getUnit().toString());
+            dto.setApartment(invoice.getApartment().getName());
+            dto.setUnit(invoice.getUnit().getFloor().getFloorName());
+            dto.setRoom(invoice.getUnit().getUnitName());
         }
 
         if (invoice.getTenant() != null) {

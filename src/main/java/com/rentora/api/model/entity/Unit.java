@@ -36,10 +36,10 @@ public class Unit {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "unit_type")
-    private UnitType unitType = UnitType.APARTMENT;
+    private UnitType unitType = UnitType.apartment;
 
     public enum UnitType {
-        APARTMENT,STUDIO,PENTHOUSE,COMMERCIAL;
+        apartment,studio,penthouse,commercial;
 
         @JsonValue
         public String toValue() {

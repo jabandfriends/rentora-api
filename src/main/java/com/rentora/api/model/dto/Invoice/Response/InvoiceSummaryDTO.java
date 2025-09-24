@@ -3,13 +3,14 @@ package com.rentora.api.model.dto.Invoice.Response;
 import com.rentora.api.model.entity.Invoice;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import lombok.Data;
 
 @Data
 public class InvoiceSummaryDTO {
     
-    private String id;
+    private UUID id;
     private String invoiceNumber;
     private String tenant;
     private String room;
