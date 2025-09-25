@@ -22,16 +22,9 @@ public class TenantInfoDto {
     private LocalDateTime createdAt;
     private UserRole role;
     private boolean accountStatus;
-
     private boolean occupiedStatus;
-
     private String unitName;
 
-    public static class ContractDto {
-        private UUID contractId;
-        private String status;
-        private LocalDate startDate;
-        private LocalDate endDate;
-    }
+
 
 }
