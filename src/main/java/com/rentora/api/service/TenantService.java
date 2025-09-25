@@ -53,8 +53,9 @@ public class TenantService {
     public TenantsMetadataResponseDto getTenantsMetadata(List<TenantInfoDto> tenantInfoDto) {
         TenantsMetadataResponseDto tenantsMetadataResponseDto = new TenantsMetadataResponseDto();
         tenantsMetadataResponseDto.setTotalTenants(tenantInfoDto.size());
-        tenantsMetadataResponseDto.setTotalOccupiedTenant(tenantInfoDto.stream().filter(TenantInfoDto::isOccupiedStatus).count());
-        tenantsMetadataResponseDto.setTotalUnOccupiedTenant(tenantInfoDto.stream().filter(tenant->!tenant.isOccupiedStatus()).count());
+        tenantsMetadataResponseDto.setTotalOccupiedTenants(tenantInfoDto.stream().filter(TenantInfoDto::isOccupiedStatus).count());
+        tenantsMetadataResponseDto.setTotalUnoccupiedTenants(tenantInfoDto.stream().filter(tenant->!tenant.isOccupiedStatus()).count());
+        tenantsMetadataResponseDto.setTotalActiveTenants(tenantInfoDto.stream().filter(TenantInfoDto::isAccountStatus).count());
         return tenantsMetadataResponseDto;
     }
 

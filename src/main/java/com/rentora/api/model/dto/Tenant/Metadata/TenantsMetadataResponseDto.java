@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class TenantsMetadataResponseDto {
     private Integer totalTenants;
-    private long totalOccupiedTenant;
-    private long totalUnOccupiedTenant;
+    private long totalOccupiedTenants;
+    private long totalUnoccupiedTenants;
+    private long totalActiveTenants;
 }
