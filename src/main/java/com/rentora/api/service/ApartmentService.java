@@ -240,7 +240,7 @@ public class ApartmentService {
         //apartment water utility
         Utility waterUtility = new Utility();
         waterUtility.setApartment(apartment);
-        waterUtility.setUtilityName("Water Utility");
+        waterUtility.setUtilityName("water");
         waterUtility.setUtilityType(request.getWaterType());
         waterUtility.setCategory(Utility.Category.utility);
         waterUtility.setUnitPrice(request.getWaterPrice());
@@ -250,7 +250,7 @@ public class ApartmentService {
         //apartment electric utility
         Utility electricityUtility = new Utility();
         electricityUtility.setApartment(apartment);
-        electricityUtility.setUtilityName("Electricity Utility");
+        electricityUtility.setUtilityName("electric");
         electricityUtility.setUtilityType(request.getElectricityType());
         electricityUtility.setCategory(Utility.Category.utility);
         electricityUtility.setUnitPrice(request.getElectricityPrice());
