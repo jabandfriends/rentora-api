@@ -8,6 +8,8 @@ import com.rentora.api.model.dto.Authentication.UpdateUserRequestDto;
 import com.rentora.api.model.dto.Authentication.UserInfo;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.CreateApartmentUserResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantInfoDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantPageResponse;
@@ -43,8 +45,8 @@ public class TenantController {
     private final AuthService authService;
     private final ApartmentUserService  apartmentUserService;
     @GetMapping("/{apartmentId}")
-    public ResponseEntity<ApiResponse<TenantPageResponse>> getTenants(@PathVariable UUID apartmentId, @RequestParam(defaultValue = "1") int page,
-                                                                                         @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir,@RequestParam(required = false) String isActive){
+    public ResponseEntity<ApiResponse<PaginatedResponse<TenantInfoDto>>> getTenants(@PathVariable UUID apartmentId, @RequestParam(defaultValue = "1") int page,
+                                                                                 @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir, @RequestParam(required = false) String isActive){
         int requestedPage = Math.max(page - 1, 0);
 
 
@@ -53,9 +55,10 @@ public class TenantController {
                 Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(requestedPage, size,sort);
 
-        TenantPageResponse tenants = tenantService.getTenants(isActive,name,apartmentId, pageable);
+        Page<TenantInfoDto> tenants = tenantService.getTenants(isActive,name,apartmentId, pageable);
+        TenantsMetadataResponseDto tenantInfoDto = tenantService.getTenantsMetadata(tenants.getContent());
 
-        return ResponseEntity.ok(ApiResponse.success(tenants));
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(tenants,page,tenantInfoDto)));
 
     }
 
