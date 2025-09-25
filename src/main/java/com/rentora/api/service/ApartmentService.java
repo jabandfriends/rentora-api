@@ -1,5 +1,6 @@
 package com.rentora.api.service;
 
+import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -76,6 +78,15 @@ public class ApartmentService {
 
             return dto;
         });
+    }
+    public ApartmentMetadataDto getApartmentsMetadata(List<ApartmentSummaryDTO> apartments) {
+        ApartmentMetadataDto apartmentMetadataResponse = new ApartmentMetadataDto();
+        apartmentMetadataResponse.setTotalApartments(apartments.size());
+        long totalActiveApartments = apartments.stream()
+                .filter(apartment -> apartment.getStatus() == Apartment.ApartmentStatus.active)
+                .count();
+        apartmentMetadataResponse.setTotalActiveApartments(totalActiveApartments);
+        return apartmentMetadataResponse;
     }
 
     public ApartmentDetailDTO getApartmentById(UUID apartmentId, UUID userId) {

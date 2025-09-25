@@ -5,6 +5,7 @@ import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ForbiddenRoleException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.Authentication.FirstTimePasswordResetRequestDto;
+import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantInfoDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantPageResponse;
 import com.rentora.api.model.entity.ApartmentUser;
@@ -36,7 +37,7 @@ public class TenantService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public TenantPageResponse getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
+    public Page<TenantInfoDto> getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
 
         Specification<ApartmentUser> spec = ApartmentUserSpecification.hasApartmentId(apartmentId).and(ApartmentUserSpecification.hasName(name));
         if(status != null) {
@@ -45,22 +46,18 @@ public class TenantService {
         }
         Page<ApartmentUser>  apartmentUsers = apartmentUserRepository.findAll(spec, pageable);
 
-        List<TenantInfoDto> tenantDtos = apartmentUsers.map(TenantService::toTenantInfoDto).getContent();
-        long occupiedCount = tenantDtos.stream().filter(TenantInfoDto::isOccupiedStatus).count();
-        long totalTenants = apartmentUsers.getTotalElements();
-        long unoccupiedCount = totalTenants - occupiedCount;
 
-        // Wrap everything in response
-        TenantPageResponse response = new TenantPageResponse();
-        response.setTenants(tenantDtos);
-        response.setTotalTenants(totalTenants);
-        response.setOccupiedCount(occupiedCount);
-        response.setUnoccupiedCount(unoccupiedCount);
-        response.setCurrentPage(apartmentUsers.getNumber());
-        response.setTotalPages(apartmentUsers.getTotalPages());
-
-        return response;
+        return apartmentUsers.map(this::toTenantInfoDto);
     }
+
+    public TenantsMetadataResponseDto getTenantsMetadata(List<TenantInfoDto> tenantInfoDto) {
+        TenantsMetadataResponseDto tenantsMetadataResponseDto = new TenantsMetadataResponseDto();
+        tenantsMetadataResponseDto.setTotalTenants(tenantInfoDto.size());
+        tenantsMetadataResponseDto.setTotalOccupiedTenant(tenantInfoDto.stream().filter(TenantInfoDto::isOccupiedStatus).count());
+        tenantsMetadataResponseDto.setTotalUnOccupiedTenant(tenantInfoDto.stream().filter(tenant->!tenant.isOccupiedStatus()).count());
+        return tenantsMetadataResponseDto;
+    }
+
     public void changePassword(UUID userId, FirstTimePasswordResetRequestDto request) throws BadRequestException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -73,7 +70,7 @@ public class TenantService {
 
     }
 
-    public static TenantInfoDto toTenantInfoDto(ApartmentUser user){
+    public TenantInfoDto toTenantInfoDto(ApartmentUser user){
         TenantInfoDto tenant = new TenantInfoDto();
         tenant.setFullName(user.getUser().getFullName());
         tenant.setEmail(user.getUser().getEmail());

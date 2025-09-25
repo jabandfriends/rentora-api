@@ -39,17 +39,9 @@ public class Unit {
     private UnitType unitType = UnitType.apartment;
 
     public enum UnitType {
-        apartment,studio,penthouse,commercial;
+        apartment,studio,penthouse,commercial
 
-        @JsonValue
-        public String toValue() {
-            return name().toLowerCase();
-        }
 
-        @JsonCreator
-        public static UnitType fromValue(String value) {
-            return UnitType.valueOf(value.toUpperCase());
-        }
     }
 
     private Integer bedrooms = 1;

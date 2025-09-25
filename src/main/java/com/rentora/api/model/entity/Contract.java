@@ -109,10 +109,10 @@ public class Contract {
     private LocalDateTime updatedAt;
 
     public enum RentalType {
-        daily, monthly, yearly
+        daily,monthly,yearly
     }
 
     public enum ContractStatus {
-        draft, active, terminated, expired, renewed
+        draft,active,terminated,expired,renewed
     }
 }
