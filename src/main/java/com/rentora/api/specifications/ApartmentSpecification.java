@@ -12,7 +12,14 @@ import java.util.UUID;
 public class ApartmentSpecification {
     //name
     public static Specification<Apartment> hasName(String name) {
-        return (root,query,criteriaBuilder)-> name == null ? null : criteriaBuilder.like(root.get("name").as(String.class), "%" + name + "%");
+        return (root, query, criteriaBuilder) -> {
+            if (name == null || name.isBlank()) return null;
+
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("name")),
+                    "%" + name.toLowerCase() + "%"
+            );
+        };
     }
 
     //status
