@@ -65,12 +65,12 @@ public class MaintenanceService {
                         .filter(dto -> dto.getStatus().equals(Maintenance.Status.pending.name()))
                         .count()
         );
-        maintenanceMetadataResponseDto.setPendingCount(
+        maintenanceMetadataResponseDto.setInProgressCount(
                 maintenanceDetailDto.stream()
                         .filter(dto -> dto.getStatus().equals(Maintenance.Status.in_progress.name()))
                         .count()
         );
-        maintenanceMetadataResponseDto.setPendingCount(
+        maintenanceMetadataResponseDto.setAssignedCount(
                 maintenanceDetailDto.stream()
                         .filter(dto -> dto.getStatus().equals(Maintenance.Status.assigned.name()))
                         .count()
