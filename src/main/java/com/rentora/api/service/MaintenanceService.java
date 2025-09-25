@@ -2,6 +2,7 @@ package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
@@ -42,40 +43,66 @@ public class MaintenanceService {
     private final UserRepository userRepository;
     private final UnitRepository unitRepository;
 
-    public MaintenancePageResponse getMaintenance(UUID apartmentId, String search, Maintenance.Status status, Pageable pageable) {
+    public Page<MaintenanceDetailDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
 
 
-        Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(search)).and(MaintenanceSpecification.hasStatus(status));
-
+        Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name));
         //status check
-        if(status != null) {
+        if (status != null) {
             log.info("status: {}", status);
             spec = spec.and(MaintenanceSpecification.hasStatus(status));
         }
-        Page<Maintenance> maintenance = maintenanceRepository.findAll(pageable);
+        Page<Maintenance> maintenance = maintenanceRepository.findAll(spec, pageable);
 
-        List<MaintenanceDetailDTO> maintenanceDTOS = maintenance.map(MaintenanceService::toMaintenanceDetailDto).getContent();
-        long totalMaintenance = maintenance.getTotalElements();
-        long pending = maintenance.stream()
-                .filter(m -> m.getStatus() == Maintenance.Status.pending)
-                .count();
-        long in_progress = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.in_progress).count();
-        long assigned = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.assigned).count();
+        return maintenance.map(this::toMaintenanceDetailDto);
+    }
 
-//        return maintenance.map(maintenances -> {
-//            MaintenanceDetailDTO dto = toMaintenanceDetailDto(maintenances);
-        // Create the response object and populate it
-        MaintenancePageResponse response = new MaintenancePageResponse();
-        response.setMaintenances(maintenanceDTOS);
-        response.setTotalMaintenance(totalMaintenance);
-        response.setPendingCount(pending);
-        response.setAssignedCount(assigned);
-        response.setInProgressCount(in_progress);
-        response.setCurrentPage(maintenance.getNumber());
-        response.setTotalPages(maintenance.getTotalPages());
+    public MaintenanceMetadataResponseDto getMaintenanceMetadata(List<MaintenanceDetailDTO> maintenanceDetailDto) {
+        MaintenanceMetadataResponseDto maintenanceMetadataResponseDto = new MaintenanceMetadataResponseDto();
+        maintenanceMetadataResponseDto.setTotalMaintenance(maintenanceDetailDto.size());
+        maintenanceMetadataResponseDto.setPendingCount(
+                maintenanceDetailDto.stream()
+                        .filter(dto -> dto.getStatus().equals(Maintenance.Status.pending.name()))
+                        .count()
+        );
+        maintenanceMetadataResponseDto.setPendingCount(
+                maintenanceDetailDto.stream()
+                        .filter(dto -> dto.getStatus().equals(Maintenance.Status.in_progress.name()))
+                        .count()
+        );
+        maintenanceMetadataResponseDto.setPendingCount(
+                maintenanceDetailDto.stream()
+                        .filter(dto -> dto.getStatus().equals(Maintenance.Status.assigned.name()))
+                        .count()
+        );
 
-        return response;
-    };
+        return maintenanceMetadataResponseDto;
+
+    }
+
+
+//        List<MaintenanceDetailDTO> maintenanceDTOS = maintenance.map(MaintenanceService::toMaintenanceDetailDto).getContent();
+//        long totalMaintenance = maintenance.getTotalElements();
+//        long pending = maintenance.stream()
+//                .filter(m -> m.getStatus() == Maintenance.Status.pending)
+//                .count();
+//        long in_progress = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.in_progress).count();
+//        long assigned = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.assigned).count();
+//
+////        return maintenance.map(maintenances -> {
+////            MaintenanceDetailDTO dto = toMaintenanceDetailDto(maintenances);
+//        // Create the response object and populate it
+//        MaintenancePageResponse response = new MaintenancePageResponse();
+//        response.setMaintenances(maintenanceDTOS);
+//        response.setTotalMaintenance(totalMaintenance);
+//        response.setPendingCount(pending);
+//        response.setAssignedCount(assigned);
+//        response.setInProgressCount(in_progress);
+//        response.setCurrentPage(maintenance.getNumber());
+//        response.setTotalPages(maintenance.getTotalPages());
+//
+//        return response;
+//    };
 
 
     public ExecuteMaintenanceResponse createMaintenance(UUID createByUserId, CreateMaintenanceRequest request) {
@@ -150,7 +177,7 @@ public class MaintenanceService {
             log.info("maintenance deleted: {}", maintenance.getTitle());
         }
 
-    public static MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
+    public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
         dto.setId(maintenance.getId());
 //        dto.setUnitId(maintenance.getUnit().getId());
