@@ -1,7 +1,10 @@
 package com.rentora.api.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import com.rentora.api.model.dto.Invoice.Response.InvoiceOverallDTO;
 import com.rentora.api.repository.InvoiceRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -29,6 +32,12 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
 
+//    public InvoiceOverallDTO getOverallInvoice(UUID userid,Invoice.PaymentStatus status){
+//
+//        List<Invoice> invoiceSummaries = invoiceRepository.findAll();
+//        List<InvoiceOverallDTO> invoiceOverallDTO = invoiceSummaries.map(InvoiceService::toInvoicesSummaryDTO).getContent();
+//    }
+
     public Page<InvoiceSummaryDTO> search(String invoiceNumber,
                                 Invoice.PaymentStatus status,
                                 Pageable pageable) {
@@ -37,8 +46,27 @@ public class InvoiceService {
 
         Page<Invoice> allInvoice = invoiceRepository.findAll(specification, pageable);
 
-        return allInvoice.map(this::toInvoicesSummaryDTO);
+        return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
     }
+
+//    public InvoiceOverallDTO getInvoiceSummary(String invoiceNumber, Invoice.PaymentStatus status, Pageable pageable) {
+//        Specification<Invoice> specification = Specification.anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status));
+//
+//
+//        Page<Invoice> allInvoices = invoiceRepository.findAll(specification,pageable);
+//
+//        List<InvoiceSummaryDTO> invoiceSummaries = allInvoices.map(InvoiceService::toInvoicesSummaryDTO).getContent();
+//
+//        long total = allInvoices.getTotalElements();
+//        long paid =  allInvoices.getTotalPages();
+//        long unpaid = total - paid;
+//
+//        InvoiceOverallDTO overall = new InvoiceOverallDTO();
+//        overall.setOverallDTO(invoiceSummaries);
+//        overall.setTotalInvoice(total);
+//
+//        return overall;
+//    }
 
     public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId) {
         Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
@@ -49,58 +77,58 @@ public class InvoiceService {
         return dto;
     }
 
-    private InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
-        InvoiceSummaryDTO dto = new InvoiceSummaryDTO();
-        dto.setId(invoice.getId());
-        dto.setInvoiceNumber(invoice.getInvoiceNumber());
+    private static InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
+        InvoiceSummaryDTO summary = new InvoiceSummaryDTO();
+        summary.setId(invoice.getId());
+        summary.setInvoiceNumber(invoice.getInvoiceNumber());
 
 
         if (invoice.getTenant() != null) {
-            dto.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
+            summary.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
         }
 
-        dto.setRoom(invoice.getUnit().getUnitName());
-        dto.setAmount(invoice.getTotalAmount());
-        dto.setIssueDate(invoice.getBillStart());
-        dto.setDueDate(invoice.getDueDate());
-        dto.setStatus(invoice.getPaymentStatus());
+        summary.setRoom(invoice.getUnit().getUnitName());
+        summary.setAmount(invoice.getTotalAmount());
+        summary.setIssueDate(invoice.getBillStart());
+        summary.setDueDate(invoice.getDueDate());
+        summary.setStatus(invoice.getPaymentStatus());
 
-        return dto;
+        return summary;
     }
 
-        private InvoiceDetailDTO toInvoicesDetailDTO(Invoice invoice) {
-        InvoiceDetailDTO dto = new InvoiceDetailDTO();
-        dto.setId(invoice.getId());
-        dto.setInvoiceNumber(invoice.getInvoiceNumber());
-        dto.setContract(invoice.getContract().getContractNumber());
-        dto.setStatus(invoice.getPaymentStatus());
+    private static InvoiceDetailDTO toInvoicesDetailDTO(Invoice invoice) {
+        InvoiceDetailDTO detail = new InvoiceDetailDTO();
+        detail.setId(invoice.getId());
+        detail.setInvoiceNumber(invoice.getInvoiceNumber());
+        detail.setContract(invoice.getContract().getContractNumber());
+        detail.setStatus(invoice.getPaymentStatus());
 
-        dto.setRentalAmount(invoice.getRentAmount());
-        dto.setUtilAmount(invoice.getUtilAmount());
-        dto.setServiceAmount(invoice.getServiceAmount());
-        dto.setFeesAmount(invoice.getFeesAmount());
-        dto.setDiscountAmount(invoice.getDiscountAmount());
-        dto.setTaxAmount(invoice.getTaxAmount());
-        dto.setTotalAmount(invoice.getTotalAmount());
-        dto.setBillStart(invoice.getBillStart());
-        dto.setDueDate(invoice.getDueDate());
+        detail.setRentalAmount(invoice.getRentAmount());
+        detail.setUtilAmount(invoice.getUtilAmount());
+        detail.setServiceAmount(invoice.getServiceAmount());
+        detail.setFeesAmount(invoice.getFeesAmount());
+        detail.setDiscountAmount(invoice.getDiscountAmount());
+        detail.setTaxAmount(invoice.getTaxAmount());
+        detail.setTotalAmount(invoice.getTotalAmount());
+        detail.setBillStart(invoice.getBillStart());
+        detail.setDueDate(invoice.getDueDate());
 
         if (invoice.getApartment() != null) {
-            dto.setApartment(invoice.getApartment().getName());
-            dto.setUnit(invoice.getUnit().getFloor().getFloorName());
-            dto.setRoom(invoice.getUnit().getUnitName());
+            detail.setApartment(invoice.getApartment().getName());
+            detail.setUnit(invoice.getUnit().getFloor().getFloorName());
+            detail.setRoom(invoice.getUnit().getUnitName());
         }
 
         if (invoice.getTenant() != null) {
-            dto.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
-            dto.setEmail(invoice.getTenant().getEmail());
+            detail.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
+            detail.setEmail(invoice.getTenant().getEmail());
         }
-        dto.setPdf(invoice.getPdf());
-        dto.setNotes(invoice.getNotes());
-        dto.setCreatedAt(invoice.getCreatedAt());
-        dto.setUpdatedAt(invoice.getUpdatedAt());
+        detail.setPdf(invoice.getPdf());
+        detail.setNotes(invoice.getNotes());
+        detail.setCreatedAt(invoice.getCreatedAt());
+        detail.setUpdatedAt(invoice.getUpdatedAt());
 
-        return dto;
+        return detail;
     }
 
 }

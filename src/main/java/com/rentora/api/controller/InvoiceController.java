@@ -56,7 +56,7 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(invoices,page)));
     }
 
-     @GetMapping("/{invoiceId}")
+     @GetMapping("/detail/{invoiceId}")
      public ResponseEntity<ApiResponse<InvoiceDetailDTO>> getInvoicesById(
          @PathVariable UUID invoiceId,
          @AuthenticationPrincipal UserPrincipal currentUser) {

@@ -89,12 +89,12 @@ public class TenantService {
 
         // Check contracts
         boolean occupied = contracts.stream()
-                .anyMatch(contract -> contract.getStatus() == Contract.ContractStatus.ACTIVE);
+                .anyMatch(contract -> contract.getStatus() == Contract.ContractStatus.active);
         tenant.setOccupiedStatus(occupied);
 
         //check roomnum with active
         contracts.stream()
-                .filter(contract -> contract.getStatus() == Contract.ContractStatus.ACTIVE)
+                .filter(contract -> contract.getStatus() == Contract.ContractStatus.active)
                 .findFirst()
                 .map(Contract::getUnit)                       // get the unit
                 .map(Unit::getUnitName)                       // get the unit name

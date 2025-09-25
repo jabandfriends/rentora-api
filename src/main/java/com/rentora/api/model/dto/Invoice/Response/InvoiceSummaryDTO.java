@@ -3,6 +3,7 @@ package com.rentora.api.model.dto.Invoice.Response;
 import com.rentora.api.model.entity.Invoice;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import lombok.Data;
