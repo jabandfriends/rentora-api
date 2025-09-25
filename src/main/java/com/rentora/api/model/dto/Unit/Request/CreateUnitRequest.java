@@ -16,7 +16,7 @@ public class CreateUnitRequest {
     @Size(max = 50, message = "Unit name cannot exceed 50 characters")
     private String unitName;
 
-    private Unit.UnitType unitType = Unit.UnitType.APARTMENT;
+    private Unit.UnitType unitType = Unit.UnitType.apartment;
 
     @Min(value = 0, message = "Bedrooms cannot be negative")
     private Integer bedrooms = 1;
