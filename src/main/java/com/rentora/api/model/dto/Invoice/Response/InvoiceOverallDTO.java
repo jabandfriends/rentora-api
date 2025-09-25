@@ -8,7 +8,6 @@ import java.util.List;
 @Data
 public class InvoiceOverallDTO {
 
-    private List<InvoiceSummaryDTO> overallDTO;
     private long totalInvoice;
     private long paidInvoice;
     private long unpaidInvoice;
