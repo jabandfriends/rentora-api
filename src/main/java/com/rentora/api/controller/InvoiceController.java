@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Invoice.Response.InvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Response.OverdueInvoiceOverallDTO;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +58,28 @@ public class InvoiceController {
         InvoiceOverallDTO overall = invoiceService.getInvoiceOverall(summary.getContent());
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
+    }
+
+    @GetMapping("/overdue")
+    public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getOverdueInvoices(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "createdAt") String sortBy){
+
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+
+        Page<InvoiceSummaryDTO> overdue = invoiceService.searchOverdue(search, pageable);
+
+        OverdueInvoiceOverallDTO overall = invoiceService.getOverdueInvoiceOverall(overdue.getContent());
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(overdue, page, overall)));
     }
 
      @GetMapping("/detail/{invoiceId}")

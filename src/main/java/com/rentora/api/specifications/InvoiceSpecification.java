@@ -4,6 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.rentora.api.model.entity.Invoice;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 public final class InvoiceSpecification {
@@ -21,6 +22,10 @@ public final class InvoiceSpecification {
     public static Specification<Invoice> hasStatus(Invoice.PaymentStatus status) {
         return (root, query, criteriaBuilder) -> (status == null) ? null
                 : criteriaBuilder.equal(root.get("paymentStatus"), status);
+    }
+
+    public static Specification<Invoice> hasOverdueStatus() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("paymentStatus"), Invoice.PaymentStatus.overdue);
     }
 
 }

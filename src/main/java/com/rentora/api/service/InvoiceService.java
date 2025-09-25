@@ -7,8 +7,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.rentora.api.model.dto.Invoice.Response.InvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Response.OverdueInvoiceOverallDTO;
 import com.rentora.api.repository.InvoiceRepository;
-import jakarta.persistence.EntityNotFoundException;
+import org.hibernate.sql.ast.tree.expression.Over;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -34,12 +35,9 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
 
-//    public InvoiceOverallDTO getOverallInvoice(UUID userid,Invoice.PaymentStatus status){
-//
-//        List<Invoice> invoiceSummaries = invoiceRepository.findAll();
-//        List<InvoiceOverallDTO> invoiceOverallDTO = invoiceSummaries.map(InvoiceService::toInvoicesSummaryDTO).getContent();
-//    }
+//method for monthly invoice
 
+    //for searching in invoice table
     public Page<InvoiceSummaryDTO> search(String invoiceNumber,
                                 Invoice.PaymentStatus status,
                                 Pageable pageable) {
@@ -53,6 +51,7 @@ public class InvoiceService {
         return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
     }
 
+    //for get overall invoice
     public InvoiceOverallDTO getInvoiceOverall(List<InvoiceSummaryDTO> listOverAll) {
         InvoiceOverallDTO overall = new InvoiceOverallDTO();
         overall.setTotalInvoice(listOverAll.size());
@@ -69,6 +68,7 @@ public class InvoiceService {
 
     }
 
+    //for get invoice by using invoice id
     public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId) {
         Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found or access denied"));
@@ -76,6 +76,25 @@ public class InvoiceService {
         InvoiceDetailDTO dto = toInvoicesDetailDTO(invoice);
 
         return dto;
+    }
+
+//method for overdue invoice
+    //for searching overdue invoice in table
+    public Page<InvoiceSummaryDTO> searchOverdue(String invoiceNumber,
+                                                 Pageable pageable) {
+
+        Specification<Invoice> specification = Specification.allOf(InvoiceSpecification.hasOverdueStatus());
+        Page<Invoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
+
+        return OverdueInvoice.map(InvoiceService::toInvoicesSummaryDTO);
+    }
+
+    //for get overall of overdue invoice
+    public OverdueInvoiceOverallDTO getOverdueInvoiceOverall(List<InvoiceSummaryDTO> listOverDue) {
+        OverdueInvoiceOverallDTO overdue = new OverdueInvoiceOverallDTO();
+        overdue.setOverdueInvoice(listOverDue.size());
+
+        return overdue;
     }
 
     private static InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
