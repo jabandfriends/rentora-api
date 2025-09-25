@@ -2,7 +2,9 @@ package com.rentora.api.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.rentora.api.model.dto.Invoice.Response.InvoiceOverallDTO;
 import com.rentora.api.repository.InvoiceRepository;
@@ -43,30 +45,29 @@ public class InvoiceService {
                                 Pageable pageable) {
         Specification<Invoice> specification = Specification
                 .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status));
-
+        if (status != null) {
+            specification = specification.and(InvoiceSpecification.hasStatus(status));
+        }
         Page<Invoice> allInvoice = invoiceRepository.findAll(specification, pageable);
 
         return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
     }
 
-//    public InvoiceOverallDTO getInvoiceSummary(String invoiceNumber, Invoice.PaymentStatus status, Pageable pageable) {
-//        Specification<Invoice> specification = Specification.anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status));
-//
-//
-//        Page<Invoice> allInvoices = invoiceRepository.findAll(specification,pageable);
-//
-//        List<InvoiceSummaryDTO> invoiceSummaries = allInvoices.map(InvoiceService::toInvoicesSummaryDTO).getContent();
-//
-//        long total = allInvoices.getTotalElements();
-//        long paid =  allInvoices.getTotalPages();
-//        long unpaid = total - paid;
-//
-//        InvoiceOverallDTO overall = new InvoiceOverallDTO();
-//        overall.setOverallDTO(invoiceSummaries);
-//        overall.setTotalInvoice(total);
-//
-//        return overall;
-//    }
+    public InvoiceOverallDTO getInvoiceOverall(List<InvoiceSummaryDTO> listOverAll) {
+        InvoiceOverallDTO overall = new InvoiceOverallDTO();
+        overall.setTotalInvoice(listOverAll.size());
+
+        Map<Invoice.PaymentStatus, Long> statusCount = listOverAll.stream().collect(Collectors.groupingBy(InvoiceSummaryDTO::getStatus, Collectors.counting()));
+
+        overall.setPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.paid, 0L));
+        overall.setUnpaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.unpaid, 0L));
+        overall.setPartiallyPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.partially_paid, 0L));
+        overall.setOverdueInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.overdue,0L));
+        overall.setCancelledInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.cancelled,0L));
+
+        return overall;
+
+    }
 
     public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId) {
         Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)

@@ -3,6 +3,8 @@ package com.rentora.api.controller;
 import java.util.UUID;
 
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
+import com.rentora.api.model.dto.Invoice.Response.InvoiceOverallDTO;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,7 +37,6 @@ public class InvoiceController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getInvoices(
-        @AuthenticationPrincipal UserPrincipal currentUser,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String search,
@@ -51,9 +52,11 @@ public class InvoiceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<InvoiceSummaryDTO> invoices = invoiceService.search(search, status, pageable);
+        Page<InvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable);
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(invoices,page)));
+        InvoiceOverallDTO overall = invoiceService.getInvoiceOverall(summary.getContent());
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
     }
 
      @GetMapping("/detail/{invoiceId}")
