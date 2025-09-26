@@ -66,7 +66,7 @@ public class MaintenanceService {
         Maintenance maintenance = new Maintenance();
 
         //  from the DTO.
-        maintenance.setTicketNumber(request.getTicketName()); // Implement your own logic for ticket number
+        maintenance.setTicketNumber(request.getTicketNumber()); // Implement your own logic for ticket number
         maintenance.setTitle(request.getTitle());
         maintenance.setDescription(request.getDescription());
         maintenance.setCategory(request.getCategory());

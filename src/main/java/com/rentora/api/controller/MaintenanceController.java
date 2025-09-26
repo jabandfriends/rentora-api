@@ -38,6 +38,7 @@ public class MaintenanceController {
     private final MaintenanceService maintenanceService;
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceDetailDTO>>> getMaintenance(
+            @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -59,16 +60,19 @@ public class MaintenanceController {
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenance,page)));
     }
+
     @GetMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<MaintenanceDetailDTO>> getMaintenanceById(
+            @PathVariable UUID apartmentId,
             @PathVariable UUID maintenanceId,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         MaintenanceDetailDTO maintenance = maintenanceService.getMaintenanceById(maintenanceId);
         return ResponseEntity.ok(ApiResponse.success(maintenance));
     }
 
-    @PostMapping("/users/create")
+    @PostMapping
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenance(
+            @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody CreateMaintenanceRequest request) {
 

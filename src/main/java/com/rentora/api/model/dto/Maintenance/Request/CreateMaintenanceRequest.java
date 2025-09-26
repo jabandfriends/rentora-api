@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class CreateMaintenanceRequest {
 
     @NotBlank
     @Size(max = 50, message = "Maintenance Ticket number exceed 50 numbers")
-    private String ticketName;
+    private String ticketNumber;
 
     @NotBlank(message = "Maintenance name is required")
     @Size(max = 100, message = "Maintenance name cannot exceed 100 characters")
@@ -34,9 +35,11 @@ public class CreateMaintenanceRequest {
     private Maintenance.Status status;
     private Maintenance.Priority priority;
 
+    private LocalDate requestedDate;
     private OffsetDateTime appointmentDate;
     private OffsetDateTime startAt;
     private OffsetDateTime completedAt;
+    private OffsetDateTime dueDate;
 
     @DecimalMin(value = "0.0", message = "estimatedHours cannot be negative")
     private BigDecimal estimatedHours;
