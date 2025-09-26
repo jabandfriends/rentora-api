@@ -29,11 +29,13 @@ public class UpdateUserRequestDto {
     @Size(max = 13, message = "National ID must not exceed 13 characters")
     private String nationalId;
 
-    private LocalDate birthDate; // Will be parsed to LocalDate
+    private String birthDate; // Will be parsed to LocalDate
 
     @Size(max = 100, message = "Emergency contact name must not exceed 100 characters")
     private String emergencyContactName;
 
     @Size(max = 15, message = "Emergency contact phone must not exceed 15 characters")
     private String emergencyContactPhone;
+
+
 }

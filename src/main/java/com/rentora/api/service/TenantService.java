@@ -5,7 +5,9 @@ import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ForbiddenRoleException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.Authentication.FirstTimePasswordResetRequestDto;
+import com.rentora.api.model.dto.Authentication.UserInfo;
 import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
+import com.rentora.api.model.dto.Tenant.Response.TenantDetailInfoResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantInfoDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantPageResponse;
 import com.rentora.api.model.entity.ApartmentUser;
@@ -13,6 +15,7 @@ import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.User;
 import com.rentora.api.repository.ApartmentUserRepository;
+import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.UserRepository;
 import com.rentora.api.specifications.ApartmentUserSpecification;
 import jakarta.transaction.Transactional;
@@ -36,6 +39,7 @@ public class TenantService {
     private final ApartmentUserRepository apartmentUserRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ContractRepository contractRepository;
 
     public Page<TenantInfoDto> getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
 
@@ -59,6 +63,13 @@ public class TenantService {
         return tenantsMetadataResponseDto;
     }
 
+    public TenantDetailInfoResponseDto getTenantDetail(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return toTenantInfoDtoByUser(user);
+    }
+
     public void changePassword(UUID userId, FirstTimePasswordResetRequestDto request) throws BadRequestException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -69,6 +80,23 @@ public class TenantService {
 
         log.info("Password changed for user: {}", user.getEmail());
 
+    }
+
+    public TenantDetailInfoResponseDto toTenantInfoDtoByUser(User user){
+        TenantDetailInfoResponseDto tenant = new TenantDetailInfoResponseDto();
+        tenant.setUserId(user.getId());
+        tenant.setFirstName(user.getFirstName());
+        tenant.setLastName(user.getLastName());
+        tenant.setFullName(user.getFullName());
+        tenant.setEmail(user.getEmail());
+        tenant.setPhoneNumber(user.getPhoneNumber());
+        tenant.setNationalId(user.getNationalId());
+        tenant.setDateOfBirth(user.getBirthDate());
+        tenant.setEmergencyContactName(user.getEmergencyContactName());
+        tenant.setEmergencyContactPhone(user.getEmergencyContactPhone());
+        tenant.setCreatedAt(user.getCreatedAt());
+
+        return tenant;
     }
 
     public TenantInfoDto toTenantInfoDto(ApartmentUser user){
