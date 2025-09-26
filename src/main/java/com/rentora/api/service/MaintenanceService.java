@@ -1,21 +1,17 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
-import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.User;
 import com.rentora.api.repository.MaintenanceRepository;
 import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UserRepository;
-import com.rentora.api.specifications.ApartmentSpecification;
 import com.rentora.api.specifications.MaintenanceSpecification;
-import com.sun.tools.javac.Main;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.net.URL;
 import java.util.UUID;
 
 

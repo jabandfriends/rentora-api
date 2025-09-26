@@ -1,16 +1,11 @@
 package com.rentora.api.controller;
 
-
-import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
-import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
-import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
 import com.rentora.api.model.dto.PaginatedResponse;
-import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.MaintenanceService;
