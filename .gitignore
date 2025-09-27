@@ -6,7 +6,13 @@ build/
 !**/src/test/**/build/
 
 ## docker db ##
-./db
+/db
+
+##log
+/logs
+
+.env
+
 ### STS ###
 .apt_generated
 .classpath
