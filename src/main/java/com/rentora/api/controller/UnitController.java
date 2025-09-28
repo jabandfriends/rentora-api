@@ -46,7 +46,8 @@ public class UnitController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) Unit.UnitStatus status,
             @RequestParam(required = false) Unit.UnitType unitType,
-            @RequestParam(required = false) UUID floorId) {
+            @RequestParam(required = false) UUID floorId,
+            @RequestParam(required = false) String search) {
 
         int requestPage = Math.max(page-1,0);
 
@@ -57,7 +58,7 @@ public class UnitController {
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<UnitSummaryDto> units = unitService.getUnitsByApartment(
-                apartmentId, status, unitType, floorId, pageable);
+                apartmentId, status, unitType,search, floorId, pageable);
 
         UnitMetadataDto unitsMetadata = unitService.getUnitsMetadata(units.getContent(),apartmentId);
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,unitsMetadata)));

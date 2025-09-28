@@ -13,12 +13,14 @@ import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.FloorRepository;
 import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.specifications.UnitSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -40,14 +42,12 @@ public class UnitService {
     private final ContractRepository contractRepository;
 
     public Page<UnitSummaryDto> getUnitsByApartment(UUID apartmentId, Unit.UnitStatus status,
-                                                    Unit.UnitType unitType, UUID floorId, Pageable pageable) {
+                                                    Unit.UnitType unitType,String search, UUID floorId, Pageable pageable) {
         Page<Unit> units;
+        Specification<Unit> spec = UnitSpecification.hasApartmentId(apartmentId).and(UnitSpecification.hasStatus(status)).and(UnitSpecification.hasUnitType(unitType)).and(UnitSpecification.hasFloorId(floorId))
+                .and(UnitSpecification.hasName(search));
 
-        if (floorId != null) {
-            units = unitRepository.findByFloorId(floorId, pageable);
-        } else {
-            units = unitRepository.findByApartmentIdAndFilters(apartmentId, status, unitType, pageable);
-        }
+        units = unitRepository.findAll(spec, pageable);
 
         return units.map(this::toUnitSummaryDto);
     }
