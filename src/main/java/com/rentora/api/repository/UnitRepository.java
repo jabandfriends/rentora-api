@@ -47,6 +47,7 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
             "WHERE b.apartment.id = :apartmentId")
     long countByApartmentId(@Param("apartmentId") UUID apartmentId);
 
+
     @Query("SELECT COUNT(u) FROM Unit u " +
             "JOIN u.floor f " +
             "JOIN f.building b " +

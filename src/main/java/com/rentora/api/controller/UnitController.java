@@ -2,6 +2,8 @@ package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Unit.Metadata.UnitMetadataDto;
 import com.rentora.api.model.dto.Unit.Request.CreateUnitRequest;
 import com.rentora.api.model.dto.Unit.Request.UpdateUnitRequest;
 import com.rentora.api.model.dto.Unit.Response.UnitDetailDto;
@@ -43,16 +45,10 @@ public class UnitController {
             @RequestParam(defaultValue = "unitName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) Unit.UnitStatus status,
-            @RequestParam(required = false) String unitType,
+            @RequestParam(required = false) Unit.UnitType unitType,
             @RequestParam(required = false) UUID floorId) {
 
         int requestPage = Math.max(page-1,0);
-        Unit.UnitType type = null;
-        try {
-            type = EnumUtils.parseUnitType(unitType);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
 
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
@@ -61,9 +57,10 @@ public class UnitController {
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<UnitSummaryDto> units = unitService.getUnitsByApartment(
-                apartmentId, status, type, floorId, pageable);
+                apartmentId, status, unitType, floorId, pageable);
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
+        UnitMetadataDto unitsMetadata = unitService.getUnitsMetadata(units.getContent(),apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,unitsMetadata)));
     }
 
     @GetMapping("/{unitId}")
