@@ -2,6 +2,7 @@ package com.rentora.api.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "utilities")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 public class Utility {
     @Id
