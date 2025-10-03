@@ -68,8 +68,9 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
 
-    @GetMapping("/unittest")
+    @GetMapping("/utility")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnits(
+            @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
