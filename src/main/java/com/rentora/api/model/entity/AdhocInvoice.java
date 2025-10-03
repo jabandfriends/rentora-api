@@ -68,7 +68,7 @@ public class AdhocInvoice {
 
         @Enumerated(EnumType.STRING)
         @Column(name = "payment_status", length = 20)
-        private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
+        private PaymentStatus paymentStatus = PaymentStatus.unpaid;
 
         @Column(name = "paid_at")
         private OffsetDateTime paidAt;
@@ -109,7 +109,7 @@ public class AdhocInvoice {
 
         // --- ENUMs ---
         public enum PaymentStatus {
-            PAID, UNPAID, OVERDUE
+            paid, unpaid, overdue
         }
 
         public enum InvoiceStatus {
