@@ -2,11 +2,9 @@ package com.rentora.api.controller;
 
 import java.util.UUID;
 
-import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
-import com.rentora.api.model.dto.Invoice.Response.InvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Metadata.InvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Response.OverdueInvoiceOverallDTO;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
-import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Invoice.Response.InvoiceSummaryDTO;
 import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.dto.Invoice.Response.InvoiceDetailDTO;
