@@ -36,7 +36,7 @@ public class ReportController {
     private final ReportService reportService;
     private final ReceiptReportService receiptReportService;
 
-    @GetMapping("/unit")
+    @GetMapping("/{apartmentId}/unit")
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
             @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
