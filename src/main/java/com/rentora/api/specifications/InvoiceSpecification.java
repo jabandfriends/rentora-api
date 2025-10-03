@@ -28,4 +28,8 @@ public final class InvoiceSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("paymentStatus"), Invoice.PaymentStatus.overdue);
     }
 
+    public static Specification<Invoice> hasApartmentId(UUID apartmentId) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("apartment").get("id"), apartmentId);
+    }
+
 }

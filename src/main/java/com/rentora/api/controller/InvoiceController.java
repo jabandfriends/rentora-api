@@ -36,13 +36,14 @@ public class InvoiceController {
     
     private final InvoiceService invoiceService;
 
-    @GetMapping
+    @GetMapping("/{apartmentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getInvoices(
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String search,
         @RequestParam(defaultValue = "desc") String sortDir,
         @RequestParam(defaultValue = "createdAt") String sortBy,
+        @PathVariable UUID apartmentId,
         @RequestParam(required = false) Invoice.PaymentStatus status){
 
 
@@ -53,7 +54,7 @@ public class InvoiceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<InvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable);
+        Page<InvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable, apartmentId);
 
         InvoiceOverallDTO overall = invoiceService.getInvoiceOverall(summary.getContent());
 

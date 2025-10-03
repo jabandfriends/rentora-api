@@ -40,13 +40,14 @@ public class InvoiceService {
     //for searching in invoice table
     public Page<InvoiceSummaryDTO> search(String invoiceNumber,
                                 Invoice.PaymentStatus status,
-                                Pageable pageable) {
+                                Pageable pageable , UUID apartmentId) {
         Specification<Invoice> specification = Specification
-                .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status));
+                .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status)).and(InvoiceSpecification.hasApartmentId(apartmentId));
         if (status != null) {
             specification = specification.and(InvoiceSpecification.hasStatus(status));
         }
-        Page<Invoice> allInvoice = invoiceRepository.findAll(specification, pageable);
+
+        Page<Invoice> allInvoice = invoiceRepository.findAll(specification,pageable);
 
         return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
     }
