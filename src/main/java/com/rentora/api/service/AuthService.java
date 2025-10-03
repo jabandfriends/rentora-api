@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -120,6 +121,39 @@ public class AuthService {
         return createUserInfo(savedUser);
     }
 
+    public void updateUser(UUID userId,UpdateUserRequestDto request) throws BadRequestException {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Email validation: allow own email
+        String newEmail = request.getEmail();
+        if (newEmail != null && !newEmail.isEmpty()) {
+            newEmail = newEmail.toLowerCase().trim();
+            boolean emailTakenByOther = userRepository.existsByEmail(newEmail) && !newEmail.equals(user.getEmail());
+            if (emailTakenByOther) {
+                throw new BadRequestException("Email is already in use");
+            }
+            user.setEmail(newEmail);
+        }
+
+        // Update other fields if present
+        Optional.ofNullable(request.getFirstName()).filter(s -> !s.isEmpty()).ifPresent(user::setFirstName);
+        Optional.ofNullable(request.getLastName()).filter(s -> !s.isEmpty()).ifPresent(user::setLastName);
+        Optional.ofNullable(request.getPhoneNumber()).filter(s -> !s.isEmpty()).ifPresent(user::setPhoneNumber);
+        Optional.ofNullable(request.getBirthDate()).filter(s -> !s.isEmpty())
+                .ifPresent(bd -> user.setBirthDate(LocalDate.parse(bd))); // you may add try/catch for parse
+        Optional.ofNullable(request.getNationalId()).filter(s -> !s.isEmpty()).ifPresent(user::setNationalId);
+        Optional.ofNullable(request.getPassword()).filter(s -> !s.isEmpty())
+                .ifPresent(pwd -> user.setPasswordHash(passwordEncoder.encode(pwd)));
+        Optional.ofNullable(request.getEmergencyContactName()).filter(s -> !s.isEmpty())
+                .ifPresent(user::setEmergencyContactName);
+        Optional.ofNullable(request.getEmergencyContactPhone()).filter(s -> !s.isEmpty())
+                .ifPresent(user::setEmergencyContactPhone);
+
+        User savedUser = userRepository.save(user);
+
+        log.info("User updated: {}", savedUser.getEmail());
+    }
+
     public void changePassword(UUID userId, ChangePasswordRequest request) throws BadRequestException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -135,6 +169,19 @@ public class AuthService {
         userRepository.save(user);
 
         log.info("Password changed for user: {}", user.getEmail());
+    }
+
+    public void resetPassword(UUID userId, FirstTimePasswordResetRequestDto request) throws BadRequestException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        //new password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+
+        log.info("Password reset for user: {}", user.getEmail());
+
     }
 
     public UserInfo getCurrentUser(UUID userId) {
@@ -153,6 +200,8 @@ public class AuthService {
         userInfo.setPhoneNumber(user.getPhoneNumber());
         userInfo.setProfileImageUrl(user.getProfileImageUrl());
         userInfo.setMustChangePassword(user.getMustChangePassword() != null && user.getMustChangePassword());
+        userInfo.setBirthDate(user.getBirthDate());
+        userInfo.setNationalId(user.getNationalId());
         userInfo.setLastLogin(user.getLastLogin() != null ? user.getLastLogin().toString() : null);
 
         // Map apartment roles

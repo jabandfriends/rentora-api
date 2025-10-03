@@ -1,6 +1,7 @@
 package com.rentora.api.model.dto.Apartment.Request;
 
 
+import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.Utility;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -39,5 +40,6 @@ public class SetupApartmentRequest {
     private BigDecimal waterPrice;
 
     private Utility.UtilityType waterType;
+
 
 }

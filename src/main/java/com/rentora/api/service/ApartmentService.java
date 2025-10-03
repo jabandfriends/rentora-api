@@ -1,5 +1,6 @@
 package com.rentora.api.service;
 
+import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
@@ -12,16 +13,19 @@ import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ApartmentSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 
 import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -51,14 +55,13 @@ public class ApartmentService {
 
     private final ApartmentPaymentRepository apartmentPaymentRepository;
 
-    public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Pageable pageable) {
-        Page<Apartment> apartments;
+    private final FloorRepository floorRepository;
 
-        if (search != null && !search.trim().isEmpty()) {
-            apartments = apartmentRepository.findByUserIdAndNameContaining(userId, search.trim(), pageable);
-        } else {
-            apartments = apartmentRepository.findByUserId(userId, pageable);
-        }
+    public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Apartment.ApartmentStatus status, Pageable pageable) {
+
+
+        Specification<Apartment> spec = ApartmentSpecification.hasUserId(userId).and(ApartmentSpecification.hasName(search)).and(ApartmentSpecification.hasStatus(status));
+        Page<Apartment> apartments = apartmentRepository.findAll(spec, pageable);
 
         return apartments.map(apartment -> {
             ApartmentSummaryDTO dto = toApartmentSummaryDto(apartment);
@@ -75,6 +78,15 @@ public class ApartmentService {
 
             return dto;
         });
+    }
+    public ApartmentMetadataDto getApartmentsMetadata(List<ApartmentSummaryDTO> apartments) {
+        ApartmentMetadataDto apartmentMetadataResponse = new ApartmentMetadataDto();
+        apartmentMetadataResponse.setTotalApartments(apartments.size());
+        long totalActiveApartments = apartments.stream()
+                .filter(apartment -> apartment.getStatus() == Apartment.ApartmentStatus.active)
+                .count();
+        apartmentMetadataResponse.setTotalActiveApartments(totalActiveApartments);
+        return apartmentMetadataResponse;
     }
 
     public ApartmentDetailDTO getApartmentById(UUID apartmentId, UUID userId) {
@@ -228,7 +240,7 @@ public class ApartmentService {
         //apartment water utility
         Utility waterUtility = new Utility();
         waterUtility.setApartment(apartment);
-        waterUtility.setUtilityName("Water Utility");
+        waterUtility.setUtilityName("water");
         waterUtility.setUtilityType(request.getWaterType());
         waterUtility.setCategory(Utility.Category.utility);
         waterUtility.setUnitPrice(request.getWaterPrice());
@@ -238,7 +250,7 @@ public class ApartmentService {
         //apartment electric utility
         Utility electricityUtility = new Utility();
         electricityUtility.setApartment(apartment);
-        electricityUtility.setUtilityName("Electricity Utility");
+        electricityUtility.setUtilityName("electric");
         electricityUtility.setUtilityType(request.getElectricityType());
         electricityUtility.setCategory(Utility.Category.utility);
         electricityUtility.setUnitPrice(request.getElectricityPrice());
@@ -252,6 +264,19 @@ public class ApartmentService {
             building.setName(buildingItem.getBuildingName());
             building.setTotalFloors(buildingItem.getTotalFloors());
             buildingRepository.save(building);
+
+
+            Integer totalFloors = buildingItem.getTotalFloors();
+            //save floors
+            for (Integer i = 1; i <= totalFloors; i++) {
+                Floor floor = new Floor();
+                floor.setBuilding(building);
+                floor.setFloorNumber(i);
+                floor.setFloorName("Floor " + i);
+                floor.setTotalUnits(buildingItem.getTotalUnitPerFloor());
+                floorRepository.save(floor);
+            }
+
         });
 
         //payment
@@ -264,6 +289,7 @@ public class ApartmentService {
         payment.setCreatedBy(createdByUser);
         apartmentPaymentRepository.save(payment);
 
+        // activate apartment
         apartment.setStatus(Apartment.ApartmentStatus.active);
         apartmentRepository.save(apartment);
 

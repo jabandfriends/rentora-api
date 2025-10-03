@@ -4,17 +4,20 @@ import com.rentora.api.constant.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "apartment_users")
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 public class ApartmentUser {
     @Id
@@ -44,6 +47,7 @@ public class ApartmentUser {
 
     @Column(name = "left_at")
     private LocalDateTime leftAt;
+
 
     @Column(name = "is_active")
     private Boolean isActive = true;

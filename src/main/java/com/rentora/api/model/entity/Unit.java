@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "units")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 public class Unit {
 
@@ -39,10 +40,7 @@ public class Unit {
     private UnitType unitType = UnitType.apartment;
 
     public enum UnitType {
-
         apartment,studio,penthouse,commercial
-
-
     }
 
     private Integer bedrooms = 1;

@@ -3,14 +3,17 @@ package com.rentora.api.model.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name= "buildings")
 public class Building {
 
@@ -42,6 +45,8 @@ public class Building {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "building", fetch = FetchType.LAZY)
+    List<Floor> floors;
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
