@@ -68,7 +68,7 @@ public class InvoiceService {
     }
 
     //for get invoice by using invoice id
-    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId) {
+    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId, UUID apartmentId) {
         Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found or access denied"));
 
@@ -80,9 +80,9 @@ public class InvoiceService {
 //method for overdue invoice
     //for searching overdue invoice in table
     public Page<InvoiceSummaryDTO> searchOverdue(String invoiceNumber,
-                                                 Pageable pageable) {
+                                                 Pageable pageable, UUID apartmentId) {
 
-        Specification<Invoice> specification = Specification.allOf(InvoiceSpecification.hasOverdueStatus());
+        Specification<Invoice> specification = Specification.allOf(InvoiceSpecification.hasOverdueStatus(),InvoiceSpecification.hasApartmentId(apartmentId));
         Page<Invoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
 
         return OverdueInvoice.map(InvoiceService::toInvoicesSummaryDTO);
