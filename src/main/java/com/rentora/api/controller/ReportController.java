@@ -2,11 +2,13 @@ package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.Pagination;
 import com.rentora.api.model.dto.Report.Response.ReceiptReportDetailDTO;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
 import com.rentora.api.model.entity.AdhocInvoice;
+import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.Unit;
-import com.rentora.api.repository.ReceiptReportRepository;
+import com.rentora.api.repository.FloorRepository;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ReceiptReportService;
 import com.rentora.api.service.ReportService;
@@ -23,7 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
-
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -35,8 +37,9 @@ public class ReportController {
     private final UnitService unitService;
     private final ReportService reportService;
     private final ReceiptReportService receiptReportService;
+    private final FloorRepository floorRepository;
 
-    @GetMapping("/{apartmentId}/unit")
+    @GetMapping("/{apartmentId}/room-report")
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
             @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser,
@@ -46,31 +49,45 @@ public class ReportController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) Unit.UnitStatus status,
             @RequestParam(required = false) String unitType,
-            @RequestParam(required = false) UUID floorId) {
-
-        int requestPage = Math.max(page-1,0);
+            @RequestParam(required = false) UUID floorId
+    ) {
+        int requestPage = Math.max(page - 1, 0);
         Unit.UnitType type = null;
+
         try {
             type = EnumUtils.parseUnitType(unitType);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
 
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<UnitSummaryDto> units = unitService.getUnitsByApartment(
-                apartmentId, status, type, floorId, pageable);
+        // ✅ STEP 1: ดึง floorIds ทั้งหมดจาก apartmentId
+        List<UUID> floorIds = floorRepository.findByApartmentId(apartmentId)
+                .stream()
+                .map(Floor::getId)
+                .toList();
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
+        if (floorIds.isEmpty()) {
+            log.info("No floors found for apartment {}", apartmentId);
+            return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.empty()));
+        }
+
+        // ✅ STEP 2: ดึง units ที่อยู่ใน floorIds เหล่านี้
+        Page<UnitSummaryDto> units = unitService.getUnitsByFloors(floorIds, status, type, pageable);
+
+        log.info("Found {} units for apartment {}", units.getTotalElements(), apartmentId);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units, page)));
     }
+
 
     @GetMapping("/utility")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnits(
-            @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -87,25 +104,27 @@ public class ReportController {
         Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(pageable);
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
-    @GetMapping("/{apartmentId}/adhoc-invoices")
+    @GetMapping("/{apartmentId}/receipt-report")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReceiptReportDetailDTO>>> getAdhocInvoices(
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "invoiceDate") String sortBy,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) AdhocInvoice.PaymentStatus status
     ) {
         int requestPage = Math.max(page - 1, 0);
-
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
-
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ReceiptReportDetailDTO> invoices = receiptReportService.getAdhocInvoices(apartmentId, status, pageable);
+        List<ReceiptReportDetailDTO> invoices = receiptReportService.getAdhocAndInvoices(apartmentId, status, pageable);
+        int totalItems = invoices.size();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(invoices, page)));
+        Pagination pagination = new Pagination(page, size, totalPages, totalItems);
+        PaginatedResponse<ReceiptReportDetailDTO> response = new PaginatedResponse<>(invoices, pagination);
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
+
 }

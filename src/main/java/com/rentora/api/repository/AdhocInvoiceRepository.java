@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Repository
-public interface ReceiptReportRepository extends JpaRepository<AdhocInvoice, UUID> {
+public interface AdhocInvoiceRepository extends JpaRepository<AdhocInvoice, UUID> {
     Page<AdhocInvoice> findByApartmentId(UUID apartmentId, Pageable pageable);
     Page<AdhocInvoice> findByApartmentIdAndPaymentStatus(UUID apartmentId, AdhocInvoice.PaymentStatus status, Pageable pageable);
 }

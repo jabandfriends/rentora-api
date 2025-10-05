@@ -1,5 +1,6 @@
 package com.rentora.api.repository;
 
+import com.rentora.api.model.entity.AdhocInvoice;
 import com.rentora.api.model.entity.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpec
     Optional<Invoice> findByInvoiceId(@Param("invoiceId") UUID invoiceId);
 
 
+    Page<Invoice> findByApartment_Id(UUID apartmentId, Pageable pageable);
 
-
+    Page<Invoice> findByApartment_IdAndPaymentStatus(UUID apartmentId, Invoice.PaymentStatus paymentStatus, Pageable pageable);
 }

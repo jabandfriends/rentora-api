@@ -9,6 +9,7 @@ import java.time.LocalDate;
 public class ReceiptReportDetailDTO {
     private String id;
     private String adhocNumber;
+    private BigDecimal amount;
 
     // Relation
     private String apartmentId;
