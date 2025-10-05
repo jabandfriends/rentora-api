@@ -2,6 +2,8 @@ package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Report.Metadata.ReportUnitUtilityMetadata;
 import com.rentora.api.model.dto.Report.Response.ReceiptReportDetailDTO;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
 import com.rentora.api.model.entity.AdhocInvoice;
@@ -85,8 +87,11 @@ public class ReportController {
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,pageable);
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
+        ReportUnitUtilityMetadata metadata = reportService.getUnitsUtilityMetadata(apartmentId);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,metadata)));
     }
+
     @GetMapping("/{apartmentId}/adhoc-invoices")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReceiptReportDetailDTO>>> getAdhocInvoices(
             @PathVariable UUID apartmentId,

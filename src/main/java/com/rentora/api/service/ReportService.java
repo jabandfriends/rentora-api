@@ -2,6 +2,7 @@ package com.rentora.api.service;
 
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.Pagination;
+import com.rentora.api.model.dto.Report.Metadata.ReportUnitUtilityMetadata;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -53,6 +55,29 @@ public class ReportService {
 
         return new PageImpl<>(responses, pageable, units.getTotalElements());
     }
+
+    public ReportUnitUtilityMetadata getUnitsUtilityMetadata(UUID apartmentId) {
+        ReportUnitUtilityMetadata reportUnitUtilityMetadata = new ReportUnitUtilityMetadata();
+        long waterUsageUnit = unitUtilityRepository.countUsageAmountByApartmentIdByUtility(apartmentId,"water");
+        long electricUsageUnit = unitUtilityRepository.countUsageAmountByApartmentIdByUtility(apartmentId,"electric");
+
+        BigDecimal waterUsagePrice = unitUtilityRepository.sumPriceByUtility(apartmentId,"water");
+        BigDecimal electricUsagePrice = unitUtilityRepository.sumPriceByUtility(apartmentId,"electric");
+
+        BigDecimal totalAmount = waterUsagePrice.add(electricUsagePrice);
+        long totalUsageUnit = waterUsageUnit + electricUsageUnit;
+
+        reportUnitUtilityMetadata.setWaterUsageUnits(waterUsageUnit);
+        reportUnitUtilityMetadata.setElectricUsageUnits(electricUsageUnit);
+        reportUnitUtilityMetadata.setWaterUsagePrices(waterUsagePrice);
+        reportUnitUtilityMetadata.setElectricUsagePrices(electricUsagePrice);
+
+        reportUnitUtilityMetadata.setTotalUsageUnits(totalUsageUnit);
+        reportUnitUtilityMetadata.setTotalAmount(totalAmount);
+        return reportUnitUtilityMetadata;
+    }
+
+
 
     private UnitServiceResponseDto toUnitServiceResponseDtoCombined(List<UnitUtilities> utilities) {
         UnitServiceResponseDto response = new UnitServiceResponseDto();
