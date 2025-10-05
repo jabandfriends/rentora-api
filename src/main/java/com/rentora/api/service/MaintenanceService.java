@@ -1,23 +1,19 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
-import com.rentora.api.model.dto.Maintenance.Response.MaintenancePageResponse;
-import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.User;
 import com.rentora.api.repository.MaintenanceRepository;
 import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UserRepository;
-import com.rentora.api.specifications.ApartmentSpecification;
 import com.rentora.api.specifications.MaintenanceSpecification;
-import com.sun.tools.javac.Main;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.net.URL;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +38,7 @@ public class MaintenanceService {
     private final UserRepository userRepository;
     private final UnitRepository unitRepository;
 
-    public Page<MaintenanceDetailDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
+    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
 
 
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name));
@@ -54,24 +49,24 @@ public class MaintenanceService {
         }
         Page<Maintenance> maintenance = maintenanceRepository.findAll(spec, pageable);
 
-        return maintenance.map(this::toMaintenanceDetailDto);
+        return maintenance.map(this::toMaintenanceInfoDto);
     }
 
-    public MaintenanceMetadataResponseDto getMaintenanceMetadata(List<MaintenanceDetailDTO> maintenanceDetailDto) {
+    public MaintenanceMetadataResponseDto getMaintenanceMetadata(List<MaintenanceInfoDTO> maintenanceInfoDto) {
         MaintenanceMetadataResponseDto maintenanceMetadataResponseDto = new MaintenanceMetadataResponseDto();
-        maintenanceMetadataResponseDto.setTotalMaintenance(maintenanceDetailDto.size());
+        maintenanceMetadataResponseDto.setTotalMaintenance(maintenanceInfoDto.size());
         maintenanceMetadataResponseDto.setPendingCount(
-                maintenanceDetailDto.stream()
+                maintenanceInfoDto.stream()
                         .filter(dto -> dto.getStatus().equals(Maintenance.Status.pending.name()))
                         .count()
         );
         maintenanceMetadataResponseDto.setInProgressCount(
-                maintenanceDetailDto.stream()
+                maintenanceInfoDto.stream()
                         .filter(dto -> dto.getStatus().equals(Maintenance.Status.in_progress.name()))
                         .count()
         );
         maintenanceMetadataResponseDto.setAssignedCount(
-                maintenanceDetailDto.stream()
+                maintenanceInfoDto.stream()
                         .filter(dto -> dto.getStatus().equals(Maintenance.Status.assigned.name()))
                         .count()
         );
@@ -176,22 +171,12 @@ public class MaintenanceService {
 
             log.info("maintenance deleted: {}", maintenance.getTitle());
         }
-
     public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
         dto.setId(maintenance.getId());
-//        dto.setUnitId(maintenance.getUnit().getId());
-//        dto.setTenantUserId(maintenance.getTenantUser().getId());
-//        dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
-        if (maintenance.getUnit() != null) {
-            dto.setUnitId(maintenance.getUnit().getId());
-        }
-        if (maintenance.getTenantUser() != null) {
-            dto.setTenantUserId(maintenance.getTenantUser().getId());
-        }
-        if (maintenance.getAssignedToUser() != null) {
-            dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
-        }
+        dto.setUnitId(maintenance.getUnit().getId());
+        dto.setTenantUserId(maintenance.getTenantUser().getId());
+        dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
         dto.setTicketNumber(maintenance.getTicketNumber());
         dto.setTitle(maintenance.getTitle());
         dto.setDescription(maintenance.getDescription());
@@ -229,5 +214,37 @@ public class MaintenanceService {
         }
 
         return dto;
+    }
+    public MaintenanceInfoDTO toMaintenanceInfoDto(Maintenance maintenance) {
+
+        String unitName = maintenance.getUnit().getUnitName();
+        String buildingName = maintenance.getUnit().getFloor().getBuilding().getName();
+
+        MaintenanceInfoDTO dto = new MaintenanceInfoDTO();
+
+        dto.setId(maintenance.getId());
+        dto.setTicketNumber(maintenance.getTicketNumber());
+        dto.setTitle(maintenance.getTitle());
+
+        if (unitName != null) {
+            dto.setUnitName(unitName);
+        }
+        if (buildingName != null) {
+            dto.setBuildingsName(buildingName);
+        }
+        dto.setRequestedDate(maintenance.getRequestedDate());
+        if (maintenance.getAppointmentDate() != null) {
+            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+        }
+
+
+        dto.setStatus(maintenance.getStatus().name());
+
+
+
+
+
+        return dto;
+
     }
 }

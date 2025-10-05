@@ -11,8 +11,16 @@ import java.util.UUID;
 
 public class MaintenanceSpecification {
     public static Specification<Maintenance> hasName(String name) {
-        return (root,query,criteriaBuilder)-> name == null ? null : criteriaBuilder.like(root.get("title").as(String.class), "%" + name + "%");
+        return (root, query, criteriaBuilder) -> {
+            if (name == null || name.isBlank()) return null;
+            String likePattern = "%" + name.trim().toLowerCase() + "%";
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("title").as(String.class)),
+                    likePattern
+            );
+        };
     }
+
 
     public static Specification<Maintenance> hasApartmentId(UUID apartmentId) {
         return (root, query, criteriaBuilder) -> {

@@ -10,6 +10,7 @@ import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenancePageResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
@@ -40,14 +41,14 @@ public class MaintenanceController {
 
     private final MaintenanceService maintenanceService;
     @GetMapping
-    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceDetailDTO>>> getMaintenance(
+    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceInfoDTO>>> getMaintenance(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) Maintenance.Status status
     ) {
 
@@ -59,12 +60,12 @@ public class MaintenanceController {
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
         // Call the service method with the correct parameters
-        Page<MaintenanceDetailDTO> response = maintenanceService.getMaintenance(
-                apartmentId, name, status, pageable);
-        MaintenanceMetadataResponseDto maintenanceDetailDto = maintenanceService.getMaintenanceMetadata(response.getContent());
+        Page<MaintenanceInfoDTO> response = maintenanceService.getMaintenance(
+                apartmentId, search, status, pageable);
+        MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(response.getContent());
 
         // The ApiResponse.success method should be adjusted to accept the correct DTO
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(response,page,maintenanceDetailDto)));
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(response,page,maintenanceInfoDto)));
     }
 
     @PostMapping("/users/create")

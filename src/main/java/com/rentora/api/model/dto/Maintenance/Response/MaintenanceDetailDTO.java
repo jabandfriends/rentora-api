@@ -14,6 +14,12 @@ public class MaintenanceDetailDTO {
     private UUID unitId;
     private UUID tenantUserId;
     private UUID assignedToUserId;
+    //Name
+    private String unitName;
+    private String tenantName;
+    private String assignedToUserName;
+    private String buildingsName;
+
     private String title;
     private String description;
     private String category;
