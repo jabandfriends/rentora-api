@@ -10,4 +10,8 @@ public class ReportSpecification {
     public static Specification<UnitUtilities> hasApartmentId(UUID apartmentId) {
         return (root,query,criteriaBuilder)-> apartmentId == null ? null : criteriaBuilder.equal(root.get("unit").get("floor").get("building").get("apartment").get("id"), apartmentId);
     }
+
+    public static Specification<UnitUtilities> hasName(String unitName) {
+        return (root,query,criteriaBuilder)-> unitName == null || unitName.isEmpty() ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("unit").get("unitName")), "%" + unitName.toLowerCase() + "%");
+    }
 }

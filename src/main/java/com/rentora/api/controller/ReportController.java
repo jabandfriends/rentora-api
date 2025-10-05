@@ -76,7 +76,8 @@ public class ReportController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String unitName
     ) {
         int requestPage = Math.max(page-1, 0);
 
@@ -86,7 +87,7 @@ public class ReportController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,pageable);
+        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,unitName,pageable);
         ReportUnitUtilityMetadata metadata = reportService.getUnitsUtilityMetadata(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,metadata)));

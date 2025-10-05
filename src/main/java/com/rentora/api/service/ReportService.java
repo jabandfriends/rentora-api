@@ -41,8 +41,8 @@ public class ReportService {
     private final ContractRepository contractRepository;
 
 
-    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,Pageable pageable) {
-        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId);
+    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,Pageable pageable) {
+        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName));
         Page<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec,pageable);
 
         // group by unitId
