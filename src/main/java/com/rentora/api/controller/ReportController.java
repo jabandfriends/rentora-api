@@ -14,6 +14,7 @@ import com.rentora.api.service.UnitService;
 import com.rentora.api.specifications.UnitSpecification;
 import com.rentora.api.utility.EnumUtils;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ public class ReportController {
     private final ReceiptReportService receiptReportService;
     private final UnitRepository unitRepository;
 
+    @Transactional
     @GetMapping("/{apartmentId}/room-report")
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
             @PathVariable UUID apartmentId,
