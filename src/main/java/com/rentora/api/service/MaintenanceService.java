@@ -27,6 +27,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import static com.rentora.api.model.entity.Unit.UnitStatus.maintenance;
+
 
 @Slf4j
 @Service
@@ -107,25 +109,26 @@ public class MaintenanceService {
 
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
+        String unitName = unit.getUnitName();
 
-        User tenantUser = userRepository.findById(request.getTenantUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + request.getTenantUserId()));
+//        User tenantUser = userRepository.findById(request.getTenantUserId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + request.getTenantUserId()));
+
 
         // 2. Create a new Maintenance entity and map data.
         Maintenance maintenance = new Maintenance();
 
+
         //  from the DTO.
-        maintenance.setTicketNumber(request.getTicketName()); // Implement your own logic for ticket number
+        maintenance.setUnit(unit);
+
+        maintenance.setTicketNumber(request.getTicketNumber()); // Implement your own logic for ticket number
         maintenance.setTitle(request.getTitle());
         maintenance.setDescription(request.getDescription());
-        maintenance.setCategory(request.getCategory());
         maintenance.setPriority(request.getPriority());
         maintenance.setAppointmentDate(request.getAppointmentDate());
+        maintenance.setDueDate(request.getDueDate());
         maintenance.setEstimatedHours(request.getEstimatedHours());
-        maintenance.setEstimatedCost(request.getEstimatedCost());
-        maintenance.setIsEmergency(request.getIsEmergency());
-        maintenance.setIsRecurring(request.getIsRecurring());
-        maintenance.setRecurringSchedule(request.getRecurringSchedule());
         if (request.getStatus() != null) {
             maintenance.setStatus(request.getStatus());
         }
@@ -133,7 +136,8 @@ public class MaintenanceService {
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
 
         maintenance.setUnit(unit);
-        maintenance.setTenantUser(tenantUser);
+//        maintenance.setTenantUser(tenantUser);
+
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
