@@ -5,8 +5,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.InvoiceOverallDTO;
-import com.rentora.api.model.dto.Invoice.Response.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
+import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
+import com.rentora.api.model.entity.AdhocInvoice;
 import com.rentora.api.repository.InvoiceRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,83 +40,172 @@ public class InvoiceService {
 //method for monthly invoice
 
     //for searching in invoice table
-    public Page<InvoiceSummaryDTO> search(String invoiceNumber,
-                                Invoice.PaymentStatus status,
-                                Pageable pageable , UUID apartmentId) {
-        Specification<Invoice> specification = Specification
-                .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status)).and(InvoiceSpecification.hasApartmentId(apartmentId));
-        if (status != null) {
-            specification = specification.and(InvoiceSpecification.hasStatus(status));
-        }
-
-        Page<Invoice> allInvoice = invoiceRepository.findAll(specification,pageable);
-
-        return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
-    }
+//    public Page<InvoiceSummaryDTO> search(String invoiceNumber,
+//                                Invoice.PaymentStatus status,
+//                                Pageable pageable , UUID apartmentId) {
+//        Specification<Invoice> specification = Specification
+//                .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status)).and(InvoiceSpecification.hasApartmentId(apartmentId));
+//        if (status != null) {
+//            specification = specification.and(InvoiceSpecification.hasStatus(status));
+//        }
+//
+//        Page<Invoice> allInvoice = invoiceRepository.findAll(specification,pageable);
+//
+//        return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
+//    }
 
     //for get overall invoice
-    public InvoiceOverallDTO getInvoiceOverall(List<InvoiceSummaryDTO> listOverAll) {
-        InvoiceOverallDTO overall = new InvoiceOverallDTO();
+//    public InvoiceOverallDTO getInvoiceOverall(List<InvoiceSummaryDTO> listOverAll) {
+//        InvoiceOverallDTO overall = new InvoiceOverallDTO();
+//        overall.setTotalInvoice(listOverAll.size());
+//
+//        Map<Invoice.PaymentStatus, Long> statusCount = listOverAll.stream().collect(Collectors.groupingBy(InvoiceSummaryDTO::getStatus, Collectors.counting()));
+//
+//        overall.setPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.paid, 0L));
+//        overall.setUnpaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.unpaid, 0L));
+//        overall.setPartiallyPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.partially_paid, 0L));
+//        overall.setOverdueInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.overdue,0L));
+//        overall.setCancelledInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.cancelled,0L));
+//
+//        return overall;
+//
+//    }
+
+    public Page<AdhocInvoiceSummaryDTO> search(String invoiceNumber,
+                                          AdhocInvoice.PaymentStatus status,
+                                          Pageable pageable , UUID apartmentId) {
+        Specification<AdhocInvoice> specification = Specification
+                .anyOf(InvoiceSpecification.hasInvoiceNumberForAdhoc(invoiceNumber),InvoiceSpecification.hasStatusForAdhoc(status)).and(InvoiceSpecification.hasApartmentIdForAdhoc(apartmentId));
+        if (status != null) {
+            specification = specification.and(InvoiceSpecification.hasStatusForAdhoc(status));
+        }
+
+        Page<AdhocInvoice> allAdhocInvoices = invoiceRepository.findAll(specification,pageable);
+
+        return allAdhocInvoices.map(InvoiceService::toAdhocInvoiceSummaryDTO);
+    }
+
+    public AdhocInvoiceOverallDTO getAdhocInvoiceOverall(List<AdhocInvoiceSummaryDTO> listOverAll) {
+        AdhocInvoiceOverallDTO overall = new AdhocInvoiceOverallDTO();
         overall.setTotalInvoice(listOverAll.size());
 
-        Map<Invoice.PaymentStatus, Long> statusCount = listOverAll.stream().collect(Collectors.groupingBy(InvoiceSummaryDTO::getStatus, Collectors.counting()));
+        Map<AdhocInvoice.PaymentStatus, Long> statusCount = listOverAll.stream().collect(Collectors.groupingBy(AdhocInvoiceSummaryDTO::getStatus, Collectors.counting()));
 
-        overall.setPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.paid, 0L));
-        overall.setUnpaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.unpaid, 0L));
-        overall.setPartiallyPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.partially_paid, 0L));
-        overall.setOverdueInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.overdue,0L));
-        overall.setCancelledInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.cancelled,0L));
+        overall.setPaidInvoice(statusCount.getOrDefault(AdhocInvoice.PaymentStatus.paid, 0L));
+        overall.setUnpaidInvoice(statusCount.getOrDefault(AdhocInvoice.PaymentStatus.unpaid, 0L));
+        overall.setOverdueInvoice(statusCount.getOrDefault(AdhocInvoice.PaymentStatus.overdue,0L));
 
         return overall;
 
     }
 
-    //for get invoice by using invoice id
-    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId, UUID apartmentId) {
-        Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found or access denied"));
+    public AdhocInvoiceDetailDTO getAdhocInvoicesById(UUID adhocInvoiceId, UUID userId, UUID apartmentId) {
+        AdhocInvoice adhocInvoice = invoiceRepository.findByAdhocInvoiceId(adhocInvoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("AdhocInvoice not found or access denied"));
 
-        InvoiceDetailDTO dto = toInvoicesDetailDTO(invoice);
+        AdhocInvoiceDetailDTO dto = toAdhocInvoiceDetailDTO(adhocInvoice);
 
         return dto;
     }
 
+//    //for get invoice by using invoice id
+//    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId, UUID apartmentId) {
+//        Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found or access denied"));
+//
+//        InvoiceDetailDTO dto = toInvoicesDetailDTO(invoice);
+//
+//        return dto;
+//    }
+
 //method for overdue invoice
     //for searching overdue invoice in table
-    public Page<InvoiceSummaryDTO> searchOverdue(String invoiceNumber,
+    public Page<AdhocInvoiceSummaryDTO> searchOverdue(String adhocInvoiceNumber,
                                                  Pageable pageable, UUID apartmentId) {
 
-        Specification<Invoice> specification = Specification.allOf(InvoiceSpecification.hasOverdueStatus(),InvoiceSpecification.hasApartmentId(apartmentId));
-        Page<Invoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
+        Specification<AdhocInvoice> specification = Specification.allOf(InvoiceSpecification.hasOverdueStatusForAdhoc(),InvoiceSpecification.hasApartmentIdForAdhoc(apartmentId));
+        Page<AdhocInvoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
 
-        return OverdueInvoice.map(InvoiceService::toInvoicesSummaryDTO);
+        return OverdueInvoice.map(InvoiceService::toAdhocInvoiceSummaryDTO);
     }
 
     //for get overall of overdue invoice
-    public OverdueInvoiceOverallDTO getOverdueInvoiceOverall(List<InvoiceSummaryDTO> listOverDue) {
+    public OverdueInvoiceOverallDTO getOverdueAdhocInvoiceOverall(List<AdhocInvoiceSummaryDTO> listOverDue) {
         OverdueInvoiceOverallDTO overdue = new OverdueInvoiceOverallDTO();
         overdue.setOverdueInvoice(listOverDue.size());
 
         return overdue;
     }
 
-    private static InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
-        InvoiceSummaryDTO summary = new InvoiceSummaryDTO();
-        summary.setId(invoice.getId());
-        summary.setInvoiceNumber(invoice.getInvoiceNumber());
+//    private static InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
+//        InvoiceSummaryDTO summary = new InvoiceSummaryDTO();
+//        summary.setId(invoice.getId());
+//        summary.setInvoiceNumber(invoice.getInvoiceNumber());
+//
+//
+//        if (invoice.getTenant() != null) {
+//            summary.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
+//        }
+//
+//        summary.setRoom(invoice.getUnit().getUnitName());
+//        summary.setAmount(invoice.getTotalAmount());
+//        summary.setIssueDate(invoice.getBillStart());
+//        summary.setDueDate(invoice.getDueDate());
+//        summary.setStatus(invoice.getPaymentStatus());
+//
+//        return summary;
+//    }
 
-
-        if (invoice.getTenant() != null) {
-            summary.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
+    private static AdhocInvoiceSummaryDTO toAdhocInvoiceSummaryDTO(AdhocInvoice adhocInvoice) {
+        AdhocInvoiceSummaryDTO summary = new AdhocInvoiceSummaryDTO();
+        summary.setId(adhocInvoice.getId());
+        summary.setInvoiceNumber(adhocInvoice.getAdhocNumber());
+        if (adhocInvoice.getTenantUserId() != null) {
+            summary.setTenant(adhocInvoice.getTenantUserId().getFirstName() + " " + adhocInvoice.getTenantUserId().getLastName());
         }
-
-        summary.setRoom(invoice.getUnit().getUnitName());
-        summary.setAmount(invoice.getTotalAmount());
-        summary.setIssueDate(invoice.getBillStart());
-        summary.setDueDate(invoice.getDueDate());
-        summary.setStatus(invoice.getPaymentStatus());
+        summary.setRoom(adhocInvoice.getUnit().getUnitName());
+        summary.setAmount(adhocInvoice.getFinalAmount());
+        summary.setIssueDate(adhocInvoice.getInvoiceDate());
+        summary.setDueDate(adhocInvoice.getDueDate());
+        summary.setStatus(adhocInvoice.getPaymentStatus());
 
         return summary;
+    }
+
+    private static AdhocInvoiceDetailDTO toAdhocInvoiceDetailDTO(AdhocInvoice adhocInvoice) {
+        AdhocInvoiceDetailDTO detail = new AdhocInvoiceDetailDTO();
+        detail.setAdhocInvoiceId(adhocInvoice.getId());
+        detail.setAdhocNumber(adhocInvoice.getAdhocNumber());
+        detail.setTitle(adhocInvoice.getTitle());
+        detail.setDescription(adhocInvoice.getDescription());
+        detail.setPaymentStatus(adhocInvoice.getPaymentStatus());
+        detail.setStatus(adhocInvoice.getStatus());
+        detail.setPriority(adhocInvoice.getPriority());
+        detail.setFinalAmount(adhocInvoice.getFinalAmount());
+        detail.setPaidAmount(adhocInvoice.getPaidAmount());
+        detail.setInvoiceDate(adhocInvoice.getInvoiceDate());
+        detail.setDueDate(adhocInvoice.getDueDate());
+
+        if (adhocInvoice.getApartment() != null) {
+            detail.setApartment(adhocInvoice.getApartment().getName());
+        }
+
+        if (adhocInvoice.getUnit() != null) {
+            detail.setUnit(adhocInvoice.getUnit().getUnitName());
+        }
+
+        if (adhocInvoice.getTenantUserId() != null) {
+            detail.setTenantUser(adhocInvoice.getTenantUserId().getFirstName() + " " + adhocInvoice.getTenantUserId().getLastName());
+            detail.setEmail(adhocInvoice.getTenantUserId().getEmail());
+        }
+
+        detail.setReceiptUrls(adhocInvoice.getReceiptUrls());
+        detail.setImages(adhocInvoice.getImages());
+        detail.setNotes(adhocInvoice.getNotes());
+        detail.setCreatedByUserId(adhocInvoice.getCreatedByUserId().getId());
+        detail.setCreatedAt(adhocInvoice.getCreatedAt());
+        detail.setUpdatedAt(adhocInvoice.getUpdatedAt());
+        return detail;
     }
 
     private static InvoiceDetailDTO toInvoicesDetailDTO(Invoice invoice) {

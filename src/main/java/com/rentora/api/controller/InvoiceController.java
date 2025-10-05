@@ -2,9 +2,13 @@ package com.rentora.api.controller;
 
 import java.util.UUID;
 
+import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.InvoiceOverallDTO;
-import com.rentora.api.model.dto.Invoice.Response.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
+import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.entity.AdhocInvoice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,16 +36,74 @@ import lombok.extern.slf4j.Slf4j;
 public class InvoiceController {
     
     private final InvoiceService invoiceService;
+//
+//    @GetMapping("/{apartmentId}")
+//    public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getInvoices(
+//        @RequestParam(defaultValue = "1") int page,
+//        @RequestParam(defaultValue = "10") int size,
+//        @RequestParam(required = false) String search,
+//        @RequestParam(defaultValue = "desc") String sortDir,
+//        @RequestParam(defaultValue = "createdAt") String sortBy,
+//        @PathVariable UUID apartmentId,
+//        @RequestParam(required = false) Invoice.PaymentStatus status){
+//
+//
+//        int requestedPage = Math.max(page - 1, 0);
+//        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+//                Sort.by(sortBy).descending() :
+//                Sort.by(sortBy).ascending();
+//
+//        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+//
+//        Page<InvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable, apartmentId);
+//
+//        InvoiceOverallDTO overall = invoiceService.getInvoiceOverall(summary.getContent());
+//
+//        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
+//    }
+
+//    @GetMapping("/{apartmentId}/overdue")
+//    public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getOverdueInvoices(
+//            @RequestParam(defaultValue = "1") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(required = false) String search,
+//            @RequestParam(defaultValue = "desc") String sortDir,
+//            @PathVariable UUID apartmentId,
+//            @RequestParam(defaultValue = "createdAt") String sortBy){
+//
+//        int requestedPage = Math.max(page - 1, 0);
+//        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+//                Sort.by(sortBy).descending() :
+//                Sort.by(sortBy).ascending();
+//
+//        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+//
+//        Page<InvoiceSummaryDTO> overdue = invoiceService.searchOverdue(search, pageable, apartmentId);
+//
+//        OverdueInvoiceOverallDTO overall = invoiceService.getOverdueInvoiceOverall(overdue.getContent());
+//
+//        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(overdue, page, overall)));
+//    }
+
+//     @GetMapping("/{apartmentId}/detail/{invoiceId}")
+//     public ResponseEntity<ApiResponse<InvoiceDetailDTO>> getInvoicesById(
+//         @PathVariable UUID invoiceId,
+//         @PathVariable UUID apartmentId,
+//         @AuthenticationPrincipal UserPrincipal currentUser) {
+//
+//         InvoiceDetailDTO invoice = invoiceService.getInvoicesById(invoiceId, currentUser.getId(),  apartmentId);
+//         return ResponseEntity.ok(ApiResponse.success(invoice));
+//     }
 
     @GetMapping("/{apartmentId}")
-    public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getInvoices(
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "10") int size,
-        @RequestParam(required = false) String search,
-        @RequestParam(defaultValue = "desc") String sortDir,
-        @RequestParam(defaultValue = "createdAt") String sortBy,
-        @PathVariable UUID apartmentId,
-        @RequestParam(required = false) Invoice.PaymentStatus status){
+    public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getInvoices(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @PathVariable UUID apartmentId,
+            @RequestParam(required = false) AdhocInvoice.PaymentStatus status){
 
 
         int requestedPage = Math.max(page - 1, 0);
@@ -51,15 +113,15 @@ public class InvoiceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<InvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable, apartmentId);
+        Page<AdhocInvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable, apartmentId);
 
-        InvoiceOverallDTO overall = invoiceService.getInvoiceOverall(summary.getContent());
+        AdhocInvoiceOverallDTO overall = invoiceService.getAdhocInvoiceOverall(summary.getContent());
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
     }
 
     @GetMapping("/{apartmentId}/overdue")
-    public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getOverdueInvoices(
+    public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getOverdueInvoices(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
@@ -74,21 +136,22 @@ public class InvoiceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<InvoiceSummaryDTO> overdue = invoiceService.searchOverdue(search, pageable, apartmentId);
+        Page<AdhocInvoiceSummaryDTO> overdue = invoiceService.searchOverdue(search, pageable, apartmentId);
 
-        OverdueInvoiceOverallDTO overall = invoiceService.getOverdueInvoiceOverall(overdue.getContent());
+        OverdueInvoiceOverallDTO overall = invoiceService.getOverdueAdhocInvoiceOverall(overdue.getContent());
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(overdue, page, overall)));
     }
 
-     @GetMapping("/{apartmentId}/detail/{invoiceId}")
-     public ResponseEntity<ApiResponse<InvoiceDetailDTO>> getInvoicesById(
-         @PathVariable UUID invoiceId,
-         @PathVariable UUID apartmentId,
-         @AuthenticationPrincipal UserPrincipal currentUser) {
+    @GetMapping("/{apartmentId}/detail/{adhocInvoiceId}")
+    public ResponseEntity<ApiResponse<AdhocInvoiceDetailDTO>> getInvoicesById(
+            @PathVariable UUID adhocInvoiceId,
+            @PathVariable UUID apartmentId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
 
-         InvoiceDetailDTO invoice = invoiceService.getInvoicesById(invoiceId, currentUser.getId(),  apartmentId);
-         return ResponseEntity.ok(ApiResponse.success(invoice));
-     }
+        AdhocInvoiceDetailDTO invoice = invoiceService.getAdhocInvoicesById(adhocInvoiceId, currentUser.getId(),  apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(invoice));
+    }
+
 
 }

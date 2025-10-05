@@ -1,10 +1,10 @@
 package com.rentora.api.specifications;
 
+import com.rentora.api.model.entity.AdhocInvoice;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.rentora.api.model.entity.Invoice;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 public final class InvoiceSpecification {
@@ -24,11 +24,32 @@ public final class InvoiceSpecification {
                 : criteriaBuilder.equal(root.get("paymentStatus"), status);
     }
 
-    public static Specification<Invoice> hasOverdueStatus() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("paymentStatus"), Invoice.PaymentStatus.overdue);
+    public static Specification<Invoice> hasApartmentId(UUID apartmentId) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("apartment").get("id"), apartmentId);
     }
 
-    public static Specification<Invoice> hasApartmentId(UUID apartmentId) {
+    public static Specification<Invoice> hasOverdueStatus() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("paymentStatus"), AdhocInvoice.PaymentStatus.overdue);
+    }
+
+    public static Specification<AdhocInvoice> hasInvoiceNumberForAdhoc(String adhocInvoiceNumber) {
+        return (root, query, criteriaBuilder) -> {
+            if (adhocInvoiceNumber == null || adhocInvoiceNumber.isBlank()) return null;
+            String like = "%" + adhocInvoiceNumber.trim().toLowerCase() + "%";
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("adhocInvoiceNumber")), like);
+        };
+    }
+
+    public static Specification<AdhocInvoice> hasStatusForAdhoc(AdhocInvoice.PaymentStatus status) {
+        return (root, query, criteriaBuilder) -> (status == null) ? null
+                : criteriaBuilder.equal(root.get("paymentStatus"), status);
+    }
+
+    public static Specification<AdhocInvoice> hasOverdueStatusForAdhoc() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("paymentStatus"), AdhocInvoice.PaymentStatus.overdue);
+    }
+
+    public static Specification<AdhocInvoice> hasApartmentIdForAdhoc(UUID apartmentId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("apartment").get("id"), apartmentId);
     }
 
