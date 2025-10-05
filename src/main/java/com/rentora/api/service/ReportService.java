@@ -9,6 +9,7 @@ import com.rentora.api.model.entity.Utility;
 import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.UnitUtilityRepository;
 import com.rentora.api.repository.UtilityRepository;
+import com.rentora.api.specifications.ReportSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +39,9 @@ public class ReportService {
     private final ContractRepository contractRepository;
 
 
-    public Page<UnitServiceResponseDto> getUnitsUtility(Pageable pageable) {
-        Page<UnitUtilities> units = unitUtilityRepository.findAll(pageable);
+    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,Pageable pageable) {
+        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId);
+        Page<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec,pageable);
 
         // group by unitId
         Map<UUID, List<UnitUtilities>> grouped = units.stream()

@@ -68,7 +68,7 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
 
-    @GetMapping("/utility")
+    @GetMapping("/{apartmentId}/utility")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnits(
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
@@ -84,7 +84,7 @@ public class ReportController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(pageable);
+        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,pageable);
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
     @GetMapping("/{apartmentId}/adhoc-invoices")
