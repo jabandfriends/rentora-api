@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -123,23 +124,32 @@ public class AuthService {
     public void updateUser(UUID userId,UpdateUserRequestDto request) throws BadRequestException {
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            boolean isExistEmail = userRepository.existsByEmail(request.getEmail().toLowerCase().trim());
-            if (isExistEmail) {
+        // Email validation: allow own email
+        String newEmail = request.getEmail();
+        if (newEmail != null && !newEmail.isEmpty()) {
+            newEmail = newEmail.toLowerCase().trim();
+            boolean emailTakenByOther = userRepository.existsByEmail(newEmail) && !newEmail.equals(user.getEmail());
+            if (emailTakenByOther) {
                 throw new BadRequestException("Email is already in use");
             }
+            user.setEmail(newEmail);
         }
-        if (request.getFirstName() != null && !request.getFirstName().isEmpty()) { user.setFirstName(request.getFirstName()); }
-        if (request.getLastName() != null && !request.getLastName().isEmpty()) { user.setLastName(request.getLastName()); }
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) { user.setEmail(request.getEmail()); }
-        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) { user.setPhoneNumber(request.getPhoneNumber()); }
-        if (request.getBirthDate() != null){ user.setBirthDate(request.getBirthDate()); }
-        if(request.getNationalId() != null && !request.getNationalId().isEmpty()){ user.setNationalId(request.getNationalId()); }
-        if(request.getPassword() != null && !request.getPassword().isEmpty()) { user.setPasswordHash(passwordEncoder.encode(request.getPassword()));}
-        if(request.getEmergencyContactName() != null && !request.getEmergencyContactName().isEmpty()) { user.setEmergencyContactName(request.getEmergencyContactName()); }
-        if(request.getEmergencyContactPhone() != null && !request.getEmergencyContactPhone().isEmpty()) { user.setEmergencyContactPhone(request.getEmergencyContactPhone()); }
 
-        User savedUser =userRepository.save(user);
+        // Update other fields if present
+        Optional.ofNullable(request.getFirstName()).filter(s -> !s.isEmpty()).ifPresent(user::setFirstName);
+        Optional.ofNullable(request.getLastName()).filter(s -> !s.isEmpty()).ifPresent(user::setLastName);
+        Optional.ofNullable(request.getPhoneNumber()).filter(s -> !s.isEmpty()).ifPresent(user::setPhoneNumber);
+        Optional.ofNullable(request.getBirthDate()).filter(s -> !s.isEmpty())
+                .ifPresent(bd -> user.setBirthDate(LocalDate.parse(bd))); // you may add try/catch for parse
+        Optional.ofNullable(request.getNationalId()).filter(s -> !s.isEmpty()).ifPresent(user::setNationalId);
+        Optional.ofNullable(request.getPassword()).filter(s -> !s.isEmpty())
+                .ifPresent(pwd -> user.setPasswordHash(passwordEncoder.encode(pwd)));
+        Optional.ofNullable(request.getEmergencyContactName()).filter(s -> !s.isEmpty())
+                .ifPresent(user::setEmergencyContactName);
+        Optional.ofNullable(request.getEmergencyContactPhone()).filter(s -> !s.isEmpty())
+                .ifPresent(user::setEmergencyContactPhone);
+
+        User savedUser = userRepository.save(user);
 
         log.info("User updated: {}", savedUser.getEmail());
     }
