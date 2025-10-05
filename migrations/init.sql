@@ -599,7 +599,7 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     included_at TIMESTAMPTZ, -- When it was included in monthly invoice
     
     -- Payment tracking
-    payment_status VARCHAR(20) DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'cancelled')),
+    payment_status VARCHAR(20) DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'cancelled','overdue')),
     paid_at TIMESTAMPTZ,
     
     -- Admin details
