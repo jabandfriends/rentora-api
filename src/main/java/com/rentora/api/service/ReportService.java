@@ -1,21 +1,17 @@
 package com.rentora.api.service;
 
-import com.rentora.api.model.dto.PaginatedResponse;
-import com.rentora.api.model.dto.Pagination;
 import com.rentora.api.model.dto.Report.Metadata.ReportUnitUtilityMetadata;
+import com.rentora.api.model.dto.Report.Response.ReadingDateDto;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
-import com.rentora.api.model.entity.Utility;
 import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.UnitUtilityRepository;
-import com.rentora.api.repository.UtilityRepository;
 import com.rentora.api.specifications.ReportSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,8 +38,8 @@ public class ReportService {
     private final ContractRepository contractRepository;
 
 
-    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,Pageable pageable) {
-        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName));
+    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,String readingDate,Pageable pageable) {
+        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName)).and(ReportSpecification.matchReadingDate(LocalDate.parse(readingDate)));
         Page<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec,pageable);
 
         // group by unitId
@@ -54,6 +51,18 @@ public class ReportService {
                 .toList();
 
         return new PageImpl<>(responses, pageable, units.getTotalElements());
+    }
+
+    public List<ReadingDateDto> getUnitUtilityReadingDate(UUID apartmentId) {
+        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId);
+        List<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec);
+        return units.stream()
+                .map(UnitUtilities::getReadingDate)     // only take the date
+                .filter(Objects::nonNull)                // skip nulls
+                .distinct()                              // remove duplicates
+                .sorted()                                // optional: sort ascending
+                .map(date -> ReadingDateDto.builder().readingDate(date).build())
+                .toList();
     }
 
     public ReportUnitUtilityMetadata getUnitsUtilityMetadata(UUID apartmentId) {

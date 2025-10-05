@@ -4,6 +4,7 @@ import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.dto.Report.Metadata.ReportUnitUtilityMetadata;
+import com.rentora.api.model.dto.Report.Response.ReadingDateDto;
 import com.rentora.api.model.dto.Report.Response.ReceiptReportDetailDTO;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
 import com.rentora.api.model.entity.AdhocInvoice;
@@ -25,7 +26,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
-
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -77,7 +78,8 @@ public class ReportController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(required = false) String unitName
+            @RequestParam(required = false) String unitName,
+            @RequestParam String readingDate
     ) {
         int requestPage = Math.max(page-1, 0);
 
@@ -87,11 +89,24 @@ public class ReportController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,unitName,pageable);
+        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,unitName,readingDate,pageable);
         ReportUnitUtilityMetadata metadata = reportService.getUnitsUtilityMetadata(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,metadata)));
     }
+
+    @GetMapping("/{apartmentId}/reading/date/utility")
+    public ResponseEntity<ApiResponse<List<ReadingDateDto>>> getUnitsReadingDate(
+            @PathVariable UUID apartmentId
+    ) {
+
+        List<ReadingDateDto> unitsDate = reportService.getUnitUtilityReadingDate(apartmentId);
+
+
+        return ResponseEntity.ok(ApiResponse.success(unitsDate));
+    }
+
+
 
     @GetMapping("/{apartmentId}/adhoc-invoices")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReceiptReportDetailDTO>>> getAdhocInvoices(
