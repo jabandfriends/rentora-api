@@ -122,7 +122,12 @@ public class MaintenanceService {
         //  from the DTO.
         maintenance.setUnit(unit);
 
-        maintenance.setTicketNumber(request.getTicketNumber()); // Implement your own logic for ticket number
+        if (request.getTicketNumber() == null || request.getTicketNumber().isBlank()) {
+            String today = java.time.LocalDate.now().toString().replace("-", ""); // 20251006
+            String randomSuffix = String.format("%03d", (int)(Math.random() * 1000)); // 000–999
+            request.setTicketNumber("MAINT-" + today + "-" + randomSuffix);
+        }
+        maintenance.setTicketNumber(request.getTicketNumber());
         maintenance.setTitle(request.getTitle());
         maintenance.setDescription(request.getDescription());
         maintenance.setPriority(request.getPriority());
@@ -132,6 +137,7 @@ public class MaintenanceService {
         if (request.getStatus() != null) {
             maintenance.setStatus(request.getStatus());
         }
+
 
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
 

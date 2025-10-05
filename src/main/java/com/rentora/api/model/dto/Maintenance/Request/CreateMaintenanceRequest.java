@@ -17,11 +17,10 @@ public class CreateMaintenanceRequest {
     @NotNull(message = "unitId is required")
     private UUID unitId; // Add this line
 
-    @NotNull(message = "tenantUserId is required")
-    private UUID tenantUserId;
+//    private UUID tenantUserId;
 
-    @NotBlank
-    @Size(max = 50, message = "Maintenance Ticket number exceed 50 numbers")
+//    @NotBlank
+//    @Size(max = 50, message = "Maintenance Ticket number exceed 50 numbers")
     private String ticketNumber;
 
     @NotBlank(message = "Maintenance name is required")
