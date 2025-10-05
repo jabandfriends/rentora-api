@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -38,6 +39,11 @@ public class ContractService {
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
         return contracts.map(this::toContractSummaryDto);
+    }
+
+    @Scheduled(cron = "0 0 0 * * *") // every day at midnight
+    public void expireContracts() {
+        contractRepository.expireOldContracts();
     }
 
     public Page<ContractSummaryDto> getContractsByTenant(UUID tenantId, Pageable pageable) {

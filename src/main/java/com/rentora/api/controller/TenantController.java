@@ -11,6 +11,7 @@ import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.CreateApartmentUserResponseDto;
+import com.rentora.api.model.dto.Tenant.Response.TenantDetailInfoResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantInfoDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantPageResponse;
 import com.rentora.api.repository.ApartmentUserRepository;
@@ -63,9 +64,9 @@ public class TenantController {
     }
 
     @GetMapping("/detail/{userId}")
-    public ResponseEntity<ApiResponse<UserInfo>> getTenantById(@PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse<TenantDetailInfoResponseDto>> getTenantById(@PathVariable UUID userId) {
 
-        UserInfo userInfo = authService.getCurrentUser(userId);
+        TenantDetailInfoResponseDto userInfo = tenantService.getTenantDetail(userId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 "User information retrieved successfully", userInfo
