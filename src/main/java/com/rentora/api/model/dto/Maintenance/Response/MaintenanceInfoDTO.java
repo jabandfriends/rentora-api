@@ -12,7 +12,7 @@ public class MaintenanceInfoDTO {
     private String unitName;
     private String buildingsName;
     private String title;
-    private LocalDate requestedDate;
     private LocalDate appointmentDate;
+    private LocalDate dueDate;
     private String status;
 }

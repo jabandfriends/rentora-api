@@ -242,7 +242,9 @@ public class MaintenanceService {
         if (buildingName != null) {
             dto.setBuildingsName(buildingName);
         }
-        dto.setRequestedDate(maintenance.getRequestedDate());
+        if (maintenance.getDueDate() != null) {
+            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        }
         if (maintenance.getAppointmentDate() != null) {
             dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
         }

@@ -41,6 +41,7 @@ public class MaintenanceSpecification {
             if (!StringUtils.hasText(searchTerm)) {
                 return null;
             }
+            
             String likeTerm = "%" + searchTerm.toLowerCase() + "%";
 
             // Join Maintenance -> Unit
