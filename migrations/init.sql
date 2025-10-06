@@ -296,7 +296,7 @@ CREATE OR REPLACE FUNCTION generate_contract_number()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.contract_number IS NULL THEN
-        NEW.contract_number := 'CT-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('contract_sequence'), 4, '0');
+        NEW.contract_number := 'CT-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('contract_sequence')::text, 4, '0');
     END IF;
     RETURN NEW;
 END;
