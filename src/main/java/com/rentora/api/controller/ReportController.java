@@ -2,6 +2,9 @@ package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Report.Metadata.ReportUnitUtilityMetadata;
+import com.rentora.api.model.dto.Report.Response.ReadingDateDto;
 import com.rentora.api.model.dto.Pagination;
 import com.rentora.api.model.dto.Report.Response.ReceiptReportDetailDTO;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
@@ -25,6 +28,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+
 import com.rentora.api.repository.UnitRepository;
 import java.util.List;
 import java.util.UUID;
@@ -83,12 +88,15 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units, page)));
     }
 
-    @GetMapping("/utility")
+    @GetMapping("/{apartmentId}/utility")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnits(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String unitName,
+            @PathVariable UUID apartmentId,
+            @RequestParam String readingDate
     ) {
         int requestPage = Math.max(page-1, 0);
 
@@ -98,9 +106,26 @@ public class ReportController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(pageable);
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
+        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,unitName,readingDate,pageable);
+        ReportUnitUtilityMetadata metadata = reportService.getUnitsUtilityMetadata(apartmentId);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,metadata)));
     }
+
+    @GetMapping("/{apartmentId}/reading/date/utility")
+    public ResponseEntity<ApiResponse<List<ReadingDateDto>>> getUnitsReadingDate(
+            @PathVariable UUID apartmentId
+    ) {
+
+        List<ReadingDateDto> unitsDate = reportService.getUnitUtilityReadingDate(apartmentId);
+
+
+        return ResponseEntity.ok(ApiResponse.success(unitsDate));
+    }
+
+
+
+
     @GetMapping("/{apartmentId}/receipt-report")
     public ResponseEntity<ApiResponse<PaginatedResponse<ReceiptReportDetailDTO>>> getAdhocInvoices(
             @PathVariable UUID apartmentId,
