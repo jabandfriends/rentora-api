@@ -80,9 +80,7 @@ public class ReportController {
                     .toPredicate(root, query, cb);
         }, pageable).map(unitService::toUnitSummaryDto);
 
-
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units, page)));
-
     }
 
     @GetMapping("/utility")
