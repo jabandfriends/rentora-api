@@ -99,8 +99,9 @@ public class InvoiceService {
 
     }
 
-    public AdhocInvoiceDetailDTO getAdhocInvoicesById(UUID adhocInvoiceId, UUID userId, UUID apartmentId) {
-        AdhocInvoice adhocInvoice = invoiceRepository.findByAdhocInvoiceId(adhocInvoiceId)
+    public AdhocInvoiceDetailDTO getAdhocInvoicesById(UUID adhocInvoiceId, UUID apartmentId) {
+        Specification<AdhocInvoice>  specification = InvoiceSpecification.hasApartmentIdForAdhoc(apartmentId).and(InvoiceSpecification.hasAdhocId(adhocInvoiceId));
+        AdhocInvoice adhocInvoice = invoiceRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("AdhocInvoice not found or access denied"));
 
         AdhocInvoiceDetailDTO dto = toAdhocInvoiceDetailDTO(adhocInvoice);
@@ -175,6 +176,7 @@ public class InvoiceService {
     private static AdhocInvoiceDetailDTO toAdhocInvoiceDetailDTO(AdhocInvoice adhocInvoice) {
         AdhocInvoiceDetailDTO detail = new AdhocInvoiceDetailDTO();
         detail.setAdhocInvoiceId(adhocInvoice.getId());
+        detail.setCategory(adhocInvoice.getCategory());
         detail.setAdhocNumber(adhocInvoice.getAdhocNumber());
         detail.setTitle(adhocInvoice.getTitle());
         detail.setDescription(adhocInvoice.getDescription());
@@ -202,7 +204,10 @@ public class InvoiceService {
         detail.setReceiptUrls(adhocInvoice.getReceiptUrls());
         detail.setImages(adhocInvoice.getImages());
         detail.setNotes(adhocInvoice.getNotes());
-        detail.setCreatedByUserId(adhocInvoice.getCreatedByUserId().getId());
+        if(adhocInvoice.getCreatedByUserId() != null) {
+            detail.setCreatedByUserId(adhocInvoice.getCreatedByUserId().getId());
+        }
+
         detail.setCreatedAt(adhocInvoice.getCreatedAt());
         detail.setUpdatedAt(adhocInvoice.getUpdatedAt());
         return detail;

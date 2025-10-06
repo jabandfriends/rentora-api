@@ -36,7 +36,7 @@ public final class InvoiceSpecification {
         return (root, query, criteriaBuilder) -> {
             if (adhocInvoiceNumber == null || adhocInvoiceNumber.isBlank()) return null;
             String like = "%" + adhocInvoiceNumber.trim().toLowerCase() + "%";
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("adhocInvoiceNumber")), like);
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("adhocNumber")), like);
         };
     }
 
@@ -51,6 +51,9 @@ public final class InvoiceSpecification {
 
     public static Specification<AdhocInvoice> hasApartmentIdForAdhoc(UUID apartmentId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("apartment").get("id"), apartmentId);
+    }
+    public static Specification<AdhocInvoice> hasAdhocId(UUID id) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("id"), id);
     }
 
 }

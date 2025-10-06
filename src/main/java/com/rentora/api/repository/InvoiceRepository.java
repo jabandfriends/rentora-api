@@ -14,9 +14,6 @@ import java.util.UUID;
 @Repository
 public interface InvoiceRepository extends JpaRepository<AdhocInvoice, UUID>, JpaSpecificationExecutor<AdhocInvoice> {
 
-    @Query("SELECT i FROM AdhocInvoice i JOIN FETCH i. apartment a JOIN FETCH i.unit u JOIN FETCH i.monthlyInvoiceId c JOIN FETCH i.tenantUserId usr WHERE i.id = :adhocInvoiceId")
-    Optional<AdhocInvoice> findByAdhocInvoiceId(@Param("adhocInvoiceId") UUID adhocInvoiceId);
-
 }
 
 

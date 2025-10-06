@@ -146,10 +146,9 @@ public class InvoiceController {
     @GetMapping("/{apartmentId}/detail/{adhocInvoiceId}")
     public ResponseEntity<ApiResponse<AdhocInvoiceDetailDTO>> getInvoicesById(
             @PathVariable UUID adhocInvoiceId,
-            @PathVariable UUID apartmentId,
-            @AuthenticationPrincipal UserPrincipal currentUser) {
+            @PathVariable UUID apartmentId) {
 
-        AdhocInvoiceDetailDTO invoice = invoiceService.getAdhocInvoicesById(adhocInvoiceId, currentUser.getId(),  apartmentId);
+        AdhocInvoiceDetailDTO invoice = invoiceService.getAdhocInvoicesById(adhocInvoiceId,  apartmentId);
         return ResponseEntity.ok(ApiResponse.success(invoice));
     }
 
