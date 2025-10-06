@@ -85,6 +85,15 @@ public class InvoiceService {
         return allAdhocInvoices.map(InvoiceService::toAdhocInvoiceSummaryDTO);
     }
 
+    public Page<AdhocInvoiceSummaryDTO> searchOverdue(String invoiceNumber,
+                                                      Pageable pageable, UUID apartmentId) {
+
+        Specification<AdhocInvoice> specification = Specification.allOf(InvoiceSpecification.hasInvoiceNumberForAdhoc(invoiceNumber),InvoiceSpecification.hasOverdueStatusForAdhoc()).and(InvoiceSpecification.hasApartmentIdForAdhoc(apartmentId));
+        Page<AdhocInvoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
+
+        return OverdueInvoice.map(InvoiceService::toAdhocInvoiceSummaryDTO);
+    }
+
     public AdhocInvoiceOverallDTO getAdhocInvoiceOverall(List<AdhocInvoiceSummaryDTO> listOverAll) {
         AdhocInvoiceOverallDTO overall = new AdhocInvoiceOverallDTO();
         overall.setTotalInvoice(listOverAll.size());
@@ -119,16 +128,6 @@ public class InvoiceService {
 //        return dto;
 //    }
 
-//method for overdue invoice
-    //for searching overdue invoice in table
-    public Page<AdhocInvoiceSummaryDTO> searchOverdue(String adhocInvoiceNumber,
-                                                 Pageable pageable, UUID apartmentId) {
-
-        Specification<AdhocInvoice> specification = Specification.allOf(InvoiceSpecification.hasOverdueStatusForAdhoc(),InvoiceSpecification.hasApartmentIdForAdhoc(apartmentId));
-        Page<AdhocInvoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
-
-        return OverdueInvoice.map(InvoiceService::toAdhocInvoiceSummaryDTO);
-    }
 
     //for get overall of overdue invoice
     public OverdueInvoiceOverallDTO getOverdueAdhocInvoiceOverall(List<AdhocInvoiceSummaryDTO> listOverDue) {

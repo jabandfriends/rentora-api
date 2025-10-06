@@ -52,6 +52,7 @@ public final class InvoiceSpecification {
     public static Specification<AdhocInvoice> hasApartmentIdForAdhoc(UUID apartmentId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("apartment").get("id"), apartmentId);
     }
+
     public static Specification<AdhocInvoice> hasAdhocId(UUID id) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("id"), id);
     }
