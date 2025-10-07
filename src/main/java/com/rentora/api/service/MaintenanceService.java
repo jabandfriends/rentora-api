@@ -43,8 +43,6 @@ public class MaintenanceService {
     private final UnitRepository unitRepository;
 
     public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
-
-
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name));
         //status check
         if (status != null) {
@@ -185,54 +183,39 @@ public class MaintenanceService {
         }
     public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
+
+        if (maintenance == null) {
+            return dto;
+        }
+
+        // --- Basic Maintenance Info ---
         dto.setId(maintenance.getId());
-        dto.setUnitId(maintenance.getUnit().getId());
-        if (maintenance.getTenantUser() != null) {
-            dto.setTenantUserId(maintenance.getTenantUser().getId());
-        }
-        if (maintenance.getAssignedToUser() != null) {
-            dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
-        }
         dto.setTicketNumber(maintenance.getTicketNumber());
-        dto.setTenantUserId(maintenance.getTenantUser().getId());
         dto.setTitle(maintenance.getTitle());
         dto.setDescription(maintenance.getDescription());
-        dto.setCategory(maintenance.getCategory().name());
-        dto.setStatus(maintenance.getStatus().name());
-        dto.setPriority(maintenance.getPriority().name());
+
+        if (maintenance.getCategory() != null)
+            dto.setCategory(maintenance.getCategory().name());
+
+        if (maintenance.getStatus() != null)
+            dto.setStatus(maintenance.getStatus().name());
+
+        if (maintenance.getPriority() != null)
+            dto.setPriority(maintenance.getPriority().name());
+
         dto.setRequestedDate(maintenance.getRequestedDate());
-        dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+
+        if (maintenance.getAppointmentDate() != null)
+            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+
+        if (maintenance.getDueDate() != null)
+            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+
         dto.setStartedAt(maintenance.getStartedAt());
         dto.setCompletedAt(maintenance.getCompletedAt());
-        if (maintenance.getDueDate() != null) {
-            dto.setDueDate(maintenance.getDueDate().toLocalDate());
-        }
         dto.setEstimatedHours(maintenance.getEstimatedHours());
         dto.setActualHours(maintenance.getActualHours());
         dto.setEstimatedCost(maintenance.getEstimatedCost());
-        dto.setRecurringSchedule(String.valueOf(maintenance.getRecurringSchedule()));
-        if (maintenance.getCreatedAt() != null) {
-            dto.setCreatedAt(maintenance.getCreatedAt());
-        }
-        if (maintenance.getUpdatedAt() != null) {
-            dto.setUpdatedAt(maintenance.getUpdatedAt());
-        }
-        if (maintenance.getAppointmentDate() != null) {
-            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
-        }
-        if (maintenance.getStartedAt() != null) {
-            dto.setStartedAt(maintenance.getStartedAt());
-        }
-
-        if (maintenance.getCompletedAt() != null) {
-            dto.setCompletedAt(maintenance.getCompletedAt());
-        }
-        if (maintenance.getDueDate() != null) {
-            dto.setDueDate(maintenance.getDueDate().toLocalDate());
-        }
-
-        if (maintenance.getAssignedToUser() != null) {}
-
         dto.setActualCost(maintenance.getActualCost());
         dto.setWorkSummary(maintenance.getWorkSummary());
         dto.setTenantFeedback(maintenance.getTenantFeedback());
@@ -240,8 +223,34 @@ public class MaintenanceService {
         dto.setIsEmergency(maintenance.getIsEmergency());
         dto.setIsRecurring(maintenance.getIsRecurring());
 
+        if (maintenance.getRecurringSchedule() != null)
+            dto.setRecurringSchedule(maintenance.getRecurringSchedule().toString());
+
+        if (maintenance.getCreatedAt() != null)
+            dto.setCreatedAt(maintenance.getCreatedAt());
+
+        if (maintenance.getUpdatedAt() != null)
+            dto.setUpdatedAt(maintenance.getUpdatedAt());
+
+        // --- Building Info ---
+        if (maintenance.getUnit() != null) {
+            if (maintenance.getUnit().getFloor() != null &&
+                    maintenance.getUnit().getFloor().getBuilding() != null) {
+                dto.setBuildingsName(maintenance.getUnit().getFloor().getBuilding().getName());
+            }
+            dto.setUnitName(maintenance.getUnit().getUnitName());
+        }
+
+        // --- Tenant Info ---
+        if (maintenance.getTenantUser() != null) {
+            dto.setTenantName(maintenance.getTenantUser().getFullName());
+            dto.setTenantEmail(maintenance.getTenantUser().getEmail());
+            dto.setTenantPhoneNumber(maintenance.getTenantUser().getPhoneNumber());
+        }
+
         return dto;
     }
+
     public MaintenanceInfoDTO toMaintenanceInfoDto(Maintenance maintenance) {
 
         String unitName = maintenance.getUnit().getUnitName();
