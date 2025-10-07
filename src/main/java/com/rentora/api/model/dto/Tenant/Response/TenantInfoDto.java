@@ -33,8 +33,7 @@ public class TenantInfoDto {
         private LocalDate startDate;
         private LocalDate endDate;
     }
-    private boolean occupiedStatus;
-    private String unitName;
+
 
 
 

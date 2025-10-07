@@ -2,6 +2,7 @@ package com.rentora.api.model.dto.Maintenance.Response;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -40,6 +41,6 @@ public class MaintenanceDetailDTO {
     private Boolean isEmergency;
     private Boolean isRecurring;
     private String recurringSchedule;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -187,12 +187,14 @@ public class MaintenanceService {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
         dto.setId(maintenance.getId());
         dto.setUnitId(maintenance.getUnit().getId());
-        dto.setTenantUserId(maintenance.getTenantUser().getId());
-        dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
+        if (maintenance.getTenantUser() != null) {
+            dto.setTenantUserId(maintenance.getTenantUser().getId());
+        }
+        if (maintenance.getAssignedToUser() != null) {
+            dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
+        }
         dto.setTicketNumber(maintenance.getTicketNumber());
-        dto.setUnitId(maintenance.getUnit().getId());
         dto.setTenantUserId(maintenance.getTenantUser().getId());
-        dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
         dto.setTitle(maintenance.getTitle());
         dto.setDescription(maintenance.getDescription());
         dto.setCategory(maintenance.getCategory().name());
@@ -202,13 +204,19 @@ public class MaintenanceService {
         dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
         dto.setStartedAt(maintenance.getStartedAt());
         dto.setCompletedAt(maintenance.getCompletedAt());
-        dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        if (maintenance.getDueDate() != null) {
+            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        }
         dto.setEstimatedHours(maintenance.getEstimatedHours());
         dto.setActualHours(maintenance.getActualHours());
         dto.setEstimatedCost(maintenance.getEstimatedCost());
         dto.setRecurringSchedule(String.valueOf(maintenance.getRecurringSchedule()));
-        dto.setCreatedAt(OffsetDateTime.from(maintenance.getCreatedAt()));
-        dto.setUpdatedAt(OffsetDateTime.from(maintenance.getUpdatedAt()));
+        if (maintenance.getCreatedAt() != null) {
+            dto.setCreatedAt(maintenance.getCreatedAt());
+        }
+        if (maintenance.getUpdatedAt() != null) {
+            dto.setUpdatedAt(maintenance.getUpdatedAt());
+        }
         if (maintenance.getAppointmentDate() != null) {
             dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
         }
@@ -231,12 +239,6 @@ public class MaintenanceService {
         dto.setTenantRating(maintenance.getTenantRating());
         dto.setIsEmergency(maintenance.getIsEmergency());
         dto.setIsRecurring(maintenance.getIsRecurring());
-        if (maintenance.getCreatedAt() != null) {
-            dto.setCreatedAt(maintenance.getCreatedAt().atOffset(ZoneOffset.UTC));
-        }
-        if (maintenance.getUpdatedAt() != null) {
-            dto.setUpdatedAt(maintenance.getUpdatedAt().atOffset(ZoneOffset.UTC));
-        }
 
         return dto;
     }
