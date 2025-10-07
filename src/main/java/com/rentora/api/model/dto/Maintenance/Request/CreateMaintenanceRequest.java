@@ -17,12 +17,11 @@ public class CreateMaintenanceRequest {
     @NotNull(message = "unitId is required")
     private UUID unitId; // Add this line
 
-    @NotNull(message = "tenantUserId is required")
-    private UUID tenantUserId;
+//    private UUID tenantUserId;
 
-    @NotBlank
-    @Size(max = 50, message = "Maintenance Ticket number exceed 50 numbers")
-    private String ticketName;
+//    @NotBlank
+//    @Size(max = 50, message = "Maintenance Ticket number exceed 50 numbers")
+    private String ticketNumber;
 
     @NotBlank(message = "Maintenance name is required")
     @Size(max = 100, message = "Maintenance name cannot exceed 100 characters")
@@ -35,6 +34,7 @@ public class CreateMaintenanceRequest {
     private Maintenance.Priority priority;
 
     private OffsetDateTime appointmentDate;
+    private OffsetDateTime dueDate;
     private OffsetDateTime startAt;
     private OffsetDateTime completedAt;
 
@@ -55,7 +55,11 @@ public class CreateMaintenanceRequest {
     private Boolean isEmergency;
     private Boolean isRecurring;
 
+
+
     private Maintenance.RecurringSchedule recurringSchedule;
+
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.rentora.api.controller;
 
+import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
@@ -8,6 +9,7 @@ import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ApartmentService;
@@ -55,8 +57,9 @@ public class ApartmentController {
 
         Page<ApartmentSummaryDTO> apartments = apartmentService.getApartments(
                 currentUser.getId(), search,status, pageable);
+        ApartmentMetadataDto apartmentMetadataDto = apartmentService.getApartmentsMetadata(apartments.getContent());
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(apartments,page)));
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(apartments,page,apartmentMetadataDto)));
     }
 
     @GetMapping("/{apartmentId}")

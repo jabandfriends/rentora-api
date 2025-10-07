@@ -296,7 +296,7 @@ CREATE OR REPLACE FUNCTION generate_contract_number()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.contract_number IS NULL THEN
-        NEW.contract_number := 'CT-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('contract_sequence'), 4, '0');
+        NEW.contract_number := 'CT-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('contract_sequence')::text, 4, '0');
     END IF;
     RETURN NEW;
 END;
@@ -385,7 +385,7 @@ CREATE OR REPLACE FUNCTION generate_invoice_number()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.invoice_number IS NULL THEN
-        NEW.invoice_number := 'INV-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('invoice_sequence'), 5, '0');
+        NEW.invoice_number := 'INV-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('invoice_sequence')::text, 5, '0');
     END IF;
     RETURN NEW;
 END;
@@ -441,7 +441,7 @@ CREATE OR REPLACE FUNCTION generate_payment_number()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.payment_number IS NULL THEN
-        NEW.payment_number := 'PAY-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('payment_sequence'), 5, '0');
+        NEW.payment_number := 'PAY-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('payment_sequence')::text, 5, '0');
     END IF;
     RETURN NEW;
 END;
@@ -503,7 +503,7 @@ CREATE OR REPLACE FUNCTION generate_ticket_number()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.ticket_number IS NULL THEN
-        NEW.ticket_number := 'TK-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('ticket_sequence'), 4, '0');
+        NEW.ticket_number := 'TK-' || TO_CHAR(NOW(), 'YYYYMM') || '-' || LPAD(nextval('ticket_sequence')::text, 4, '0');
     END IF;
     RETURN NEW;
 END;
@@ -599,7 +599,7 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     included_at TIMESTAMPTZ, -- When it was included in monthly invoice
     
     -- Payment tracking
-    payment_status VARCHAR(20) DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'cancelled')),
+    payment_status VARCHAR(20) DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'cancelled','overdue')),
     paid_at TIMESTAMPTZ,
     
     -- Admin details

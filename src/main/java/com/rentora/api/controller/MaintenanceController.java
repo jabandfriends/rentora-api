@@ -5,11 +5,15 @@ import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenancePageResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.security.UserPrincipal;
@@ -37,8 +41,9 @@ public class MaintenanceController {
 
     private final MaintenanceService maintenanceService;
     @GetMapping
-    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceDetailDTO>>> getMaintenance(
+    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceInfoDTO>>> getMaintenance(
             @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "title") String sortBy,
@@ -54,10 +59,13 @@ public class MaintenanceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<MaintenanceDetailDTO> maintenance = maintenanceService.getMaintenance(
-                currentUser.getId(), search,status, pageable);
+        // Call the service method with the correct parameters
+        Page<MaintenanceInfoDTO> response = maintenanceService.getMaintenance(
+                apartmentId, search, status, pageable);
+        MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(response.getContent());
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenance,page)));
+        // The ApiResponse.success method should be adjusted to accept the correct DTO
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(response,page,maintenanceInfoDto)));
     }
     @GetMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<MaintenanceDetailDTO>> getMaintenanceById(
