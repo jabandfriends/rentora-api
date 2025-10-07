@@ -122,11 +122,6 @@ public class MaintenanceService {
         //  from the DTO.
         maintenance.setUnit(unit);
 
-        if (request.getTicketNumber() == null || request.getTicketNumber().isBlank()) {
-            String today = java.time.LocalDate.now().toString().replace("-", ""); // 20251006
-            String randomSuffix = String.format("%03d", (int)(Math.random() * 1000)); // 000–999
-            request.setTicketNumber("MAINT-" + today + "-" + randomSuffix);
-        }
         maintenance.setTicketNumber(request.getTicketNumber());
         maintenance.setTitle(request.getTitle());
         maintenance.setDescription(request.getDescription());
