@@ -57,12 +57,12 @@ public class MaintenanceService {
     public MaintenanceMetadataResponseDto getMaintenanceMetadata(UUID apartmentId) {
 
         long totalMaintenance =  maintenanceRepository.countMaintenanceByApartmentId(apartmentId);
-        long totalAssignedMaintenances =  maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.assigned, apartmentId);
+        long totalCompleteMaintenances =  maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.completed, apartmentId);
         long totalPendingMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.pending, apartmentId);
         long totalInprogressMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.in_progress, apartmentId);
 
 
-        return MaintenanceMetadataResponseDto.builder().totalMaintenance(totalMaintenance).assignedCount(totalAssignedMaintenances)
+        return MaintenanceMetadataResponseDto.builder().totalMaintenance(totalMaintenance).completedCount(totalCompleteMaintenances)
                 .pendingCount(totalPendingMaintenances).inProgressCount(totalInprogressMaintenances).build();
 
     }

@@ -8,6 +8,6 @@ import lombok.Data;
 public class MaintenanceMetadataResponseDto {
     private long totalMaintenance;
     private long pendingCount;
-    private long assignedCount;
+    private long completedCount;
     private long inProgressCount;
 }
