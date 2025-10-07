@@ -2,6 +2,7 @@ package com.rentora.api.model.dto.Maintenance.Response;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -11,13 +12,16 @@ import java.math.BigDecimal;
 public class MaintenanceDetailDTO {
     private UUID id;
     private String ticketNumber;
-    private UUID unitId;
-    private UUID tenantUserId;
-    private UUID assignedToUserId;
-    //Name
+
+    //Unit
     private String unitName;
+
+    //tenant
     private String tenantName;
-    private String assignedToUserName;
+    private String tenantEmail;
+    private String tenantPhoneNumber;
+
+    //building
     private String buildingsName;
 
     private String title;
@@ -35,11 +39,15 @@ public class MaintenanceDetailDTO {
     private BigDecimal estimatedCost;
     private BigDecimal actualCost;
     private String workSummary;
+    private String assignedToUserName;
+
     private String tenantFeedback;
     private Integer tenantRating;
+
     private Boolean isEmergency;
     private Boolean isRecurring;
+
     private String recurringSchedule;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

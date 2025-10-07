@@ -8,6 +8,7 @@ import com.rentora.api.model.dto.Authentication.UpdateUserRequestDto;
 import com.rentora.api.model.dto.Authentication.UserInfo;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.Tenant.Response.CreateApartmentUserResponseDto;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.CreateApartmentUserResponseDto;

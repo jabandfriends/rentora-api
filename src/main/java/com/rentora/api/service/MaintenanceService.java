@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -41,8 +43,6 @@ public class MaintenanceService {
     private final UnitRepository unitRepository;
 
     public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
-
-
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name));
         //status check
         if (status != null) {
@@ -168,6 +168,11 @@ public class MaintenanceService {
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
     }
+    public MaintenanceDetailDTO getMaintenanceById(UUID maintenanceId) {
+        Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
+        return toMaintenanceDetailDto(maintenance);
+    }
 
         public void deleteMaintenance(UUID maintenanceId) {
             Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
@@ -178,30 +183,36 @@ public class MaintenanceService {
         }
     public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
+
+        if (maintenance == null) {
+            return dto;
+        }
+
+        // --- Basic Maintenance Info ---
         dto.setId(maintenance.getId());
-        dto.setUnitId(maintenance.getUnit().getId());
-        dto.setTenantUserId(maintenance.getTenantUser().getId());
-        dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
         dto.setTicketNumber(maintenance.getTicketNumber());
         dto.setTitle(maintenance.getTitle());
         dto.setDescription(maintenance.getDescription());
-        dto.setCategory(maintenance.getCategory().name());
-        dto.setStatus(maintenance.getStatus().name());
-        dto.setPriority(maintenance.getPriority().name());
-        dto.setRequestedDate(maintenance.getRequestedDate());
-        if (maintenance.getAppointmentDate() != null) {
-            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
-        }
-        if (maintenance.getStartedAt() != null) {
-            dto.setStartedAt(maintenance.getStartedAt());
-        }
 
-        if (maintenance.getCompletedAt() != null) {
-            dto.setCompletedAt(maintenance.getCompletedAt());
-        }
-        if (maintenance.getDueDate() != null) {
+        if (maintenance.getCategory() != null)
+            dto.setCategory(maintenance.getCategory().name());
+
+        if (maintenance.getStatus() != null)
+            dto.setStatus(maintenance.getStatus().name());
+
+        if (maintenance.getPriority() != null)
+            dto.setPriority(maintenance.getPriority().name());
+
+        dto.setRequestedDate(maintenance.getRequestedDate());
+
+        if (maintenance.getAppointmentDate() != null)
+            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+
+        if (maintenance.getDueDate() != null)
             dto.setDueDate(maintenance.getDueDate().toLocalDate());
-        }
+
+        dto.setStartedAt(maintenance.getStartedAt());
+        dto.setCompletedAt(maintenance.getCompletedAt());
         dto.setEstimatedHours(maintenance.getEstimatedHours());
         dto.setActualHours(maintenance.getActualHours());
         dto.setEstimatedCost(maintenance.getEstimatedCost());
@@ -211,15 +222,35 @@ public class MaintenanceService {
         dto.setTenantRating(maintenance.getTenantRating());
         dto.setIsEmergency(maintenance.getIsEmergency());
         dto.setIsRecurring(maintenance.getIsRecurring());
-        if (maintenance.getCreatedAt() != null) {
-            dto.setCreatedAt(maintenance.getCreatedAt().atOffset(ZoneOffset.UTC));
+
+        if (maintenance.getRecurringSchedule() != null)
+            dto.setRecurringSchedule(maintenance.getRecurringSchedule().toString());
+
+        if (maintenance.getCreatedAt() != null)
+            dto.setCreatedAt(maintenance.getCreatedAt());
+
+        if (maintenance.getUpdatedAt() != null)
+            dto.setUpdatedAt(maintenance.getUpdatedAt());
+
+        // --- Building Info ---
+        if (maintenance.getUnit() != null) {
+            if (maintenance.getUnit().getFloor() != null &&
+                    maintenance.getUnit().getFloor().getBuilding() != null) {
+                dto.setBuildingsName(maintenance.getUnit().getFloor().getBuilding().getName());
+            }
+            dto.setUnitName(maintenance.getUnit().getUnitName());
         }
-        if (maintenance.getUpdatedAt() != null) {
-            dto.setUpdatedAt(maintenance.getUpdatedAt().atOffset(ZoneOffset.UTC));
+
+        // --- Tenant Info ---
+        if (maintenance.getTenantUser() != null) {
+            dto.setTenantName(maintenance.getTenantUser().getFullName());
+            dto.setTenantEmail(maintenance.getTenantUser().getEmail());
+            dto.setTenantPhoneNumber(maintenance.getTenantUser().getPhoneNumber());
         }
 
         return dto;
     }
+
     public MaintenanceInfoDTO toMaintenanceInfoDto(Maintenance maintenance) {
 
         String unitName = maintenance.getUnit().getUnitName();
