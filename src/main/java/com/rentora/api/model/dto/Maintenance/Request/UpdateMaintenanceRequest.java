@@ -14,8 +14,8 @@ public class UpdateMaintenanceRequest {
 
     private String description;
 
-//    private Maintenance.Category category;
-//    private Maintenance.Status status;
+    private Maintenance.Category category;
+    private Maintenance.Status status;
     private Maintenance.Priority priority;
 
     private OffsetDateTime appointmentDate;
@@ -38,5 +38,5 @@ public class UpdateMaintenanceRequest {
 //    private Boolean isEmergency;
 //    private Boolean isRecurring;
 //
-//    private Maintenance.RecurringSchedule recurringSchedule;
+    private Maintenance.RecurringSchedule recurringSchedule;
 }

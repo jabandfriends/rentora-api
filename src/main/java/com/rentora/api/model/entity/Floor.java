@@ -4,6 +4,7 @@ package com.rentora.api.model.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "floors")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 public class Floor {
     @Id

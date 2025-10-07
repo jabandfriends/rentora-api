@@ -1,9 +1,11 @@
 package com.rentora.api.service;
 
+import com.rentora.api.model.dto.Unit.Metadata.UnitMetadataDto;
 import com.rentora.api.model.dto.Unit.Request.CreateUnitRequest;
 import com.rentora.api.model.dto.Unit.Request.UpdateUnitRequest;
 import com.rentora.api.model.dto.Unit.Response.UnitDetailDto;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
+import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.exception.BadRequestException;
@@ -11,14 +13,20 @@ import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.FloorRepository;
 import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.specifications.UnitSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -34,16 +42,61 @@ public class UnitService {
     private final ContractRepository contractRepository;
 
     public Page<UnitSummaryDto> getUnitsByApartment(UUID apartmentId, Unit.UnitStatus status,
-                                                    Unit.UnitType unitType, UUID floorId, Pageable pageable) {
+                                                    Unit.UnitType unitType,String search, UUID floorId, Pageable pageable) {
         Page<Unit> units;
+        Specification<Unit> spec = UnitSpecification.hasApartmentId(apartmentId).and(UnitSpecification.hasStatus(status)).and(UnitSpecification.hasUnitType(unitType)).and(UnitSpecification.hasFloorId(floorId))
+                .and(UnitSpecification.hasName(search));
 
-        if (floorId != null) {
-            units = unitRepository.findByFloorId(floorId, pageable);
-        } else {
-            units = unitRepository.findByApartmentIdAndFilters(apartmentId, status, unitType, pageable);
-        }
+        units = unitRepository.findAll(spec, pageable);
 
         return units.map(this::toUnitSummaryDto);
+    }
+
+    public UnitMetadataDto getUnitsMetadata(List<UnitSummaryDto> units, UUID apartmentId) {
+
+        //total unit
+        long totalUnits = unitRepository.countByApartmentId(apartmentId);
+
+        //occupied
+        long totalOccupied = unitRepository.countByApartmentIdAndStatus(apartmentId, Unit.UnitStatus.occupied);
+        long totalAvailable = unitRepository.countByApartmentIdAndStatus(apartmentId, Unit.UnitStatus.available);
+        long totalMaintenance = unitRepository.countByApartmentIdAndStatus(apartmentId, Unit.UnitStatus.maintenance);
+
+
+        return UnitMetadataDto.builder().totalUnits(totalUnits).totalUnitsOccupied(totalOccupied).totalUnitsAvailable(totalAvailable)
+                .totalUnitsMaintenance(totalMaintenance).build();
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    public void updateUnitStatus() {
+        LocalDate today = LocalDate.now();
+
+        List<Unit> allUnits = unitRepository.findAll();
+
+
+        for (Unit unit : allUnits) {
+            Unit.UnitStatus newStatus = Unit.UnitStatus.available;
+            if(unit.getStatus() != Unit.UnitStatus.maintenance) {
+
+                List<Contract> unitsContract = unit.getContracts() != null ? unit.getContracts() : new ArrayList<>();
+
+                for (Contract contract : unitsContract) {
+                    Contract.ContractStatus contractStatus = contract.getStatus();
+                    if(contractStatus == Contract.ContractStatus.active) {
+                        newStatus = Unit.UnitStatus.occupied;
+                        break;
+                    }
+                }
+            }
+            unit.setStatus(newStatus);
+            if (unit.getStatus() != newStatus) {
+                unit.setStatus(newStatus);
+                unitRepository.save(unit);
+            }
+
+        }
+
+        log.info("Unit status check completed at {}", today);
     }
 
     public UnitDetailDto getUnitById(UUID unitId, UUID userId) {
@@ -136,18 +189,24 @@ public class UnitService {
         dto.setBedrooms(unit.getBedrooms());
         dto.setBathrooms(unit.getBathrooms());
         dto.setSquareMeters(unit.getSquareMeters());
-        dto.setStatus(unit.getStatus());
+        dto.setUnitStatus(unit.getStatus());
         dto.setFurnishingStatus(unit.getFurnishingStatus());
         dto.setFloorName(unit.getFloor().getFloorName());
         dto.setBuildingName(unit.getFloor().getBuilding().getName());
         dto.setApartmentName(unit.getFloor().getBuilding().getApartment().getName());
         dto.setCreatedAt(unit.getCreatedAt() != null ? unit.getCreatedAt().toString() : null);
 
+
         // Get current tenant if any
         contractRepository.findActiveContractByUnitId(unit.getId())
                 .ifPresent(contract -> {
                     if (contract.getTenant() != null) {
-                        dto.setCurrentTenant(contract.getTenant().getFirstName() + " " + contract.getTenant().getLastName());
+                        dto.setContractNumber(contract.getContractNumber());
+                        dto.setCurrentTenant(contract.getTenant().getFirstName());
+                        dto.setContractStatus(contract.getStatus());
+                        dto.setRentalType(contract.getRentalType());
+                        dto.setContractStartDate(contract.getStartDate());
+                        dto.setContractEndDate(contract.getEndDate());
                     }
                 });
 

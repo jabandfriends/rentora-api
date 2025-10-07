@@ -3,6 +3,7 @@ package com.rentora.api.model.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "contracts")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 public class Contract {
     @Id
@@ -72,7 +74,7 @@ public class Contract {
     private String specialConditions;
 
     @Enumerated(EnumType.STRING)
-    private ContractStatus status = ContractStatus.ACTIVE;
+    private ContractStatus status = ContractStatus.active;
 
     @Column(name = "auto_renewal")
     private Boolean autoRenewal = false;
@@ -109,10 +111,10 @@ public class Contract {
     private LocalDateTime updatedAt;
 
     public enum RentalType {
-        DAILY, MONTHLY, YEARLY
+        daily,monthly,yearly
     }
 
     public enum ContractStatus {
-        DRAFT, ACTIVE, TERMINATED, EXPIRED, RENEWED
+        draft,active,terminated,expired,renewed
     }
 }

@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -38,6 +39,11 @@ public class ContractService {
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
         return contracts.map(this::toContractSummaryDto);
+    }
+
+    @Scheduled(cron = "0 0 0 * * *") // every day at midnight
+    public void expireContracts() {
+        contractRepository.expireOldContracts();
     }
 
     public Page<ContractSummaryDto> getContractsByTenant(UUID tenantId, Pageable pageable) {
@@ -89,7 +95,7 @@ public class ContractService {
         contract.setUtilitiesIncluded(request.getUtilitiesIncluded());
         contract.setTermsAndConditions(request.getTermsAndConditions());
         contract.setSpecialConditions(request.getSpecialConditions());
-        contract.setStatus(Contract.ContractStatus.ACTIVE);
+        contract.setStatus(Contract.ContractStatus.active);
         contract.setAutoRenewal(request.getAutoRenewal());
         contract.setRenewalNoticeDays(request.getRenewalNoticeDays());
         contract.setDocumentUrl(request.getDocumentUrl());
@@ -138,14 +144,14 @@ public class ContractService {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-        if (contract.getStatus() != Contract.ContractStatus.ACTIVE) {
+        if (contract.getStatus() != Contract.ContractStatus.active) {
             throw new BadRequestException("Only active contracts can be terminated");
         }
 
         User terminatedByUser = userRepository.findById(terminatedByUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        contract.setStatus(Contract.ContractStatus.TERMINATED);
+        contract.setStatus(Contract.ContractStatus.terminated);
         contract.setTerminationDate(request.getTerminationDate());
         contract.setTerminationReason(request.getTerminationReason());
         contract.setTerminatedByUser(terminatedByUser);
