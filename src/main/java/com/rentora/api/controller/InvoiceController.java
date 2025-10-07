@@ -3,7 +3,6 @@ package com.rentora.api.controller;
 import java.util.UUID;
 
 import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
-import com.rentora.api.model.dto.Invoice.Metadata.InvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
@@ -15,16 +14,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
-import com.rentora.api.model.dto.Invoice.Response.InvoiceSummaryDTO;
-import com.rentora.api.model.entity.Invoice;
-import com.rentora.api.model.dto.Invoice.Response.InvoiceDetailDTO;
-import com.rentora.api.security.UserPrincipal;
-import com.rentora.api.service.InvoiceService;
+import com.rentora.api.service.AdhocInvoiceService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class InvoiceController {
     
-    private final InvoiceService invoiceService;
+    private final AdhocInvoiceService adhocInvoiceService;
 //
 //    @GetMapping("/{apartmentId}")
 //    public ResponseEntity<ApiResponse<PaginatedResponse<InvoiceSummaryDTO>>> getInvoices(
@@ -113,9 +107,9 @@ public class InvoiceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<AdhocInvoiceSummaryDTO> summary = invoiceService.search(search, status, pageable, apartmentId);
+        Page<AdhocInvoiceSummaryDTO> summary = adhocInvoiceService.searchAdhocInvoiceByInvoiceNumber(search, status, pageable, apartmentId);
 
-        AdhocInvoiceOverallDTO overall = invoiceService.getAdhocInvoiceOverall(summary.getContent());
+        AdhocInvoiceOverallDTO overall = adhocInvoiceService.getAdhocInvoiceOverall(summary.getContent());
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
     }
@@ -136,9 +130,9 @@ public class InvoiceController {
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
-        Page<AdhocInvoiceSummaryDTO> overdue = invoiceService.searchOverdue(search, pageable, apartmentId);
+        Page<AdhocInvoiceSummaryDTO> overdue = adhocInvoiceService.searchAdhocInvoiceOverdue(search, pageable, apartmentId);
 
-        OverdueInvoiceOverallDTO overall = invoiceService.getOverdueAdhocInvoiceOverall(overdue.getContent());
+        OverdueInvoiceOverallDTO overall = adhocInvoiceService.getOverdueAdhocInvoiceOverall(overdue.getContent());
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(overdue, page, overall)));
     }
@@ -148,7 +142,7 @@ public class InvoiceController {
             @PathVariable UUID adhocInvoiceId,
             @PathVariable UUID apartmentId) {
 
-        AdhocInvoiceDetailDTO invoice = invoiceService.getAdhocInvoicesById(adhocInvoiceId,  apartmentId);
+        AdhocInvoiceDetailDTO invoice = adhocInvoiceService.getAdhocInvoicesById(adhocInvoiceId,  apartmentId);
         return ResponseEntity.ok(ApiResponse.success(invoice));
     }
 

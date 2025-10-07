@@ -7,9 +7,9 @@ import com.rentora.api.model.entity.Invoice;
 
 import java.util.UUID;
 
-public final class InvoiceSpecification {
+public final class AdhocInvoiceSpecification {
 
-    private InvoiceSpecification() {}
+    private AdhocInvoiceSpecification() {}
 
     public static Specification<Invoice> hasInvoiceNumber(String invoiceNumber) {
         return (root, query, criteriaBuilder) -> {

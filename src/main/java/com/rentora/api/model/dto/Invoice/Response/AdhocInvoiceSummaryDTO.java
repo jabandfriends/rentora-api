@@ -11,6 +11,8 @@ import lombok.Data;
 public class AdhocInvoiceSummaryDTO {
 
     private UUID id;
+    private String title;
+    private String description;
     private String invoiceNumber;
     private String tenant;
     private String room;
