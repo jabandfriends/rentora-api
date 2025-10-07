@@ -26,6 +26,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 
@@ -124,7 +125,7 @@ public class MaintenanceService {
 
     public void deleteMaintenance(UUID maintenanceId) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
-        
+
         maintenanceRepository.delete(maintenance);
 
         log.info("maintenance deleted: {}", maintenance.getTitle());
@@ -134,12 +135,25 @@ public class MaintenanceService {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
         dto.setId(maintenance.getId());
         dto.setTicketNumber(maintenance.getTicketNumber());
+        dto.setUnitId(maintenance.getUnit().getId());
+        dto.setTenantUserId(maintenance.getTenantUser().getId());
+        dto.setAssignedToUserId(maintenance.getAssignedToUser().getId());
         dto.setTitle(maintenance.getTitle());
         dto.setDescription(maintenance.getDescription());
         dto.setCategory(maintenance.getCategory().name());
         dto.setStatus(maintenance.getStatus().name());
         dto.setPriority(maintenance.getPriority().name());
         dto.setRequestedDate(maintenance.getRequestedDate());
+        dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+        dto.setStartedAt(maintenance.getStartedAt());
+        dto.setCompletedAt(maintenance.getCompletedAt());
+        dto.setDueDate(maintenance.getDueDate().toLocalDate());
+        dto.setEstimatedHours(maintenance.getEstimatedHours());
+        dto.setActualHours(maintenance.getActualHours());
+        dto.setEstimatedCost(maintenance.getEstimatedCost());
+        dto.setRecurringSchedule(String.valueOf(maintenance.getRecurringSchedule()));
+        dto.setCreatedAt(OffsetDateTime.from(maintenance.getCreatedAt()));
+        dto.setUpdatedAt(OffsetDateTime.from(maintenance.getUpdatedAt()));
         if (maintenance.getAppointmentDate() != null) {
             dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
         }
@@ -155,9 +169,9 @@ public class MaintenanceService {
         if (maintenance.getDueDate() != null) {
             dto.setDueDate(maintenance.getDueDate().toLocalDate());
         }
-        dto.setEstimatedHours(maintenance.getEstimatedHours());
-        dto.setActualHours(maintenance.getActualHours());
-        dto.setEstimatedCost(maintenance.getEstimatedCost());
+
+        if (maintenance.getAssignedToUser() != null) {}
+
         dto.setActualCost(maintenance.getActualCost());
         dto.setWorkSummary(maintenance.getWorkSummary());
         dto.setTenantFeedback(maintenance.getTenantFeedback());
