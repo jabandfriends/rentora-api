@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.Maintenance.Response;
 
+import com.rentora.api.model.entity.Maintenance;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -14,5 +15,6 @@ public class MaintenanceInfoDTO {
     private String title;
     private LocalDate appointmentDate;
     private LocalDate dueDate;
-    private String status;
+    private Maintenance.Status status;
+    private Maintenance.Priority priority;
 }

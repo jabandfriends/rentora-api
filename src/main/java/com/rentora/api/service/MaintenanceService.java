@@ -54,26 +54,16 @@ public class MaintenanceService {
         return maintenance.map(this::toMaintenanceInfoDto);
     }
 
-    public MaintenanceMetadataResponseDto getMaintenanceMetadata(List<MaintenanceInfoDTO> maintenanceInfoDto) {
-        MaintenanceMetadataResponseDto maintenanceMetadataResponseDto = new MaintenanceMetadataResponseDto();
-        maintenanceMetadataResponseDto.setTotalMaintenance(maintenanceInfoDto.size());
-        maintenanceMetadataResponseDto.setPendingCount(
-                maintenanceInfoDto.stream()
-                        .filter(dto -> dto.getStatus().equals(Maintenance.Status.pending.name()))
-                        .count()
-        );
-        maintenanceMetadataResponseDto.setInProgressCount(
-                maintenanceInfoDto.stream()
-                        .filter(dto -> dto.getStatus().equals(Maintenance.Status.in_progress.name()))
-                        .count()
-        );
-        maintenanceMetadataResponseDto.setAssignedCount(
-                maintenanceInfoDto.stream()
-                        .filter(dto -> dto.getStatus().equals(Maintenance.Status.assigned.name()))
-                        .count()
-        );
+    public MaintenanceMetadataResponseDto getMaintenanceMetadata(UUID apartmentId) {
 
-        return maintenanceMetadataResponseDto;
+        long totalMaintenance =  maintenanceRepository.countMaintenanceByApartmentId(apartmentId);
+        long totalAssignedMaintenances =  maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.assigned, apartmentId);
+        long totalPendingMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.pending, apartmentId);
+        long totalInprogressMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.in_progress, apartmentId);
+
+
+        return MaintenanceMetadataResponseDto.builder().totalMaintenance(totalMaintenance).assignedCount(totalAssignedMaintenances)
+                .pendingCount(totalPendingMaintenances).inProgressCount(totalInprogressMaintenances).build();
 
     }
 
@@ -276,8 +266,8 @@ public class MaintenanceService {
         }
 
 
-        dto.setStatus(maintenance.getStatus().name());
-
+        dto.setStatus(maintenance.getStatus());
+        dto.setPriority(maintenance.getPriority());
 
 
 
