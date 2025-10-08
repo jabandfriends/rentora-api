@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -51,6 +52,15 @@ public class BuildingController {
         Page<BuildingSummaryDto> buildings = buildingService.getBuildingsByApartment(apartmentId, search, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(buildings,page)));
+    }
+
+    @GetMapping("/no/paginate")
+    public ResponseEntity<ApiResponse<List<BuildingSummaryDto>>> getBuildingsNoPaginate(
+            @PathVariable UUID apartmentId) {
+
+
+        List<BuildingSummaryDto> buildings = buildingService.getBuildingsByApartmentNoPaginate(apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(buildings));
     }
 
     @GetMapping("/{buildingId}")
