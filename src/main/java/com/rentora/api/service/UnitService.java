@@ -42,10 +42,10 @@ public class UnitService {
     private final ContractRepository contractRepository;
 
     public Page<UnitSummaryDto> getUnitsByApartment(UUID apartmentId, Unit.UnitStatus status,
-                                                    Unit.UnitType unitType,String search, UUID floorId, Pageable pageable) {
+                                                    Unit.UnitType unitType,String searchByRoomNumber,String buildingName, UUID floorId, Pageable pageable) {
         Page<Unit> units;
         Specification<Unit> spec = UnitSpecification.hasApartmentId(apartmentId).and(UnitSpecification.hasStatus(status)).and(UnitSpecification.hasUnitType(unitType)).and(UnitSpecification.hasFloorId(floorId))
-                .and(UnitSpecification.hasName(search));
+                .and(UnitSpecification.hasName(searchByRoomNumber)).and(UnitSpecification.hasBuildingName(buildingName));
 
         units = unitRepository.findAll(spec, pageable);
 
