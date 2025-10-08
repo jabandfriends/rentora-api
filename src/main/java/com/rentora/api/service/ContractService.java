@@ -5,14 +5,10 @@ import com.rentora.api.model.dto.Contract.Request.TerminateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
 import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
-import com.rentora.api.model.entity.Contract;
-import com.rentora.api.model.entity.Unit;
-import com.rentora.api.model.entity.User;
+import com.rentora.api.model.entity.*;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.repository.ContractRepository;
-import com.rentora.api.repository.UnitRepository;
-import com.rentora.api.repository.UserRepository;
+import com.rentora.api.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -35,6 +34,10 @@ public class ContractService {
     private final UnitRepository unitRepository;
 
     private final UserRepository userRepository;
+
+    private final UnitUtilityRepository unitUtilityRepository;
+
+    private final UtilityRepository utilityRepository;
 
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
@@ -101,11 +104,47 @@ public class ContractService {
         contract.setDocumentUrl(request.getDocumentUrl());
         contract.setCreatedByUser(createdByUser);
 
+        //water start meter
+        contract.setWaterMeterStartReading(request.getWaterMeterStart());
+
+        //electric start meter
+        contract.setElectricityMeterStartReading(request.getElectricMeterStart());
+
+
+
         Contract savedContract = contractRepository.save(contract);
 
         // Update unit status to occupied
         unit.setStatus(Unit.UnitStatus.occupied);
         unitRepository.save(unit);
+
+        //get all utility
+        List<Utility> utilities = utilityRepository.findByApartmentId(unit.getFloor().getBuilding().getApartment().getId());
+
+        for(Utility utility : utilities) {
+            UnitUtilities initialReading = new UnitUtilities();
+            initialReading.setUnit(unit);
+            initialReading.setReadingDate(contract.getStartDate());
+            initialReading.setUsageMonth(contract.getStartDate().withDayOfMonth(1));
+            initialReading.setUtility(utility);
+
+            BigDecimal waterStart = request.getWaterMeterStart() != null ? request.getWaterMeterStart() : BigDecimal.ZERO;
+            BigDecimal electricStart = request.getElectricMeterStart() != null ? request.getElectricMeterStart() : BigDecimal.ZERO;
+            // Set meterStart from frontend DTO
+            if (utility.getUtilityName().equalsIgnoreCase("electric")) {
+                initialReading.setMeterStart(electricStart);
+            } else if (utility.getUtilityName().equalsIgnoreCase("water")) {
+                initialReading.setMeterStart(waterStart);
+            } else {
+                initialReading.setMeterStart(BigDecimal.ZERO); // default for others
+            }
+
+            initialReading.setMeterEnd(initialReading.getMeterStart());
+            initialReading.setUsageAmount(BigDecimal.ZERO);
+
+            unitUtilityRepository.save(initialReading);
+        }
+
 
         log.info("Contract created: {} for unit: {} and tenant: {}",
                 savedContract.getContractNumber(), unit.getUnitName(), tenant.getEmail());

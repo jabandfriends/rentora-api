@@ -98,6 +98,12 @@ public class Contract {
     @Column(name = "signed_at")
     private LocalDateTime signedAt;
 
+    @Column(name="electricity_meter_start_reading" ,nullable = false)
+    private BigDecimal electricityMeterStartReading;
+
+    @Column(name = "water_meter_start_reading", nullable = false)
+    private BigDecimal waterMeterStartReading;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User createdByUser;

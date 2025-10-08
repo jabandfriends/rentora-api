@@ -23,6 +23,7 @@ public class UnitSummaryDto {
     private String currentTenant;
     private String createdAt;
 
+
     private String contractNumber;
     private Contract.RentalType rentalType;
     private Contract.ContractStatus contractStatus;
