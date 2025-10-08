@@ -68,6 +68,15 @@ public class MaintenanceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(response,page,maintenanceInfoDto)));
     }
 
+    @GetMapping("/{maintenanceId}")
+    public ResponseEntity<ApiResponse<MaintenanceDetailDTO>> getMaintenanceById(
+            @PathVariable UUID maintenanceId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        MaintenanceDetailDTO maintenance = maintenanceService.getMaintenanceById(maintenanceId);
+        return ResponseEntity.ok(ApiResponse.success(maintenance));
+    }
+
+
     @PostMapping("/users/create")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenance(
             @AuthenticationPrincipal UserPrincipal currentUser,

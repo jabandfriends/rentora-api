@@ -6,13 +6,15 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Data
 public class UpdateMaintenanceRequest {
     @Size(max = 100, message = "Maintenance name cannot exceed 100 characters")
     private String title;
-
     private String description;
+
+    private UUID unitId;
 
     private Maintenance.Category category;
     private Maintenance.Status status;
