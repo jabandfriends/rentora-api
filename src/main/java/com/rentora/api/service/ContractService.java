@@ -101,11 +101,21 @@ public class ContractService {
         contract.setDocumentUrl(request.getDocumentUrl());
         contract.setCreatedByUser(createdByUser);
 
+        //water start meter
+        contract.setWaterMeterStartReading(request.getWaterMeterStart());
+
+        //electric start meter
+        contract.setElectricityMeterStartReading(request.getElectricMeterStart());
+
+
+
         Contract savedContract = contractRepository.save(contract);
 
         // Update unit status to occupied
         unit.setStatus(Unit.UnitStatus.occupied);
         unitRepository.save(unit);
+
+        //create unit utility
 
         log.info("Contract created: {} for unit: {} and tenant: {}",
                 savedContract.getContractNumber(), unit.getUnitName(), tenant.getEmail());

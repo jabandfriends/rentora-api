@@ -281,6 +281,8 @@ CREATE TABLE IF NOT EXISTS contracts (
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('draft', 'active', 'terminated', 'expired', 'renewed')),
     auto_renewal BOOLEAN DEFAULT false,
     renewal_notice_days INTEGER DEFAULT 30,
+    electricity_meter_start_reading NUMERIC(10, 2) NOT NULL,
+    water_meter_start_reading NUMERIC(10, 2) NOT NULL,
     termination_date DATE,
     termination_reason TEXT,
     terminated_by_user_id UUID REFERENCES users(id),

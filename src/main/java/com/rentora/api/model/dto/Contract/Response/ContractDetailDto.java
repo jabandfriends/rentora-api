@@ -42,6 +42,7 @@ public class ContractDetailDto {
     private String createdAt;
     private String updatedAt;
 
+
     // Additional detail info
     private Boolean isActive;
     private Boolean isExpiringSoon;
