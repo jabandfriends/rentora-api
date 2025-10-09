@@ -58,7 +58,7 @@ public class TenantController {
         Pageable pageable = PageRequest.of(requestedPage, size,sort);
 
         Page<TenantInfoDto> tenants = tenantService.getTenants(isActive,name,apartmentId, pageable);
-        TenantsMetadataResponseDto tenantInfoDto = tenantService.getTenantsMetadata(tenants.getContent());
+        TenantsMetadataResponseDto tenantInfoDto = tenantService.getTenantsMetadata(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(tenants,page,tenantInfoDto)));
 
