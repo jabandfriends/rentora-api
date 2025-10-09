@@ -19,6 +19,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -232,15 +234,14 @@ public class ContractService {
 
     private ContractDetailDto toContractDetailDto(Contract contract) {
         ContractDetailDto dto = new ContractDetailDto();
-        dto.setId(contract.getId().toString());
+
+        dto.setContractId(contract.getId());
         dto.setContractNumber(contract.getContractNumber());
-        dto.setUnitId(contract.getUnit().getId().toString());
         dto.setUnitName(contract.getUnit().getUnitName());
         dto.setBuildingName(contract.getUnit().getFloor().getBuilding().getName());
         dto.setApartmentName(contract.getUnit().getFloor().getBuilding().getApartment().getName());
 
         if (contract.getTenant() != null) {
-            dto.setTenantId(contract.getTenant().getId().toString());
             dto.setTenantName(contract.getTenant().getFirstName() + " " + contract.getTenant().getLastName());
             dto.setTenantEmail(contract.getTenant().getEmail());
             dto.setTenantPhone(contract.getTenant().getPhoneNumber());
@@ -272,12 +273,31 @@ public class ContractService {
         dto.setDocumentUrl(contract.getDocumentUrl());
         dto.setSignedAt(contract.getSignedAt() != null ? contract.getSignedAt().toString() : null);
 
+        //utility
+        dto.setWaterMeterStart(contract.getWaterMeterStartReading());
+        dto.setElectricMeterStart(contract.getElectricityMeterStartReading());
         if (contract.getCreatedByUser() != null) {
             dto.setCreatedByUserName(contract.getCreatedByUser().getFirstName() + " " + contract.getCreatedByUser().getLastName());
         }
 
         dto.setCreatedAt(contract.getCreatedAt() != null ? contract.getCreatedAt().toString() : null);
         dto.setUpdatedAt(contract.getUpdatedAt() != null ? contract.getUpdatedAt().toString() : null);
+
+        if (contract.getStartDate() != null && contract.getEndDate() != null) {
+            LocalDate start = contract.getStartDate();
+            LocalDate end = contract.getEndDate();
+
+            // Contract duration in days
+            int durationDays = (int) ChronoUnit.DAYS.between(start, end) + 1; // +1 to include start day
+            dto.setContractDurationDays(durationDays);
+
+            // Days until expiry
+            long daysUntilExpiry = ChronoUnit.DAYS.between(LocalDate.now(), end);
+            dto.setDaysUntilExpiry(daysUntilExpiry >= 0 ? daysUntilExpiry : 0); // 0 if already expired
+        } else {
+            dto.setContractDurationDays(0);
+            dto.setDaysUntilExpiry(0L);
+        }
 
         return dto;
     }
