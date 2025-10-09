@@ -107,13 +107,13 @@ public class MaintenanceService {
 
         Contract activeContract = contracts.stream().filter(contract -> contract.getStatus().equals(Contract.ContractStatus.active)).findFirst().orElseThrow(() -> new ResourceNotFoundException("No active contract found for unit ID: " + unitId));;
 
-        // 2. Create a new Maintenance entity and map data.
+
         Maintenance maintenance = new Maintenance();
 
         //tenant from contract
         maintenance.setTenantUser(activeContract.getTenant());
 
-        //  from the DTO.
+        // from the DTO.
         maintenance.setUnit(unit);
         maintenance.setCategory(request.getCategory());
         maintenance.setTitle(request.getTitle());
@@ -122,17 +122,14 @@ public class MaintenanceService {
         maintenance.setAppointmentDate(request.getAppointmentDate());
         maintenance.setDueDate(request.getDueDate());
         maintenance.setEstimatedHours(request.getEstimatedHours());
+        maintenance.setEstimatedCost(request.getEstimatedCost());
         maintenance.setRequestedDate(LocalDate.now());
         if (request.getStatus() != null) {
             maintenance.setStatus(request.getStatus());
         }
 
-
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
-
         maintenance.setUnit(unit);
-//        maintenance.setTenantUser(tenantUser);
-
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
