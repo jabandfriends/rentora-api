@@ -7,9 +7,11 @@ import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
+import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.User;
+import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.MaintenanceRepository;
 import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UserRepository;
@@ -24,6 +26,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -41,6 +44,7 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UserRepository userRepository;
     private final UnitRepository unitRepository;
+    private final ContractRepository contractRepository;
 
     public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name));
@@ -93,32 +97,32 @@ public class MaintenanceService {
 
 
     public ExecuteMaintenanceResponse createMaintenance(UUID createByUserId, CreateMaintenanceRequest request) {
-        // 1. Fetch related entities from the database.
-    //        User createdByUser = userRepository.findById(createByUserId)
-    //                .orElseThrow(() -> new ResourceNotFoundException("Creator user not found with ID: " + createByUserId));
 
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
-        String unitName = unit.getUnitName();
+        UUID unitId = unit.getId();
 
-//        User tenantUser = userRepository.findById(request.getTenantUserId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + request.getTenantUserId()));
+        //current ternant base on contract
+        List<Contract> contracts = unit.getContracts();
 
+        Contract activeContract = contracts.stream().filter(contract -> contract.getStatus().equals(Contract.ContractStatus.active)).findFirst().orElseThrow(() -> new ResourceNotFoundException("No active contract found for unit ID: " + unitId));;
 
         // 2. Create a new Maintenance entity and map data.
         Maintenance maintenance = new Maintenance();
 
+        //tenant from contract
+        maintenance.setTenantUser(activeContract.getTenant());
 
         //  from the DTO.
         maintenance.setUnit(unit);
-
-        maintenance.setTicketNumber(request.getTicketNumber());
+        maintenance.setCategory(request.getCategory());
         maintenance.setTitle(request.getTitle());
         maintenance.setDescription(request.getDescription());
         maintenance.setPriority(request.getPriority());
         maintenance.setAppointmentDate(request.getAppointmentDate());
         maintenance.setDueDate(request.getDueDate());
         maintenance.setEstimatedHours(request.getEstimatedHours());
+        maintenance.setRequestedDate(LocalDate.now());
         if (request.getStatus() != null) {
             maintenance.setStatus(request.getStatus());
         }
