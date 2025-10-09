@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -59,6 +60,15 @@ public class ContractService {
     public ContractDetailDto getContractById(UUID contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+
+        return toContractDetailDto(contract);
+    }
+
+    public ContractDetailDto getContractByUnitId(UUID unitId) {
+
+        Unit unit = unitRepository.findById(unitId).orElseThrow(() -> new ResourceNotFoundException("Unit not found"));
+
+        Contract contract = unit.getContracts().stream().filter(a -> a.getStatus().equals(Contract.ContractStatus.active)).findFirst().orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
         return toContractDetailDto(contract);
     }
