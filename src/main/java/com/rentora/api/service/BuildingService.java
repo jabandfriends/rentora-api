@@ -141,6 +141,7 @@ public class BuildingService {
         // Get counts
         dto.setFloorCount(floorRepository.countByBuildingId(building.getId()));
         dto.setUnitCount(unitRepository.countByBuildingId(building.getId()));
+        dto.setOccupiedUnitCount(unitRepository.countByBuildingIdAndStatus(building.getId(), Unit.UnitStatus.occupied));
 
         return dto;
     }

@@ -17,4 +17,5 @@ public class BuildingSummaryDto {
     // Floor and unit counts
     private Long floorCount;
     private Long unitCount;
+    private Long occupiedUnitCount;
 }
