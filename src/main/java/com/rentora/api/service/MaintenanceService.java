@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.rentora.api.model.entity.Unit.UnitStatus.maintenance;
@@ -105,13 +106,15 @@ public class MaintenanceService {
         //current ternant base on contract
         List<Contract> contracts = unit.getContracts();
 
-        Contract activeContract = contracts.stream().filter(contract -> contract.getStatus().equals(Contract.ContractStatus.active)).findFirst().orElseThrow(() -> new ResourceNotFoundException("No active contract found for unit ID: " + unitId));;
+        Optional<Contract> activeContract = contracts.stream()
+                .filter(contract -> contract.getStatus().equals(Contract.ContractStatus.active))
+                .findFirst();
 
 
         Maintenance maintenance = new Maintenance();
 
         //tenant from contract
-        maintenance.setTenantUser(activeContract.getTenant());
+        activeContract.ifPresent(contract -> maintenance.setTenantUser(contract.getTenant()));
 
         // from the DTO.
         maintenance.setUnit(unit);
@@ -130,7 +133,6 @@ public class MaintenanceService {
         }
 
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
-        maintenance.setUnit(unit);
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
