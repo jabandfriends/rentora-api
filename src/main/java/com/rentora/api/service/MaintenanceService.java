@@ -124,6 +124,7 @@ public class MaintenanceService {
         maintenance.setEstimatedHours(request.getEstimatedHours());
         maintenance.setEstimatedCost(request.getEstimatedCost());
         maintenance.setRequestedDate(LocalDate.now());
+        maintenance.setIsEmergency(request.getIsEmergency());
         if (request.getStatus() != null) {
             maintenance.setStatus(request.getStatus());
         }
