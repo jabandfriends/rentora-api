@@ -186,6 +186,7 @@ public class MaintenanceService {
         }
 
         // --- Basic Maintenance Info ---
+
         dto.setId(maintenance.getId());
         dto.setUnitId(maintenance.getUnit().getId());
         dto.setTicketNumber(maintenance.getTicketNumber());
@@ -204,10 +205,10 @@ public class MaintenanceService {
         dto.setRequestedDate(maintenance.getRequestedDate());
 
         if (maintenance.getAppointmentDate() != null)
-            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+            dto.setAppointmentDate(maintenance.getAppointmentDate());
 
         if (maintenance.getDueDate() != null)
-            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+            dto.setDueDate(maintenance.getDueDate());
 
         dto.setStartedAt(maintenance.getStartedAt());
         dto.setCompletedAt(maintenance.getCompletedAt());
@@ -262,10 +263,10 @@ public class MaintenanceService {
             dto.setBuildingsName(buildingName);
         }
         if (maintenance.getDueDate() != null) {
-            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+            dto.setDueDate(maintenance.getDueDate());
         }
         if (maintenance.getAppointmentDate() != null) {
-            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+            dto.setAppointmentDate(maintenance.getAppointmentDate());
         }
 
 

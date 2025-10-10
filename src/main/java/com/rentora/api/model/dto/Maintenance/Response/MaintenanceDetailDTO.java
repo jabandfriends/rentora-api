@@ -27,10 +27,10 @@ public class MaintenanceDetailDTO {
     private Maintenance.Status status;
     private Maintenance.Priority priority;
     private LocalDate requestedDate;
-    private LocalDate appointmentDate;
+    private OffsetDateTime appointmentDate;
     private OffsetDateTime startedAt;
     private OffsetDateTime completedAt;
-    private LocalDate dueDate;
+    private OffsetDateTime dueDate;
     private BigDecimal estimatedHours;
     private BigDecimal actualHours;
     private BigDecimal estimatedCost;
