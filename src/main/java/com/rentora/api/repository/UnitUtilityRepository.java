@@ -1,6 +1,7 @@
 package com.rentora.api.repository;
 
 
+import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface UnitUtilityRepository extends JpaRepository<UnitUtilities, UUID>, JpaSpecificationExecutor<UnitUtilities> {
@@ -44,5 +46,6 @@ public interface UnitUtilityRepository extends JpaRepository<UnitUtilities, UUID
             @Param("apartmentId") UUID apartmentId,
             @Param("utilityName") String utilityName
     );
+
 
 }

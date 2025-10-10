@@ -22,4 +22,8 @@ public class ReportSpecification {
     public static Specification<UnitUtilities> matchReadingDate(LocalDate readingDate) {
         return (root,query,criteriaBuilder)-> readingDate == null ? null : criteriaBuilder.equal(root.get("readingDate"), readingDate);
     }
+
+    public static Specification<UnitUtilities> matchUsageDate(LocalDate usageDate) {
+        return (root,query,criteriaBuilder)-> usageDate == null ? null : criteriaBuilder.equal(root.get("usageMonth"), usageDate);
+    }
 }

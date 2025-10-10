@@ -22,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,7 +36,7 @@ public class ReportService {
 
 
     public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,String buildingName,String readingDate,Pageable pageable) {
-        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName)).and(ReportSpecification.matchReadingDate(LocalDate.parse(readingDate)))
+        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName)).and(ReportSpecification.matchUsageDate(LocalDate.parse(readingDate)))
                 .and(ReportSpecification.hasBuildingName(buildingName));
         Page<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec,pageable);
 
@@ -58,7 +55,7 @@ public class ReportService {
         Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId);
         List<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec);
         return units.stream()
-                .map(UnitUtilities::getReadingDate)     // only take the date
+                .map(UnitUtilities::getUsageMonth)     // only take the date
                 .filter(Objects::nonNull)                // skip nulls
                 .distinct()                              // remove duplicates
                 .sorted()                                // optional: sort ascending
@@ -92,26 +89,35 @@ public class ReportService {
     private UnitServiceResponseDto toUnitServiceResponseDtoCombined(List<UnitUtilities> utilities) {
         UnitServiceResponseDto response = new UnitServiceResponseDto();
 
-        // all utilities share same unit + tenant
+        // all utilities share same unit
         Unit unit = utilities.getFirst().getUnit();
         response.setRoomName(unit.getUnitName());
 
-        Contract contract = contractRepository.findActiveContractByUnitId(unit.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Active contract not found"));
+        // Try to find active contract
+        Optional<Contract> contractOpt = contractRepository.findActiveContractByUnitId(unit.getId());
 
-        response.setTenantName(contract.getTenant().getFullName());
-        response.setBuildingName(contract.getUnit().getFloor().getBuilding().getName());
+        if (contractOpt.isPresent()) {
+            Contract contract = contractOpt.get();
+            response.setTenantName(contract.getTenant().getFullName());
+            response.setBuildingName(contract.getUnit().getFloor().getBuilding().getName());
+        } else {
+            // Fallback if no active contract
+            response.setTenantName("No tenant");
+            response.setBuildingName(unit.getFloor().getBuilding().getName());
+        }
 
-
-        // fill water/electric fields depending on utility
+        // Fill water/electric fields
         for (UnitUtilities u : utilities) {
-            if (u.getUtility().getUtilityName().equalsIgnoreCase("water")) {
+            String utilityName = u.getUtility().getUtilityName().toLowerCase();
+
+            if (utilityName.equals("water")) {
                 response.setWaterUsage(u.getMeterEnd().subtract(u.getMeterStart()));
                 response.setWaterMeterStart(u.getMeterStart());
                 response.setWaterMeterEnd(u.getMeterEnd());
                 response.setWaterCost(u.getCalculatedCost());
             }
-            if (u.getUtility().getUtilityName().equalsIgnoreCase("electric")) {
+
+            if (utilityName.equals("electric")) {
                 response.setElectricUsage(u.getMeterEnd().subtract(u.getMeterStart()));
                 response.setElectricMeterStart(u.getMeterStart());
                 response.setElectricMeterEnd(u.getMeterEnd());
@@ -121,6 +127,7 @@ public class ReportService {
 
         return response;
     }
+
     @Data
     public static class UnitServiceResponseDto {
         private String roomName;
