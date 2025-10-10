@@ -5,16 +5,19 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
 @Data
 public class ReceiptReportDetailDTO {
-    private String id;
+    private UUID id;
     private String adhocNumber;
     private BigDecimal amount;
 
     // Relation
-    private String apartmentId;
-    private String unitId;
-    private String tenantUserId;
+    private UUID apartmentId;
+    private UUID unitId;
+    private UUID tenantUserId;
 
     // Invoice Info
     private String title;
@@ -25,7 +28,7 @@ public class ReceiptReportDetailDTO {
     private BigDecimal paidAmount;
 
     private String invoiceDate;
-    private String dueDate;
+    private LocalDate dueDate;
 
     private Boolean includeInMonthly;
     private String targetMonthlyInvoiceMonth;
@@ -50,6 +53,6 @@ public class ReceiptReportDetailDTO {
     private String approvedByUserId;
     private String approvedAt;
 
-    private String createdAt;
-    private String updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

@@ -53,33 +53,33 @@ public class ReceiptReportService {
 
     private ReceiptReportDetailDTO toDtoFromAdhoc(AdhocInvoice entity) {
         ReceiptReportDetailDTO dto = new ReceiptReportDetailDTO();
-        dto.setId(entity.getId().toString());
+        dto.setId(entity.getId());
         dto.setAdhocNumber(entity.getAdhocNumber());
-        dto.setApartmentId(entity.getApartmentId().toString());
-        dto.setUnitId(entity.getUnit() != null ? entity.getUnit().getId().toString() : null);
+        dto.setApartmentId(entity.getApartment().getId());
+        dto.setUnitId(entity.getUnit() != null ? entity.getUnit().getId() : null);
         dto.setFinalAmount(entity.getFinalAmount());
         dto.setPaidAmount(entity.getPaidAmount());
         dto.setInvoiceDate(entity.getInvoiceDate() != null ? entity.getInvoiceDate().toString() : null);
-        dto.setDueDate(entity.getDueDate() != null ? entity.getDueDate().toString() : null);
+        dto.setDueDate(entity.getDueDate() != null ? entity.getDueDate() : null);
         dto.setPaymentStatus(entity.getPaymentStatus());
-        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null);
-        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null);
+        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt() : null);
+        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt() : null);
         return dto;
     }
 
     private ReceiptReportDetailDTO toDtoFromInvoice(Invoice entity) {
         ReceiptReportDetailDTO dto = new ReceiptReportDetailDTO();
-        dto.setId(entity.getId().toString());
+        dto.setId(entity.getId());
         dto.setAdhocNumber(entity.getInvoiceNumber()); // ใช้ช่องเดียวกันเก็บเลข invoice
-        dto.setApartmentId(entity.getApartment().getId().toString());
-        dto.setUnitId(entity.getUnit() != null ? entity.getUnit().getId().toString() : null);
+        dto.setApartmentId(entity.getApartment().getId());
+        dto.setUnitId(entity.getUnit() != null ? entity.getUnit().getId() : null);
         dto.setFinalAmount(entity.getTotalAmount());
         dto.setPaidAmount(entity.getPaidAmount());
         dto.setInvoiceDate(entity.getBillStart() != null ? entity.getBillStart().toString() : null);
-        dto.setDueDate(entity.getDueDate() != null ? entity.getDueDate().toString() : null);
+        dto.setDueDate(entity.getDueDate() != null ? entity.getDueDate() : null);
         dto.setPaymentStatus(AdhocInvoice.PaymentStatus.valueOf(entity.getPaymentStatus().name()));
-        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null);
-        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null);
+        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt() : null);
+        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt() : null);
         return dto;
     }
 }

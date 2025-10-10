@@ -38,8 +38,9 @@ public class ReportService {
     private final ContractRepository contractRepository;
 
 
-    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,String readingDate,Pageable pageable) {
-        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName)).and(ReportSpecification.matchReadingDate(LocalDate.parse(readingDate)));
+    public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,String buildingName,String readingDate,Pageable pageable) {
+        Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName)).and(ReportSpecification.matchReadingDate(LocalDate.parse(readingDate)))
+                .and(ReportSpecification.hasBuildingName(buildingName));
         Page<UnitUtilities> units = unitUtilityRepository.findAll(reportUnitSpec,pageable);
 
         // group by unitId
@@ -99,15 +100,21 @@ public class ReportService {
                 .orElseThrow(() -> new EntityNotFoundException("Active contract not found"));
 
         response.setTenantName(contract.getTenant().getFullName());
+        response.setBuildingName(contract.getUnit().getFloor().getBuilding().getName());
+
 
         // fill water/electric fields depending on utility
         for (UnitUtilities u : utilities) {
             if (u.getUtility().getUtilityName().equalsIgnoreCase("water")) {
                 response.setWaterUsage(u.getMeterEnd().subtract(u.getMeterStart()));
+                response.setWaterMeterStart(u.getMeterStart());
+                response.setWaterMeterEnd(u.getMeterEnd());
                 response.setWaterCost(u.getCalculatedCost());
             }
             if (u.getUtility().getUtilityName().equalsIgnoreCase("electric")) {
                 response.setElectricUsage(u.getMeterEnd().subtract(u.getMeterStart()));
+                response.setElectricMeterStart(u.getMeterStart());
+                response.setElectricMeterEnd(u.getMeterEnd());
                 response.setElectricCost(u.getCalculatedCost());
             }
         }
@@ -117,11 +124,23 @@ public class ReportService {
     @Data
     public static class UnitServiceResponseDto {
         private String roomName;
+        private String buildingName;
         private String tenantName;
         private  BigDecimal electricUsage;
         private BigDecimal electricCost;
         private  BigDecimal waterUsage;
         private  BigDecimal waterCost;
+
+        private  BigDecimal waterMeterStart;
+        private  BigDecimal waterMeterEnd;
+
+
+        private BigDecimal electricMeterStart;
+        private  BigDecimal electricMeterEnd;
+
+
+
+
 
 
 

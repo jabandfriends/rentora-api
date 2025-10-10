@@ -15,6 +15,10 @@ public class ReportSpecification {
         return (root,query,criteriaBuilder)-> unitName == null || unitName.isEmpty() ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("unit").get("unitName")), "%" + unitName.toLowerCase() + "%");
     }
 
+    public static Specification<UnitUtilities> hasBuildingName(String buildingName) {
+        return (root,query,criteriaBuilder)-> buildingName == null || buildingName.isEmpty() ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("unit").get("floor").get("building").get("name")), "%" + buildingName.toLowerCase() + "%");
+    }
+
     public static Specification<UnitUtilities> matchReadingDate(LocalDate readingDate) {
         return (root,query,criteriaBuilder)-> readingDate == null ? null : criteriaBuilder.equal(root.get("readingDate"), readingDate);
     }
