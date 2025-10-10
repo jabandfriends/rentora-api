@@ -11,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 public interface UnitUtilityRepository extends JpaRepository<UnitUtilities, UUID>, JpaSpecificationExecutor<UnitUtilities> {

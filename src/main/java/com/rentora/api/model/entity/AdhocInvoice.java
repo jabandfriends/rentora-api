@@ -20,103 +20,107 @@ public class AdhocInvoice {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-        @Column(name = "adhoc_number", length = 50)
-        private String adhocNumber;
+    @Column(name = "adhoc_number", length = 50)
+    private String adhocNumber;
 
-        @Column(name = "apartment_id", nullable = false)
-        private UUID apartmentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "apartment_id", nullable = false)
+    private Apartment apartment;
 
-        @ManyToOne(fetch = FetchType.LAZY)
-        @JoinColumn(name = "unit_id")
-        private Unit unit;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unit_id")
+    private Unit unit;
 
-        @Column(name = "tenant_user_id")
-        private UUID tenantUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_user_id")
+    private User tenantUserId;
 
-        @Column(length = 200)
-        private String title;
+    @Column(length = 200)
+    private String title;
 
-        @Column(columnDefinition = "text")
-        private String description;
+    @Column(columnDefinition = "text")
+    private String description;
 
-        @Column(length = 30)
-        private String category;
+    @Column(length = 30)
+    private String category;
 
-        @Column(name = "final_amount", precision = 10, scale = 2)
-        private BigDecimal finalAmount;
+    @Column(name = "final_amount", precision = 10, scale = 2)
+    private BigDecimal finalAmount;
 
-        @Column(name = "paid_amount", precision = 10, scale = 2)
-        private BigDecimal paidAmount;
+    @Column(name = "paid_amount", precision = 10, scale = 2)
+    private BigDecimal paidAmount;
 
-        @Column(name = "invoice_date")
-        private LocalDate invoiceDate;
+    @Column(name = "invoice_date")
+    private LocalDate invoiceDate;
 
-        @Column(name = "due_date")
-        private LocalDate dueDate;
+    @Column(name = "due_date")
+    private LocalDate dueDate;
 
-        @Column(name = "include_in_monthly")
-        private Boolean includeInMonthly;
+    @Column(name = "include_in_monthly")
+    private Boolean includeInMonthly;
 
-        @Column(name = "target_monthly_invoice_month")
-        private LocalDate targetMonthlyInvoiceMonth;
+    @Column(name = "target_monthly_invoice_month")
+    private LocalDate targetMonthlyInvoiceMonth;
 
-        @Column(name = "monthly_invoice_id")
-        private UUID monthlyInvoiceId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "monthly_invoice_id")
+    private Invoice monthlyInvoiceId;
 
-        @Column(name = "included_at")
-        private OffsetDateTime includedAt;
+    @Column(name = "included_at")
+    private OffsetDateTime includedAt;
 
-        @Enumerated(EnumType.STRING)
-        @Column(name = "payment_status", length = 20)
-        private PaymentStatus paymentStatus = PaymentStatus.unpaid;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", length = 20)
+    private PaymentStatus paymentStatus = PaymentStatus.unpaid;
 
-        @Column(name = "paid_at")
-        private OffsetDateTime paidAt;
+    @Column(name = "paid_at")
+    private OffsetDateTime paidAt;
 
-        @Column(name = "created_by_user_id")
-        private UUID createdByUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdByUserId;
 
-        @Column(name = "approved_by_user_id")
-        private UUID approvedByUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by_user_id")
+    private User approvedByUserId;
 
-        @Column(name = "approved_at")
-        private OffsetDateTime approvedAt;
+    @Column(name = "approved_at")
+    private OffsetDateTime approvedAt;
 
-        @Enumerated(EnumType.STRING)
-        @Column(length = 20)
-        private InvoiceStatus status = InvoiceStatus.active;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20)
+    private InvoiceStatus status = InvoiceStatus.active;
 
-        @Enumerated(EnumType.STRING)
-        @Column(length = 20)
-        private InvoicePriority priority = InvoicePriority.normal;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", length = 20)
+    private InvoicePriority priority = InvoicePriority.normal;
 
-        @Column(name = "receipt_urls", columnDefinition = "jsonb")
-        private String receiptUrls; // JSON string
+    @Column(name = "receipt_urls", columnDefinition = "jsonb")
+    private String receiptUrls; // JSON string
 
-        @Column(name = "images", columnDefinition = "jsonb")
-        private String images; // JSON string
+    @Column(name = "images", columnDefinition = "jsonb")
+    private String images; // JSON string
 
-        @Column(columnDefinition = "text")
-        private String notes;
+    @Column(columnDefinition = "text")
+    private String notes;
 
-        @CreationTimestamp
-        @Column(name = "created_at", updatable = false)
-        private OffsetDateTime createdAt;
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private OffsetDateTime createdAt;
 
-        @UpdateTimestamp
-        @Column(name = "updated_at")
-        private OffsetDateTime updatedAt;
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
 
-        // --- ENUMs ---
-        public enum PaymentStatus {
-            paid, unpaid, overdue
-        }
+    public enum PaymentStatus {
+        paid,unpaid,overdue
+    }
 
-        public enum InvoiceStatus {
-            active, inactive
-        }
+    public enum InvoiceStatus {
+        active, inactive
+    }
 
-        public enum InvoicePriority {
-            normal, high
-        }
+    public enum InvoicePriority {
+        normal, high
+    }
 }

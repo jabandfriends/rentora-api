@@ -21,7 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -45,6 +47,13 @@ public class BuildingService {
         }
 
         return buildings.map(this::toBuildingSummaryDto);
+    }
+
+    public List<BuildingSummaryDto> getBuildingsByApartmentNoPaginate(UUID apartmentId) {
+        List<Building> buildings = buildingRepository.findByApartmentId(apartmentId);
+        return buildings.stream()
+                .map(this::toBuildingSummaryDto)
+                .collect(Collectors.toList());
     }
 
     public BuildingDetailDto getBuildingById(UUID buildingId, UUID userId) {
@@ -132,6 +141,7 @@ public class BuildingService {
         // Get counts
         dto.setFloorCount(floorRepository.countByBuildingId(building.getId()));
         dto.setUnitCount(unitRepository.countByBuildingId(building.getId()));
+        dto.setOccupiedUnitCount(unitRepository.countByBuildingIdAndStatus(building.getId(), Unit.UnitStatus.occupied));
 
         return dto;
     }

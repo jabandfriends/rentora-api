@@ -38,6 +38,13 @@ public class UnitSpecification {
         };
     }
 
+    public static Specification<Unit> hasBuildingName(String buildingName) {
+        return (root, query, criteriaBuilder) -> {
+            if (buildingName == null) return null;
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("floor").get("building").get("name")), "%"+ buildingName.toLowerCase() + "%");
+        };
+    }
+
     public static Specification<Unit> hasName(String search) {
         return (root, query, criteriaBuilder) -> {
             if (search == null || search.isEmpty()) return null;

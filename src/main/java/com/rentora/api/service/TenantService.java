@@ -54,13 +54,15 @@ public class TenantService {
         return apartmentUsers.map(this::toTenantInfoDto);
     }
 
-    public TenantsMetadataResponseDto getTenantsMetadata(List<TenantInfoDto> tenantInfoDto) {
-        TenantsMetadataResponseDto tenantsMetadataResponseDto = new TenantsMetadataResponseDto();
-        tenantsMetadataResponseDto.setTotalTenants(tenantInfoDto.size());
-        tenantsMetadataResponseDto.setTotalOccupiedTenants(tenantInfoDto.stream().filter(TenantInfoDto::isOccupiedStatus).count());
-        tenantsMetadataResponseDto.setTotalUnoccupiedTenants(tenantInfoDto.stream().filter(tenant->!tenant.isOccupiedStatus()).count());
-        tenantsMetadataResponseDto.setTotalActiveTenants(tenantInfoDto.stream().filter(TenantInfoDto::isAccountStatus).count());
-        return tenantsMetadataResponseDto;
+    public TenantsMetadataResponseDto getTenantsMetadata(UUID apartmentId) {
+
+        Long totalTenant = apartmentUserRepository.countByApartmentId(apartmentId);
+        Long totalOccupiedTenant= userRepository.countByApartmentIdAndIsActiveTrueWithContractStatus(apartmentId, Contract.ContractStatus.active);
+        Long totalActiveTenant = apartmentUserRepository.countByApartmentIdAndIsActiveTrue(apartmentId);
+        Long totalUnoccupiedTenant = userRepository.countByApartmentIdAndIsActiveTrueWithFalseContractStatus(apartmentId , Contract.ContractStatus.active);
+
+        return TenantsMetadataResponseDto.builder().totalTenants(totalTenant).totalActiveTenants(totalActiveTenant)
+                .totalOccupiedTenants(totalOccupiedTenant).totalUnoccupiedTenants(totalUnoccupiedTenant).build();
     }
 
     public TenantDetailInfoResponseDto getTenantDetail(UUID userId) {

@@ -39,13 +39,13 @@ public class UnitController {
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
             @PathVariable UUID apartmentId,
-            @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "unitName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) Unit.UnitStatus status,
             @RequestParam(required = false) Unit.UnitType unitType,
+            @RequestParam(required = false) String buildingName,
             @RequestParam(required = false) UUID floorId,
             @RequestParam(required = false) String search) {
 
@@ -58,7 +58,7 @@ public class UnitController {
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<UnitSummaryDto> units = unitService.getUnitsByApartment(
-                apartmentId, status, unitType,search, floorId, pageable);
+                apartmentId, status, unitType,search, buildingName,floorId, pageable);
 
         UnitMetadataDto unitsMetadata = unitService.getUnitsMetadata(units.getContent(),apartmentId);
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,unitsMetadata)));
