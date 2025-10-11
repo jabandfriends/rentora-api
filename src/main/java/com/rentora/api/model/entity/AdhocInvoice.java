@@ -3,7 +3,9 @@ package com.rentora.api.model.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -95,9 +97,11 @@ public class AdhocInvoice {
     @Column(name = "priority", length = 20)
     private InvoicePriority priority = InvoicePriority.normal;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "receipt_urls", columnDefinition = "jsonb")
     private String receiptUrls; // JSON string
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "images", columnDefinition = "jsonb")
     private String images; // JSON string
 

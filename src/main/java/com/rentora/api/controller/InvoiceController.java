@@ -4,16 +4,22 @@ import java.util.UUID;
 
 import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Request.CreateAdhocInvoiceRequest;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
+import com.rentora.api.model.dto.Invoice.Response.ExecuteAdhocInvoiceResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.AdhocInvoice;
+import com.rentora.api.security.UserPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.rentora.api.model.dto.ApiResponse;
@@ -146,5 +152,13 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(invoice));
     }
 
+    @PostMapping("/users/create")
+    public ResponseEntity<ApiResponse<ExecuteAdhocInvoiceResponse>> createInvoice(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @Valid @RequestBody CreateAdhocInvoiceRequest request){
+
+        ExecuteAdhocInvoiceResponse response = adhocInvoiceService.createAdhocInvoice(currentUser.getId(), request);
+        return new ResponseEntity<>(ApiResponse.success("Adhoc invoice created successfully",response), HttpStatus.CREATED);
+    }
 
 }

@@ -2,22 +2,26 @@ package com.rentora.api.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Request.CreateAdhocInvoiceRequest;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
-import com.rentora.api.model.entity.AdhocInvoice;
+import com.rentora.api.model.dto.Invoice.Response.ExecuteAdhocInvoiceResponse;
+import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.AdhocInvoiceRepository;
+import com.rentora.api.repository.ApartmentRepository;
+import com.rentora.api.repository.UnitRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.specifications.AdhocInvoiceSpecification;
 
 import jakarta.transaction.Transactional;
@@ -34,6 +38,8 @@ import com.rentora.api.model.dto.Invoice.Response.InvoiceDetailDTO;
 public class AdhocInvoiceService {
 
     private final AdhocInvoiceRepository invoiceRepository;
+    private final UnitRepository unitRepository;
+    private final ApartmentRepository apartmentRepository;
 
 //method for monthly invoice
 
@@ -153,6 +159,43 @@ public class AdhocInvoiceService {
 //
 //        return summary;
 //    }
+
+    public ExecuteAdhocInvoiceResponse createAdhocInvoice(UUID createdByUserId, CreateAdhocInvoiceRequest request) {
+
+        Unit unit = unitRepository.findById(request.getUnitId())
+                .orElseThrow(()-> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
+
+        Apartment apartment = apartmentRepository.findById(request.getApartment())
+                .orElseThrow(()-> new ResourceNotFoundException("Unit not found with ID: " + request.getApartment()));
+
+        List<Contract> contracts = unit.getContracts();
+
+        Optional<Contract> activeContract = contracts.stream()
+                .filter(contract -> contract.getStatus().equals(Contract.ContractStatus.active)).findFirst();
+
+        AdhocInvoice adhocInvoice = new AdhocInvoice();
+
+        activeContract.ifPresent(contract -> adhocInvoice.setTenantUserId(contract.getTenant()));
+
+        adhocInvoice.setUnit(unit);
+        adhocInvoice.setApartment(apartment);
+        adhocInvoice.setAdhocNumber(request.getAdhocNumber());
+        adhocInvoice.setTitle(request.getTitle());
+        adhocInvoice.setDescription(request.getDescription());
+        adhocInvoice.setInvoiceDate(request.getInvoiceDate());
+        adhocInvoice.setDueDate(request.getDueDate());
+        adhocInvoice.setCategory(request.getCategory());
+        adhocInvoice.setFinalAmount(request.getFinalAmount());
+        adhocInvoice.setPaymentStatus(request.getPaymentStatus());
+        adhocInvoice.setNotes(request.getNotes());
+        adhocInvoice.setIncludeInMonthly(request.getIncludeInMonthly());
+        adhocInvoice.setPriority(request.getPriority());
+        adhocInvoice.setStatus(request.getStatus());
+
+        AdhocInvoice savedAdhocInvoice = invoiceRepository.save(adhocInvoice);
+
+        return new ExecuteAdhocInvoiceResponse(savedAdhocInvoice.getId());
+    }
 
     private static AdhocInvoiceSummaryDTO toAdhocInvoiceSummaryDTO(AdhocInvoice adhocInvoice) {
         AdhocInvoiceSummaryDTO summary = new AdhocInvoiceSummaryDTO();
