@@ -3,6 +3,9 @@ package com.rentora.api.service;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.UnitUtility.Request.CreateUnitUtilityRequestDto;
 import com.rentora.api.model.dto.UnitUtility.Request.UnitUtility;
+import com.rentora.api.model.dto.UnitUtility.Response.AvailableMonthsDto;
+import com.rentora.api.model.dto.UnitUtility.Response.AvailableYearsDto;
+import com.rentora.api.model.dto.UnitUtility.Response.UnitWithUtilityResponseDto;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
@@ -11,6 +14,7 @@ import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UnitUtilityRepository;
 import com.rentora.api.repository.UtilityRepository;
+import com.rentora.api.specifications.UnitSpecification;
 import com.rentora.api.specifications.UnitUtilitySpecification;
 import com.rentora.api.specifications.UtilitySpecification;
 import jakarta.transaction.Transactional;
@@ -25,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -37,8 +43,62 @@ public class UnitUtilityService {
     private final UnitRepository unitRepository;
     private final ContractRepository contractRepository;
 
+
+    public List<UnitWithUtilityResponseDto> getAllUnitWithUtility(UUID apartmentId,String buildingName) {
+        Specification<Unit>  unitSpecification = UnitSpecification.hasApartmentId(apartmentId)
+                .and(UnitSpecification.hasBuildingName(buildingName));
+        List<Unit> allUnits = unitRepository.findAll(unitSpecification);
+
+        List<UnitWithUtilityResponseDto> unitResult = new ArrayList<>();
+        for (Unit unit : allUnits){
+            //try to find active contract
+            Optional<Contract> activeContractOpt = contractRepository.findActiveContractByUnitId(unit.getId());
+            Contract activeContract = activeContractOpt.orElse(null);
+
+            //Utility
+            UnitUtilities lastWater = findLastReading(unit,"water");
+            UnitUtilities lastElectric = findLastReading(unit,"electric");
+
+            BigDecimal waterStart = null;
+            BigDecimal electricStart = null;
+            if(lastWater != null){
+                waterStart = lastWater.getMeterEnd();
+            }else if(activeContract != null){
+                waterStart = activeContract.getWaterMeterStartReading();
+            }
+
+            if (lastElectric != null) {
+                electricStart = lastElectric.getMeterEnd();
+            } else if (activeContract != null) {
+                electricStart = activeContract.getElectricityMeterStartReading();
+            }
+
+            unitResult.add(UnitWithUtilityResponseDto.builder().unitId(unit.getId())
+                    .unitStatus(unit.getStatus()).unitName(unit.getUnitName()).buildingName(unit.getFloor().getBuilding().getName())
+                    .electricMeterStart(electricStart).waterMeterStart(waterStart).build());
+        }
+        return unitResult;
+    }
+
+    private UnitUtilities findLastReading(Unit unit , String utilityName){
+        // ===== Utility =====
+        Specification<Utility> utilitySpecification = UtilitySpecification
+                .hasApartmentId(unit.getFloor().getBuilding().getApartment().getId())
+                .and(UtilitySpecification.hasUtilityName(utilityName));
+        Utility utility = utilityRepository.findOne(utilitySpecification)
+                .orElseThrow(() -> new ResourceNotFoundException("Water utility not found"));
+        // ===== Find Last utility Reading =====
+        Specification<UnitUtilities> unitUtilitySpec = UnitUtilitySpecification.hasUnitId(unit.getId())
+                .and(UnitUtilitySpecification.hasUtilityId(utility.getId()));
+        List<UnitUtilities> unitUtilities = unitUtilityRepository.findAll(unitUtilitySpec);
+        unitUtilities.sort(Comparator.comparing(UnitUtilities::getUsageMonth).reversed());
+
+        return unitUtilities.isEmpty() ? null : unitUtilities.getFirst();
+    }
+
     public void createUnitUtility(UUID apartmentId, @RequestBody @Valid CreateUnitUtilityRequestDto requestDto) {
-        LocalDate usageMonth = requestDto.getMeterDate().withDayOfMonth(1);
+        LocalDate usageMonth = LocalDate.now().withMonth(requestDto.getReadingMonth())
+                .withYear(requestDto.getReadingYear()).withDayOfMonth(1);
 
         for (UnitUtility room : requestDto.getRooms()) {
             Unit unit = unitRepository.findById(room.getUnitId())
@@ -59,18 +119,10 @@ public class UnitUtilityService {
                     .orElseThrow(() -> new ResourceNotFoundException("Electric utility not found"));
 
             // ===== Find Last Water Reading =====
-            Specification<UnitUtilities> waterUtilitySpec = UnitUtilitySpecification.hasUnitId(unit.getId())
-                    .and(UnitUtilitySpecification.hasUtilityId(waterUtility.getId()));
-            List<UnitUtilities> unitWaterUtilities = unitUtilityRepository.findAll(waterUtilitySpec);
-            unitWaterUtilities.sort(Comparator.comparing(UnitUtilities::getUsageMonth).reversed());
-            UnitUtilities lastWaterReading = unitWaterUtilities.isEmpty() ? null : unitWaterUtilities.getFirst();
+            UnitUtilities lastWaterReading = findLastReading(unit,"water");
 
             // ===== Find Last Electric Reading =====
-            Specification<UnitUtilities> electricUtilitySpec = UnitUtilitySpecification.hasUnitId(unit.getId())
-                    .and(UnitUtilitySpecification.hasUtilityId(electricUtility.getId()));
-            List<UnitUtilities> unitElectricUtilities = unitUtilityRepository.findAll(electricUtilitySpec);
-            unitElectricUtilities.sort(Comparator.comparing(UnitUtilities::getUsageMonth).reversed());
-            UnitUtilities lastElectricReading = unitElectricUtilities.isEmpty() ? null : unitElectricUtilities.getFirst();
+            UnitUtilities lastElectricReading = findLastReading(unit,"electric");
 
             // ===== Prepare new water reading =====
             BigDecimal waterEnd = BigDecimal.valueOf(room.getWaterEnd());
@@ -149,6 +201,46 @@ public class UnitUtilityService {
 
             unitUtilityRepository.save(newElectricUtility);
         }
+    }
+
+    // Get available years
+    public AvailableYearsDto getAvailableYears(UUID apartmentId) {
+        // All usageMonths recorded for this apartment
+        List<LocalDate> usageMonths = unitUtilityRepository.findAllUsageMonthsByApartment(apartmentId);
+
+        int currentYear = LocalDate.now().getYear();
+
+        // Count how many months are used per year
+        Map<Integer, Long> monthsCountByYear = usageMonths.stream()
+                .collect(Collectors.groupingBy(LocalDate::getYear, Collectors.counting()));
+
+        // Include years that are not fully used (less than 12 months recorded)
+        List<Integer> availableYears = IntStream.rangeClosed(currentYear, currentYear + 5)
+                .boxed()
+                .filter(y -> monthsCountByYear.getOrDefault(y, 0L) < 12)
+                .collect(Collectors.toList());
+
+        return AvailableYearsDto.builder().years(availableYears).build();
+    }
+
+    // Get available months for a given year
+    public AvailableMonthsDto getAvailableMonths(UUID apartmentId, String buildingName, int year) {
+        List<LocalDate> usageMonths = unitUtilityRepository.findAllUsageMonthsByApartmentAndBuilding(apartmentId, buildingName);
+
+        Set<Integer> usedMonths = usageMonths.stream()
+                .filter(d -> d.getYear() == year)
+                .map(LocalDate::getMonthValue)
+                .collect(Collectors.toSet());
+
+        List<Integer> availableMonths = IntStream.rangeClosed(1, 12)
+                .filter(m -> !usedMonths.contains(m))
+                .boxed()
+                .collect(Collectors.toList());
+
+        return AvailableMonthsDto.builder()
+                .months(availableMonths)
+                .year(year)
+                .build();
     }
 
 }

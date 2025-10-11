@@ -9,8 +9,7 @@ import java.util.List;
 
 @Data
 public class CreateUnitUtilityRequestDto {
-    @NotNull(message = "Reading Month is required")
-    @Size(max = 2, message = "Reading month max size = 2")
-    private LocalDate meterDate;
+    private Integer readingMonth;
+    private Integer readingYear;
     private List<UnitUtility> rooms;
 }

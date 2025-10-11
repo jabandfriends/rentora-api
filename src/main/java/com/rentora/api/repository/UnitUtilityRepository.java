@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,5 +49,29 @@ public interface UnitUtilityRepository extends JpaRepository<UnitUtilities, UUID
             @Param("utilityName") String utilityName
     );
 
+    @Query("""
+    SELECT DISTINCT u.usageMonth
+    FROM UnitUtilities u
+    JOIN u.unit unit
+    JOIN unit.floor f
+    JOIN f.building b
+    JOIN b.apartment a
+    WHERE a.id = :apartmentId
+""")
+    List<LocalDate> findAllUsageMonthsByApartment(@Param("apartmentId") UUID apartmentId);
+
+    @Query("""
+    SELECT DISTINCT uu.usageMonth
+    FROM UnitUtilities uu
+    JOIN uu.unit u
+    JOIN u.floor f
+    JOIN f.building b
+    WHERE b.apartment.id = :apartmentId
+      AND b.name = :buildingName
+""")
+    List<LocalDate> findAllUsageMonthsByApartmentAndBuilding(
+            @Param("apartmentId") UUID apartmentId,
+            @Param("buildingName") String buildingName
+    );
 
 }
