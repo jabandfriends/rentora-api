@@ -2,6 +2,8 @@ package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.ExtraService.Response.ServiceInfoDTO;
+import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.repository.UnitServiceRepository;
 import com.rentora.api.service.ApartmentServiceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,15 +19,19 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/apartments/{apartmentId}/all-room/detail/test")
+@RequestMapping("/api/apartments/{apartmentId}/all-room/detail/{unitId}")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class ApartmentServiceController {
 
     private final ApartmentServiceService apartmentServiceService;
+    private final UnitRepository unitRepository;
+    private final UnitServiceRepository unitServiceRepository;
 
-    @GetMapping
+    @GetMapping("/apartment-services")
     public ResponseEntity<ApiResponse<List<ServiceInfoDTO>>> getAllServiceDetails
-            (@PathVariable UUID apartmentId) {
+            (@PathVariable UUID apartmentId,
+             @PathVariable UUID unitId
+            ) {
         List<ServiceInfoDTO> services  = apartmentServiceService.getApartmentService(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(services));

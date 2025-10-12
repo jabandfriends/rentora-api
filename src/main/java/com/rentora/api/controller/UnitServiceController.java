@@ -40,7 +40,7 @@ public class UnitServiceController {
         return ResponseEntity.ok(ApiResponse.success(serviceList));
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ApiResponse<ExecuteUnitServiceResponse>> createUnitService(
             @PathVariable UUID unitId,
             @Valid @RequestBody CreateUnitServiceRequest request){
