@@ -1,6 +1,7 @@
 package com.rentora.api.repository;
 
 import com.rentora.api.model.entity.AdhocInvoice;
+import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ import java.util.UUID;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpecificationExecutor<Invoice> {
+    long countByApartmentId(UUID apartmentId);
+    long countByApartmentAndPaymentStatus(Apartment apartment, Invoice.PaymentStatus paymentStatus);
 
     @Query("SELECT i FROM Invoice i JOIN FETCH i.apartment a JOIN FETCH i.unit u JOIN FETCH i.contract c JOIN FETCH i.tenant usr WHERE i.id = :invoiceId")
     Optional<Invoice> findByInvoiceId(@Param("invoiceId") UUID invoiceId);
