@@ -14,14 +14,9 @@ import java.math.BigDecimal;
 @Data
 public class CreateAdhocInvoiceRequest {
 
-    @NotNull(message = "Apartment ID is required")
-    private UUID apartment;
-
     @NotNull(message = "Unit ID is required")
     private UUID unitId;
 
-    @NotBlank(message = "Adhoc number is required")
-    private String adhocNumber;
 
     @Size(max = 100, message = "Title cannot exceed 100 characters")
     private String title;
@@ -36,14 +31,13 @@ public class CreateAdhocInvoiceRequest {
     private LocalDate dueDate;
 
     @NotBlank(message = "Category is required")
-    private String category;
+    private AdhocInvoice.AdhocInvoiceCategory category;
 
     @NotNull(message = "Final amount is required")
     @DecimalMin(value = "0.01", message = "Final amount must be greater than 0")
     private BigDecimal finalAmount;
 
-    @NotNull(message = "Payment status is required")
-    private AdhocInvoice.PaymentStatus paymentStatus;
+    private AdhocInvoice.PaymentStatus paymentStatus = AdhocInvoice.PaymentStatus.unpaid;
 
     @Size(max = 250, message = "Description cannot exceed 250 characters")
     private String notes;
@@ -53,6 +47,5 @@ public class CreateAdhocInvoiceRequest {
     @NotNull(message = "Invoice priority is required")
     private AdhocInvoice.InvoicePriority priority;
 
-    @NotNull(message = "Invoice status is required")
-    private AdhocInvoice.InvoiceStatus status;
+    private AdhocInvoice.InvoiceStatus status = AdhocInvoice.InvoiceStatus.active;
 }

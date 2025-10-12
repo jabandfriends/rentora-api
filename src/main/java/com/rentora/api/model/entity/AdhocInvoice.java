@@ -43,8 +43,11 @@ public class AdhocInvoice {
     @Column(columnDefinition = "text")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 30)
-    private String category;
+    private AdhocInvoiceCategory category; //miscellaneous,penalty
+
+
 
     @Column(name = "final_amount", precision = 10, scale = 2)
     private BigDecimal finalAmount;
@@ -126,5 +129,8 @@ public class AdhocInvoice {
 
     public enum InvoicePriority {
         normal, high
+    }
+    public enum AdhocInvoiceCategory{
+        miscellaneous,penalty
     }
 }

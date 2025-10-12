@@ -633,6 +633,30 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     )
 );
 
+-- Generate adhoc number trigger
+CREATE OR REPLACE FUNCTION generate_adhoc_number()
+    RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.adhoc_number IS NULL THEN
+        NEW.adhoc_number := 'ADHOC-' || TO_CHAR(NOW(), 'YYYYMM') || '-' ||
+                            LPAD(nextval('adhoc_sequence')::text, 5, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE SEQUENCE IF NOT EXISTS adhoc_sequence START 1;
+
+CREATE TRIGGER set_adhoc_number
+    BEFORE INSERT ON adhoc_invoices
+    FOR EACH ROW
+EXECUTE FUNCTION generate_adhoc_number();
+
+CREATE TRIGGER update_adhoc_invoices_updated_at
+    BEFORE UPDATE ON adhoc_invoices
+    FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- =========================================
 -- 19. ENHANCED INDEXES
 -- =========================================

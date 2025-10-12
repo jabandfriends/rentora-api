@@ -179,7 +179,6 @@ public class AdhocInvoiceService {
 
         adhocInvoice.setUnit(unit);
         adhocInvoice.setApartment(apartment);
-        adhocInvoice.setAdhocNumber(request.getAdhocNumber());
         adhocInvoice.setTitle(request.getTitle());
         adhocInvoice.setDescription(request.getDescription());
         adhocInvoice.setInvoiceDate(request.getInvoiceDate());
