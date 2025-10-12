@@ -3,6 +3,8 @@ package com.rentora.api.model.dto.Invoice.Request;
 import java.util.UUID;
 
 import com.rentora.api.model.entity.AdhocInvoice;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,7 +32,7 @@ public class CreateAdhocInvoiceRequest {
     @NotNull(message = "Due date is required")
     private LocalDate dueDate;
 
-    @NotBlank(message = "Category is required")
+    @NotNull(message = "Category is required")
     private AdhocInvoice.AdhocInvoiceCategory category;
 
     @NotNull(message = "Final amount is required")
