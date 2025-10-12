@@ -1,4 +1,4 @@
-package com.rentora.api.model.dto.ExtraService.Request;
+package com.rentora.api.model.dto.ExtraService.Response;
 
 import lombok.Data;
 

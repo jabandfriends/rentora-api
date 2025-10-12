@@ -1,7 +1,7 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.model.dto.ExtraService.Request.ServiceInfoDTO;
+import com.rentora.api.model.dto.ExtraService.Response.ServiceInfoDTO;
 import com.rentora.api.model.entity.ServiceEntity;
 import com.rentora.api.repository.ApartmentServiceRepository;
 import com.rentora.api.repository.UnitRepository;
