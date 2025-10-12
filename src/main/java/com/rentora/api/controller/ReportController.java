@@ -75,12 +75,13 @@ public class ReportController {
     }
 
     @GetMapping("/{apartmentId}/utility")
-    public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnits(
+    public ResponseEntity<ApiResponse<PaginatedResponse<ReportService.UnitServiceResponseDto>>> getUnitsUtility(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String unitName,
+            @RequestParam(required = false) String buildingName,
             @PathVariable UUID apartmentId,
             @RequestParam String readingDate
     ) {
@@ -92,7 +93,7 @@ public class ReportController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,unitName,readingDate,pageable);
+        Page<ReportService.UnitServiceResponseDto> units = reportService.getUnitsUtility(apartmentId,unitName,buildingName,readingDate,pageable);
         ReportUnitUtilityMetadata metadata = reportService.getUnitsUtilityMetadata(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,metadata)));

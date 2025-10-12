@@ -29,6 +29,14 @@ public class CreateContractRequest {
     @NotNull(message = "Rental type is required")
     private Contract.RentalType rentalType;
 
+    //water and electric start meter
+    @NotNull(message = "Water meter is required")
+    private BigDecimal waterMeterStart;
+
+    @NotNull(message = "Electricity meter is required")
+    private BigDecimal electricMeterStart;
+
+
     @NotNull(message = "Start date is required")
     private LocalDate startDate;
 

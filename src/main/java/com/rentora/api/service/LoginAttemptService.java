@@ -21,6 +21,7 @@ public class LoginAttemptService {
         int attempts = user.getLoginAttempts() + 1;
         user.setLoginAttempts(attempts);
 
+
         if (attempts >= maxAttempts) {
             user.setLockedUntil(LocalDateTime.now().plusMinutes(lockMinutes));
         }

@@ -1,11 +1,13 @@
 package com.rentora.api.model.dto.Tenant.Metadata;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class TenantsMetadataResponseDto {
-    private Integer totalTenants;
-    private long totalOccupiedTenants;
-    private long totalUnoccupiedTenants;
-    private long totalActiveTenants;
+    private Long totalTenants;
+    private Long totalOccupiedTenants;
+    private Long totalUnoccupiedTenants;
+    private Long totalActiveTenants;
 }
