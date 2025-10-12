@@ -4,6 +4,7 @@ import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 public class UnitUtilitySpecification {
@@ -29,6 +30,21 @@ public class UnitUtilitySpecification {
         return (root, query, criteriaBuilder) -> {
             if (apartmentId == null ) return null;
             return criteriaBuilder.equal(root.get("unit").get("floor").get("building").get("apartment").get("id"),  apartmentId );
+        };
+    }
+
+    //has usage month
+    public static Specification<UnitUtilities> hasUsageMonth(LocalDate usageMonth) {
+        return (root, query, criteriaBuilder) -> {
+            if (usageMonth == null ) return null;
+            return criteriaBuilder.equal(root.get("usageMonth"),  usageMonth );
+        };
+    }
+
+    public static Specification<UnitUtilities> hasUtilityName(String utilityName) {
+        return (root, query, criteriaBuilder) -> {
+            if (utilityName == null || utilityName.isEmpty()) return null;
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("utility").get("utilityName")),  utilityName );
         };
     }
 }

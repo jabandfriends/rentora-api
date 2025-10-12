@@ -87,7 +87,7 @@ public class UnitUtilityService {
                 .hasApartmentId(unit.getFloor().getBuilding().getApartment().getId())
                 .and(UtilitySpecification.hasUtilityName(utilityName));
         Utility utility = utilityRepository.findOne(utilitySpecification)
-                .orElseThrow(() -> new ResourceNotFoundException("Water utility not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Utility not found"));
         // ===== Find Last utility Reading =====
         Specification<UnitUtilities> unitUtilitySpec = UnitUtilitySpecification.hasUnitId(unit.getId())
                 .and(UnitUtilitySpecification.hasUtilityId(utility.getId()));
