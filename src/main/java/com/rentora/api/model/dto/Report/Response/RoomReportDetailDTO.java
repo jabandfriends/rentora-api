@@ -7,26 +7,14 @@ import java.math.BigDecimal;
 @Data
 public class RoomReportDetailDTO {
     private String id;
-    private String unitName;
-    private Unit.UnitType unitType;
-    private Integer bedrooms;
-    private BigDecimal bathrooms;
-    private BigDecimal squareMeters;
-    private Integer balconyCount;
-    private Integer parkingSpaces;
-    private Unit.UnitStatus status;
-    private Unit.FurnishingStatus furnishingStatus;
-    private String floorPlanUrl;
-    private String notes;
-    private String floorId;
-    private String floorName;
-    private Integer floorNumber;
-    private String buildingId;
-    private String buildingName;
-    private String apartmentId;
-    private String apartmentName;
-    private String createdAt;
-    private String updatedAt;
+    private String roomName;
+    private String tenantName;
+    private String reservedName;
+    private BigDecimal totalAmount;
+    private String issueDate;
+    private String dueDate;
+    private String checkoutDate;
+    private String status;
 
     // Current contract info
     private String currentContractId;

@@ -1,5 +1,6 @@
 package com.rentora.api.service;
 
+import com.rentora.api.model.dto.Report.Metadata.ReceiptReportMetaData;
 import com.rentora.api.model.dto.Report.Response.ReceiptReportDetailDTO;
 import com.rentora.api.model.entity.AdhocInvoice;
 import com.rentora.api.model.entity.Invoice;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
@@ -82,7 +84,37 @@ public class ReceiptReportService {
         dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null);
         return dto;
     }
+
+    public ReceiptReportMetaData getReceiptReportMetadata(UUID apartmentId) {
+        List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByApartmentId(apartmentId, Pageable.unpaged()).getContent();
+        List<Invoice> invoices = invoiceRepository.findByApartment_Id(apartmentId, Pageable.unpaged()).getContent();
+
+        long totalBill = adhocInvoices.size() + invoices.size();
+        long paid = adhocInvoices.stream().filter(inv -> inv.getPaymentStatus() == AdhocInvoice.PaymentStatus.paid).count()
+                + invoices.stream().filter(inv -> inv.getPaymentStatus() == Invoice.PaymentStatus.paid).count();
+        long unpaid = adhocInvoices.stream().filter(inv -> inv.getPaymentStatus() == AdhocInvoice.PaymentStatus.unpaid).count()
+                + invoices.stream().filter(inv -> inv.getPaymentStatus() == Invoice.PaymentStatus.unpaid).count();
+        long overdue = adhocInvoices.stream().filter(inv ->
+                inv.getPaymentStatus() == AdhocInvoice.PaymentStatus.unpaid &&
+                        inv.getDueDate() != null &&
+                        inv.getDueDate().isBefore(LocalDate.now())
+        ).count()
+                + invoices.stream().filter(inv ->
+                inv.getPaymentStatus() == Invoice.PaymentStatus.unpaid &&
+                        inv.getDueDate() != null &&
+                        inv.getDueDate().isBefore(LocalDate.now())
+        ).count();
+
+        ReceiptReportMetaData metadata = new ReceiptReportMetaData();
+        metadata.setTotalBill(totalBill);
+        metadata.setReceiptPaid(paid);
+        metadata.setReceiptUnpaid(unpaid);
+        metadata.setReceiptOverdue(overdue);
+
+        return metadata;
+    }
 }
+
 
 
 

@@ -85,7 +85,7 @@ public class Unit {
         unfurnished,furnished,semi_furnished
     }
     public enum UnitStatus {
-        available,occupied,maintenance,reserved
+        available,occupied,maintenance, AVAILABLE, UNAVAILABLE, reserved
     }
 
     @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -1,11 +1,15 @@
 package com.rentora.api.service;
 
+import com.rentora.api.model.dto.Report.Metadata.ReceiptReportMetaData;
 import com.rentora.api.model.dto.Report.Metadata.ReportUnitUtilityMetadata;
+import com.rentora.api.model.dto.Report.Metadata.RoomReportMetaData;
 import com.rentora.api.model.dto.Report.Response.ReadingDateDto;
+import com.rentora.api.model.dto.Report.Response.RoomReportDetailDTO;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
 import com.rentora.api.repository.ContractRepository;
+import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UnitUtilityRepository;
 import com.rentora.api.specifications.ReportSpecification;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,7 +40,7 @@ public class ReportService {
 
     private final UnitUtilityRepository unitUtilityRepository;
     private final ContractRepository contractRepository;
-
+    private final UnitRepository unitRepository;
 
     public Page<UnitServiceResponseDto> getUnitsUtility(UUID apartmentId,String unitName,String readingDate,Pageable pageable) {
         Specification<UnitUtilities> reportUnitSpec = ReportSpecification.hasApartmentId(apartmentId).and(ReportSpecification.hasName(unitName)).and(ReportSpecification.matchReadingDate(LocalDate.parse(readingDate)));
@@ -114,6 +118,48 @@ public class ReportService {
 
         return response;
     }
+    public RoomReportMetaData getRoomReportMetadata(UUID apartmentId) {
+        RoomReportMetaData metadata = new RoomReportMetaData();
+
+        long totalRooms = unitRepository.countByFloor_Building_Apartment_Id(apartmentId);
+        long availableRooms = unitRepository.countByFloor_Building_Apartment_IdAndStatus(
+                apartmentId, Unit.UnitStatus.AVAILABLE
+        );
+        long unavailableRooms = unitRepository.countByFloor_Building_Apartment_IdAndStatus(
+                apartmentId, Unit.UnitStatus.UNAVAILABLE
+        );
+
+        metadata.setTotalRooms(totalRooms);
+        metadata.setAvailableRooms(availableRooms);
+        metadata.setUnavailableRooms(unavailableRooms);
+
+        return metadata;
+    }
+    public Page<RoomReportDetailDTO> getRoomReport(UUID apartmentId, Pageable pageable) {
+        Specification<Unit> spec = (root, query, cb) ->
+                apartmentId == null ? null : cb.equal(root.get("floor").get("building").get("apartment").get("id"), apartmentId);
+
+        Page<Unit> units = unitRepository.findAll(spec, pageable);
+
+        return units.map(unit -> {
+            Contract contract = contractRepository.findActiveContractByUnitId(unit.getId())
+                    .orElse(null);
+            return toRoomReportDetailDTO(unit, contract);
+        });
+    }
+    public RoomReportDetailDTO toRoomReportDetailDTO(Unit unit, Contract contract) {
+        RoomReportDetailDTO dto = new RoomReportDetailDTO();
+        dto.setRoomName(unit.getUnitName());
+        dto.setTenantName(contract != null ? contract.getTenant().getFullName() : null);
+        dto.setReservedName(contract != null ? contract.getGuarantorName() : null);
+        dto.setTotalAmount(contract != null ? contract.getRentalPrice() : null);
+        dto.setIssueDate(contract != null ? contract.getStartDate().toString() : null);
+        dto.setDueDate(contract != null ? contract.getEndDate().toString() : null);
+        dto.setCheckoutDate(contract != null ? contract.getEndDate().toString() : null);
+        dto.setStatus(unit.getStatus().name());
+        return dto;
+    }
+
     @Data
     public static class UnitServiceResponseDto {
         private String roomName;
@@ -126,6 +172,7 @@ public class ReportService {
 
 
     }
+
 
 
 }

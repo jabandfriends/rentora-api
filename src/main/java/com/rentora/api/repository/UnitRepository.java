@@ -68,4 +68,9 @@ public interface UnitRepository extends JpaRepository<Unit, UUID>, JpaSpecificat
                                     @Param("status") Unit.UnitStatus status);
 
     boolean existsByFloorIdAndUnitName(UUID floorId, String unitName);
+
+    //for roomreportmetadata
+    long countByFloor_Building_Apartment_Id(UUID apartmentId);
+
+    long countByFloor_Building_Apartment_IdAndStatus(UUID apartmentId, Unit.UnitStatus status);
 }
