@@ -14,11 +14,11 @@ import java.math.BigDecimal;
 @Data
 public class CreateAdhocInvoiceRequest {
 
-    @NotNull(message = "Unit ID is required")
-    private UUID unitId;
-
     @NotNull(message = "Apartment ID is required")
     private UUID apartment;
+
+    @NotNull(message = "Unit ID is required")
+    private UUID unitId;
 
     @NotBlank(message = "Adhoc number is required")
     private String adhocNumber;

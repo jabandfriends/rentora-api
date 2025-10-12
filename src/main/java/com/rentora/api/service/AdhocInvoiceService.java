@@ -160,13 +160,13 @@ public class AdhocInvoiceService {
 //        return summary;
 //    }
 
-    public ExecuteAdhocInvoiceResponse createAdhocInvoice(UUID createdByUserId, CreateAdhocInvoiceRequest request) {
+    public ExecuteAdhocInvoiceResponse createAdhocInvoice(UUID createdByUserId, UUID apartmentId, CreateAdhocInvoiceRequest request) {
 
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(()-> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
 
-        Apartment apartment = apartmentRepository.findById(request.getApartment())
-                .orElseThrow(()-> new ResourceNotFoundException("Unit not found with ID: " + request.getApartment()));
+        Apartment apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(()-> new ResourceNotFoundException("Unit not found with ID: " + apartmentId));
 
         List<Contract> contracts = unit.getContracts();
 

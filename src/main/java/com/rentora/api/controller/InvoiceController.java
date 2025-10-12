@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/invoices")
+@RequestMapping("/api/invoices/{apartmentId}")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class InvoiceController {
     
@@ -95,7 +95,7 @@ public class InvoiceController {
 //         return ResponseEntity.ok(ApiResponse.success(invoice));
 //     }
 
-    @GetMapping("/{apartmentId}")
+    @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getInvoices(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -120,7 +120,7 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
     }
 
-    @GetMapping("/{apartmentId}/overdue")
+    @GetMapping("/overdue")
     public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getOverdueInvoices(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -143,7 +143,7 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(overdue, page, overall)));
     }
 
-    @GetMapping("/{apartmentId}/detail/{adhocInvoiceId}")
+    @GetMapping("/detail/{adhocInvoiceId}")
     public ResponseEntity<ApiResponse<AdhocInvoiceDetailDTO>> getInvoicesById(
             @PathVariable UUID adhocInvoiceId,
             @PathVariable UUID apartmentId) {
@@ -152,12 +152,13 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(invoice));
     }
 
-    @PostMapping("/users/create")
+    @PostMapping("/adhocInvoice/create")
     public ResponseEntity<ApiResponse<ExecuteAdhocInvoiceResponse>> createInvoice(
             @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID apartmentId,
             @Valid @RequestBody CreateAdhocInvoiceRequest request){
 
-        ExecuteAdhocInvoiceResponse response = adhocInvoiceService.createAdhocInvoice(currentUser.getId(), request);
+        ExecuteAdhocInvoiceResponse response = adhocInvoiceService.createAdhocInvoice(currentUser.getId(), apartmentId, request);
         return new ResponseEntity<>(ApiResponse.success("Adhoc invoice created successfully",response), HttpStatus.CREATED);
     }
 
