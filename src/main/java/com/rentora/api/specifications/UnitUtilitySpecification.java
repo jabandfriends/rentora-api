@@ -13,10 +13,22 @@ public class UnitUtilitySpecification {
             return criteriaBuilder.equal(root.get("utility").get("id"),  id);
         };
     }
+    public static Specification<UnitUtilities> hasId(UUID id) {
+        return (root, query, criteriaBuilder) -> {
+            if (id == null ) return null;
+            return criteriaBuilder.equal(root.get("id"),  id);
+        };
+    }
     public static Specification<UnitUtilities> hasUnitId(UUID unitId) {
         return (root, query, criteriaBuilder) -> {
             if (unitId == null ) return null;
             return criteriaBuilder.equal(root.get("unit").get("id"),  unitId );
+        };
+    }
+    public static Specification<UnitUtilities> hasApartmentId(UUID apartmentId) {
+        return (root, query, criteriaBuilder) -> {
+            if (apartmentId == null ) return null;
+            return criteriaBuilder.equal(root.get("unit").get("floor").get("building").get("apartment").get("id"),  apartmentId );
         };
     }
 }

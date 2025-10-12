@@ -4,6 +4,7 @@ package com.rentora.api.controller;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.UnitUtility.Request.CreateUnitUtilityRequestDto;
 import com.rentora.api.model.dto.UnitUtility.Request.UnitUtility;
+import com.rentora.api.model.dto.UnitUtility.Request.UpdateUnitUtilityRequestDto;
 import com.rentora.api.model.dto.UnitUtility.Response.AvailableMonthsDto;
 import com.rentora.api.model.dto.UnitUtility.Response.AvailableYearsDto;
 import com.rentora.api.model.dto.UnitUtility.Response.UnitWithUtilityResponseDto;
@@ -31,6 +32,13 @@ public class UnitUtilityController {
         unitUtilityService.createUnitUtility(apartmentId,createUnitUtilityRequestDto);
 
         return ResponseEntity.ok(ApiResponse.success("Create utility successfully",null));
+    }
+
+    @PutMapping
+    public ResponseEntity<ApiResponse<Object>> updateUnitUtility(@PathVariable UUID apartmentId,@RequestBody UpdateUnitUtilityRequestDto request) {
+        unitUtilityService.updateUnitUtility(apartmentId,request);
+
+        return ResponseEntity.ok(ApiResponse.success("Update utility successfully",null));
     }
 
     @GetMapping

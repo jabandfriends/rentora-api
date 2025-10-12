@@ -111,6 +111,7 @@ public class ReportService {
             String utilityName = u.getUtility().getUtilityName().toLowerCase();
 
             if (utilityName.equals("water")) {
+                response.setWaterUnitUtilityId(u.getId());
                 response.setWaterUsage(u.getMeterEnd().subtract(u.getMeterStart()));
                 response.setWaterMeterStart(u.getMeterStart());
                 response.setWaterMeterEnd(u.getMeterEnd());
@@ -118,6 +119,7 @@ public class ReportService {
             }
 
             if (utilityName.equals("electric")) {
+                response.setElectricUnitUtilityId(u.getId());
                 response.setElectricUsage(u.getMeterEnd().subtract(u.getMeterStart()));
                 response.setElectricMeterStart(u.getMeterStart());
                 response.setElectricMeterEnd(u.getMeterEnd());
@@ -130,6 +132,8 @@ public class ReportService {
 
     @Data
     public static class UnitServiceResponseDto {
+        private UUID waterUnitUtilityId;
+        private UUID electricUnitUtilityId;
         private String roomName;
         private String buildingName;
         private String tenantName;

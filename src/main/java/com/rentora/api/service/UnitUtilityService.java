@@ -3,6 +3,7 @@ package com.rentora.api.service;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.UnitUtility.Request.CreateUnitUtilityRequestDto;
 import com.rentora.api.model.dto.UnitUtility.Request.UnitUtility;
+import com.rentora.api.model.dto.UnitUtility.Request.UpdateUnitUtilityRequestDto;
 import com.rentora.api.model.dto.UnitUtility.Response.AvailableMonthsDto;
 import com.rentora.api.model.dto.UnitUtility.Response.AvailableYearsDto;
 import com.rentora.api.model.dto.UnitUtility.Response.UnitWithUtilityResponseDto;
@@ -80,7 +81,7 @@ public class UnitUtilityService {
         return unitResult;
     }
 
-    private UnitUtilities findLastReading(Unit unit , String utilityName){
+    public UnitUtilities findLastReading(Unit unit , String utilityName){
         // ===== Utility =====
         Specification<Utility> utilitySpecification = UtilitySpecification
                 .hasApartmentId(unit.getFloor().getBuilding().getApartment().getId())
@@ -96,6 +97,66 @@ public class UnitUtilityService {
         return unitUtilities.isEmpty() ? null : unitUtilities.getFirst();
     }
 
+    public void updateUnitUtility(UUID apartmentId,@RequestBody @Valid UpdateUnitUtilityRequestDto request){
+        List<UnitUtilities> unitUtilitiesResult = new ArrayList<>();
+        //water utility
+        Specification<UnitUtilities> waterSpec = UnitUtilitySpecification.hasId(request.getWaterUnitUtilityId())
+                .and(UnitUtilitySpecification.hasApartmentId(apartmentId));
+        UnitUtilities waterUtility = unitUtilityRepository.findOne(waterSpec)
+                .orElseThrow(()-> new ResourceNotFoundException("Water utility not found"));
+
+        if(request.getWaterEnd() != null) waterUtility.setMeterEnd(request.getWaterEnd());
+        if(request.getWaterStart() != null) waterUtility.setMeterStart(request.getWaterStart());
+        //total Usage
+        BigDecimal waterUsage =  waterUtility.getMeterEnd().subtract(waterUtility.getMeterStart());
+        waterUtility.setUsageAmount(waterUsage);
+        //totalCost
+        BigDecimal waterTotalCost;
+        BigDecimal waterPricePerUnit = waterUtility.getUtility().getUnitPrice();
+        BigDecimal waterFixedPrice = waterUtility.getUtility().getFixedPrice();
+        Utility.UtilityType waterCostType = waterUtility.getUtility().getUtilityType();
+        if(waterCostType == Utility.UtilityType.meter) {
+            waterTotalCost= waterUsage.multiply(waterPricePerUnit);
+            waterUtility.setCalculatedCost(waterTotalCost);
+        }
+        if(waterCostType == Utility.UtilityType.fixed) {
+            waterTotalCost = waterFixedPrice;
+            waterUtility.setCalculatedCost(waterTotalCost);
+        }
+
+        unitUtilitiesResult.add(waterUtility);
+
+        //electric utility
+        Specification<UnitUtilities> electricSpec = UnitUtilitySpecification.hasId(request.getElectricUnitUtilityId())
+                .and(UnitUtilitySpecification.hasApartmentId(apartmentId));
+        UnitUtilities electricUtility = unitUtilityRepository.findOne(electricSpec)
+                .orElseThrow(()-> new ResourceNotFoundException("Electric utility not found"));
+
+        if(request.getElectricEnd() != null) electricUtility.setMeterEnd(request.getElectricEnd());
+        if(request.getElectricStart() != null) electricUtility.setMeterStart(request.getElectricStart());
+
+        //total Usage
+        BigDecimal electricUsage =  electricUtility.getMeterEnd().subtract(electricUtility.getMeterStart());
+        electricUtility.setUsageAmount(electricUsage);
+        //totalCost
+        BigDecimal electricTotalCost;
+        BigDecimal electricPricePerUnit = electricUtility.getUtility().getUnitPrice();
+        BigDecimal electricFixedPrice = electricUtility.getUtility().getFixedPrice();
+        Utility.UtilityType electricCostType = electricUtility.getUtility().getUtilityType();
+        if(electricCostType == Utility.UtilityType.meter) {
+            electricTotalCost= electricUsage.multiply(electricPricePerUnit);
+            electricUtility.setCalculatedCost(electricTotalCost);
+        }
+        if(electricCostType == Utility.UtilityType.fixed) {
+            electricTotalCost = electricFixedPrice;
+            electricUtility.setCalculatedCost(electricTotalCost);
+        }
+
+        unitUtilitiesResult.add(electricUtility);
+        unitUtilityRepository.saveAll(unitUtilitiesResult);
+
+        log.info("Update utility successfully for {}",electricUtility.getUnit().getUnitName());
+    }
     public void createUnitUtility(UUID apartmentId, @RequestBody @Valid CreateUnitUtilityRequestDto requestDto) {
         LocalDate usageMonth = LocalDate.now().withMonth(requestDto.getReadingMonth())
                 .withYear(requestDto.getReadingYear()).withDayOfMonth(1);
