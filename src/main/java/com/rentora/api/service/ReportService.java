@@ -133,7 +133,6 @@ public class ReportService {
 
         return response;
     }
-<<<<<<< HEAD
     public RoomReportMetaData getRoomReportMetadata(UUID apartmentId) {
         RoomReportMetaData metadata = new RoomReportMetaData();
 
@@ -175,8 +174,6 @@ public class ReportService {
         dto.setStatus(unit.getStatus().name());
         return dto;
     }
-=======
->>>>>>> develop
 
     @Data
     public static class UnitServiceResponseDto {
