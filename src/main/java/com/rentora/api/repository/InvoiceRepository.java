@@ -3,8 +3,10 @@ package com.rentora.api.repository;
 import com.rentora.api.model.entity.AdhocInvoice;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Invoice;
+import com.rentora.api.model.entity.Unit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -12,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,4 +31,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpec
     Page<Invoice> findByApartment_Id(UUID apartmentId, Pageable pageable);
 
     Page<Invoice> findByApartment_IdAndPaymentStatus(UUID apartmentId, Invoice.PaymentStatus paymentStatus, Pageable pageable);
+
+    Optional<Invoice> findByUnitAndGenMonth(Unit unit, LocalDate genMonth);
 }

@@ -46,6 +46,8 @@ public class MonthlyInvoiceService {
 
         Page<Invoice> monthlyInvoices = invoiceRepository.findAll(specification,pageable);
 
+
+
         return monthlyInvoices.map(this::toMonthlyInvoiceResponseDto);
     }
 
@@ -62,7 +64,7 @@ public class MonthlyInvoiceService {
                 .totalOverdueMonthlyInvoice(totalOverdueMonthlyInvoices).build();
     }
 
-    public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, Integer readingMonth, Integer readingYear, Integer paymentDueDays) {
+    public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate, Integer paymentDueDays) {
         Invoice monthlyInvoice = new Invoice();
         //find current
         User currentAdmin = userRepository.findById(admin.getId()).orElseThrow(()-> new ResourceNotFoundException("User not found"));
@@ -74,8 +76,8 @@ public class MonthlyInvoiceService {
 
         // Set billing date based on reading month/year
         LocalDate billStart = LocalDate.now()
-                .withYear(readingYear)
-                .withMonth(readingMonth)
+                .withYear(readingDate.getYear())
+                .withMonth(readingDate.getMonthValue())
                 .withDayOfMonth(1);
         LocalDate billEnd = billStart.withDayOfMonth(billStart.lengthOfMonth());
         LocalDate dueDate = LocalDate.now().plusDays(paymentDueDays);
@@ -110,8 +112,13 @@ public class MonthlyInvoiceService {
         monthlyInvoice.setGeneratedByUser(currentAdmin);
         monthlyInvoice.setPaymentDueDate(dueDate);
         monthlyInvoice.setUtilAmount(utilityAmount);
-        monthlyInvoice.setBillStart(billStart);
-        monthlyInvoice.setBillEnd(billEnd);
+        if(activeContract.getRentalType().equals(Contract.RentalType.daily)) {
+            monthlyInvoice.setBillStart(activeContract.getStartDate());
+            monthlyInvoice.setBillEnd(activeContract.getEndDate());
+        }else{
+            monthlyInvoice.setBillStart(billStart);
+            monthlyInvoice.setBillEnd(billEnd);
+        }
         monthlyInvoice.setGenMonth(billStart);
         monthlyInvoice.setDueDate(dueDate);
 
@@ -125,7 +132,7 @@ public class MonthlyInvoiceService {
         // Save invoice
         invoiceRepository.save(monthlyInvoice);
 
-        log.info("Monthly invoice created for unit {} for month {}-{}", unitId, readingMonth, readingYear);
+        log.info("Monthly invoice created for unit {} for month {}-{}", unitId, readingDate, dueDate);
     }
 
     private UnitUtilities getLatestUnitUtilitySafe(UUID unitId, String utilityName, LocalDate usageMonth) {
@@ -167,10 +174,43 @@ public class MonthlyInvoiceService {
     }
 
     private MonthlyInvoiceResponseDto toMonthlyInvoiceResponseDto(Invoice invoice) {
-        return MonthlyInvoiceResponseDto.builder().invoiceId(invoice.getId())
+        // water
+        Specification<UnitUtilities> waterUnitUtilitySpecification = UnitUtilitySpecification.hasUtilityName("water")
+                .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
+                .and(UnitUtilitySpecification.hasUsageMonth(invoice.getGenMonth()));
+
+        UnitUtilities waterUtility = unitUtilityRepository.findOne(waterUnitUtilitySpecification).orElse(null);
+
+        // electric
+        Specification<UnitUtilities> electricUnitUtilitySpecification = UnitUtilitySpecification.hasUtilityName("electric")
+                .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
+                .and(UnitUtilitySpecification.hasUsageMonth(invoice.getGenMonth()));
+
+        UnitUtilities electricUtility = unitUtilityRepository.findOne(electricUnitUtilitySpecification).orElse(null);
+
+        // safely handle nulls using ternary operators (or Optional)
+        BigDecimal waterAmount = (waterUtility != null && waterUtility.getCalculatedCost() != null)
+                ? waterUtility.getCalculatedCost()
+                : BigDecimal.ZERO;
+
+        BigDecimal electricAmount = (electricUtility != null && electricUtility.getCalculatedCost() != null)
+                ? electricUtility.getCalculatedCost()
+                : BigDecimal.ZERO;
+
+        return MonthlyInvoiceResponseDto.builder()
+                .invoiceId(invoice.getId())
+                .invoiceNumber(invoice.getInvoiceNumber())
+                .tenantName(invoice.getTenant().getFullName())
+                .tenantPhone(invoice.getTenant().getPhoneNumber())
                 .buildingName(invoice.getContract().getUnit().getFloor().getBuilding().getName())
-                .paymentStatus(invoice.getPaymentStatus()).tenantName(invoice.getTenant().getFullName())
-                .totalAmount(invoice.getTotalAmount()).unitName(invoice.getContract().getUnit().getUnitName()).build();
+                .unitName(invoice.getContract().getUnit().getUnitName())
+                .paymentStatus(invoice.getPaymentStatus())
+                .rentAmount(invoice.getRentAmount())
+                .waterAmount(waterAmount)
+                .electricAmount(electricAmount)
+                .totalAmount(invoice.getTotalAmount())
+                .build();
     }
+
 
 }

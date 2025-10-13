@@ -8,6 +8,7 @@ import com.rentora.api.model.dto.UnitUtility.Request.UpdateUnitUtilityRequestDto
 import com.rentora.api.model.dto.UnitUtility.Response.AvailableMonthsDto;
 import com.rentora.api.model.dto.UnitUtility.Response.AvailableYearsDto;
 import com.rentora.api.model.dto.UnitUtility.Response.UnitWithUtilityResponseDto;
+import com.rentora.api.model.entity.Unit;
 import com.rentora.api.service.UnitUtilityService;
 
 import lombok.RequiredArgsConstructor;

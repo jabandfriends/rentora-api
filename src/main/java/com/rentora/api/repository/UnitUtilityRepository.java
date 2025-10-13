@@ -1,6 +1,7 @@
 package com.rentora.api.repository;
 
 
+import com.rentora.api.model.entity.Building;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitUtilities;
 import org.springframework.data.domain.Page;
@@ -73,5 +74,7 @@ public interface UnitUtilityRepository extends JpaRepository<UnitUtilities, UUID
             @Param("apartmentId") UUID apartmentId,
             @Param("buildingName") String buildingName
     );
+
+    List<UnitUtilities> findByUnitAndUsageMonth(Unit unit, LocalDate usageMonth);
 
 }
