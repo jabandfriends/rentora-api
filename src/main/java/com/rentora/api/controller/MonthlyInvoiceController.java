@@ -4,9 +4,12 @@ import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
 import com.rentora.api.model.dto.MonthlyInvoice.Metadata.MonthlyInvoiceMetadataDto;
 import com.rentora.api.model.dto.MonthlyInvoice.Request.CreateMonthlyInvoiceDto;
+import com.rentora.api.model.dto.MonthlyInvoice.Response.MonthlyInvoiceDetailResponseDto;
 import com.rentora.api.model.dto.MonthlyInvoice.Response.MonthlyInvoiceResponseDto;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.UnitUtility.Request.UnitUtility;
+import com.rentora.api.model.dto.UnitUtility.Response.AvailableMonthsDto;
 import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.security.UserPrincipal;
@@ -37,6 +40,13 @@ public class MonthlyInvoiceController {
         monthlyInvoiceService.createMonthlyInvoice(currentUser,request.getUnitId(),request.getReadingDate(),request.getPaymentDueDay());
 
         return ResponseEntity.ok(ApiResponse.success("success",null));
+    }
+    @GetMapping("/detail/{invoiceNumber}")
+    public ResponseEntity<ApiResponse<MonthlyInvoiceDetailResponseDto>> getInvoiceDetail(@PathVariable String invoiceNumber
+    ) {
+        MonthlyInvoiceDetailResponseDto response = monthlyInvoiceService.getMonthlyInvoiceDetail(invoiceNumber);
+
+        return ResponseEntity.ok(ApiResponse.success("Success",response));
     }
 
     @GetMapping("/{apartmentId}")

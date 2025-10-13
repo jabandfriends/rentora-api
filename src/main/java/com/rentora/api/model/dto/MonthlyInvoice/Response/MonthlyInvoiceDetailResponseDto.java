@@ -14,6 +14,7 @@ import java.util.UUID;
 @Builder
 public class MonthlyInvoiceDetailResponseDto {
     private UUID invoiceId;
+    private String invoiceNumber;
     private String unitName;
     private String buildingName;
     private String tenantName;
@@ -21,7 +22,7 @@ public class MonthlyInvoiceDetailResponseDto {
     private Invoice.PaymentStatus paymentStatus;
 
     //new
-    private String invoiceNumber;
+
     private String tenantPhone;
     private String tenantEmail;
     private BigDecimal waterAmount;
@@ -31,8 +32,8 @@ public class MonthlyInvoiceDetailResponseDto {
     private String floorName;
     private String contractNumber;
     private LocalDate dueDate;
-    private Integer invoiceMonth;
-    private Integer invoiceYear;
+    private LocalDate billStart;
+    private LocalDate billEnd;
     private Contract.RentalType rentalType;
 
 
@@ -41,6 +42,7 @@ public class MonthlyInvoiceDetailResponseDto {
     private BigDecimal waterMeterEnd;
     private BigDecimal totalWaterUsageUnit;
     private BigDecimal waterPricePerUnit;
+    private BigDecimal waterFixedPrice;
     private Utility.UtilityType waterPriceRateType;
     private BigDecimal waterTotalCost;
 
@@ -49,6 +51,7 @@ public class MonthlyInvoiceDetailResponseDto {
     private BigDecimal electricMeterEnd;
     private BigDecimal totalElectricUsageUnit;
     private BigDecimal electricPricePerUnit;
+    private BigDecimal electricFixedPrice;
     private Utility.UtilityType electricPriceRateType;
     private BigDecimal electricTotalCost;
 

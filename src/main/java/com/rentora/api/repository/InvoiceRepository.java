@@ -33,4 +33,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpec
     Page<Invoice> findByApartment_IdAndPaymentStatus(UUID apartmentId, Invoice.PaymentStatus paymentStatus, Pageable pageable);
 
     Optional<Invoice> findByUnitAndGenMonth(Unit unit, LocalDate genMonth);
+
+    Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
 }

@@ -2,6 +2,7 @@ package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.MonthlyInvoice.Metadata.MonthlyInvoiceMetadataDto;
+import com.rentora.api.model.dto.MonthlyInvoice.Response.MonthlyInvoiceDetailResponseDto;
 import com.rentora.api.model.dto.MonthlyInvoice.Response.MonthlyInvoiceResponseDto;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.*;
@@ -49,6 +50,13 @@ public class MonthlyInvoiceService {
 
 
         return monthlyInvoices.map(this::toMonthlyInvoiceResponseDto);
+    }
+
+    public MonthlyInvoiceDetailResponseDto getMonthlyInvoiceDetail(String invoiceNumber){
+        Invoice invoice = invoiceRepository.findByInvoiceNumber(invoiceNumber).
+                orElseThrow(() -> new ResourceNotFoundException("Invoice number " + invoiceNumber + " not found"));
+
+        return toMonthlyInvoiceDetailDto(invoice);
     }
 
     public MonthlyInvoiceMetadataDto getMonthlyInvoiceMetadata(UUID apartmentId){
@@ -171,6 +179,76 @@ public class MonthlyInvoiceService {
             return BigDecimal.ZERO; // already paid
         }
         return BigDecimal.ZERO;
+    }
+    private MonthlyInvoiceDetailResponseDto toMonthlyInvoiceDetailDto(Invoice invoice) {
+
+        // === find water utility ===
+        Specification<UnitUtilities> waterSpec = UnitUtilitySpecification.hasUtilityName("water")
+                .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
+                .and(UnitUtilitySpecification.hasUsageMonth(invoice.getGenMonth()));
+        UnitUtilities waterUtility = unitUtilityRepository.findOne(waterSpec).orElse(null);
+
+        // === find electric utility ===
+        Specification<UnitUtilities> electricSpec = UnitUtilitySpecification.hasUtilityName("electric")
+                .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
+                .and(UnitUtilitySpecification.hasUsageMonth(invoice.getGenMonth()));
+        UnitUtilities electricUtility = unitUtilityRepository.findOne(electricSpec).orElse(null);
+
+        // === safe values (if null, fallback to BigDecimal.ZERO or null) ===
+        BigDecimal waterAmount = (waterUtility != null && waterUtility.getCalculatedCost() != null)
+                ? waterUtility.getCalculatedCost()
+                : BigDecimal.ZERO;
+
+        BigDecimal electricAmount = (electricUtility != null && electricUtility.getCalculatedCost() != null)
+                ? electricUtility.getCalculatedCost()
+                : BigDecimal.ZERO;
+
+        // === get active contract ===
+        Contract activeContract = contractRepository.findActiveContractByUnitId(invoice.getUnit().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+
+        // === build response ===
+        return MonthlyInvoiceDetailResponseDto.builder()
+                .invoiceId(invoice.getId())
+                .invoiceNumber(invoice.getInvoiceNumber())
+                .unitName(invoice.getUnit().getUnitName())
+                .buildingName(invoice.getUnit().getFloor().getBuilding().getName())
+                .tenantName(invoice.getTenant().getFullName())
+                .totalAmount(invoice.getTotalAmount())
+                .paymentStatus(invoice.getPaymentStatus())
+                .tenantPhone(invoice.getTenant().getPhoneNumber())
+                .tenantEmail(invoice.getTenant().getEmail())
+                .rentAmount(invoice.getRentAmount())
+                .contractRentAmount(activeContract.getRentalPrice())
+                .floorName(invoice.getUnit().getFloor().getFloorName())
+                .contractNumber(activeContract.getContractNumber())
+                .dueDate(invoice.getDueDate())
+                .rentalType(activeContract.getRentalType())
+
+                // === Water section ===
+                .waterAmount(waterAmount)
+                .waterMeterStart(waterUtility != null ? waterUtility.getMeterStart() : null)
+                .waterMeterEnd(waterUtility != null ? waterUtility.getMeterEnd() : null)
+                .totalWaterUsageUnit(waterUtility != null ? waterUtility.getUsageAmount() : null)
+                .waterPricePerUnit(waterUtility != null && waterUtility.getUtility() != null ? waterUtility.getUtility().getUnitPrice() : null)
+                .waterPriceRateType(waterUtility != null && waterUtility.getUtility() != null ? waterUtility.getUtility().getUtilityType() : null)
+                .waterTotalCost(waterUtility != null ? waterUtility.getCalculatedCost() : BigDecimal.ZERO)
+                .waterFixedPrice(waterUtility != null && waterUtility.getUtility() != null ? waterUtility.getUtility().getFixedPrice() : null)
+
+                // === Electric section ===
+                .electricAmount(electricAmount)
+                .electricMeterStart(electricUtility != null ? electricUtility.getMeterStart() : null)
+                .electricMeterEnd(electricUtility != null ? electricUtility.getMeterEnd() : null)
+                .totalElectricUsageUnit(electricUtility != null ? electricUtility.getUsageAmount() : null)
+                .electricPricePerUnit(electricUtility != null && electricUtility.getUtility() != null ? electricUtility.getUtility().getUnitPrice() : null)
+                .electricPriceRateType(electricUtility != null && electricUtility.getUtility() != null ? electricUtility.getUtility().getUtilityType() : null)
+                .electricTotalCost(electricUtility != null ? electricUtility.getCalculatedCost() : BigDecimal.ZERO)
+                .electricFixedPrice(electricUtility != null && electricUtility.getUtility() != null ? electricUtility.getUtility().getFixedPrice() : null)
+
+                // === Other info ===
+                .billStart(invoice.getBillStart())
+                .billEnd(invoice.getBillEnd())
+                .build();
     }
 
     private MonthlyInvoiceResponseDto toMonthlyInvoiceResponseDto(Invoice invoice) {
