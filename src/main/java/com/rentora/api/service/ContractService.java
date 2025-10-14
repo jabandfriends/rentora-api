@@ -9,12 +9,14 @@ import com.rentora.api.model.entity.*;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ContractSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,16 @@ public class ContractService {
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
         return contracts.map(this::toContractSummaryDto);
+    }
+
+    public Page<ContractSummaryDto> getContractsByStatusByApartmentIdByUnit(UUID apartmentId, Contract.ContractStatus contractStatus,
+                                                                      UUID unitId,Pageable pageable) {
+        Specification<Contract> contractSpecification = ContractSpecification.hasStatus(contractStatus)
+                        .and(ContractSpecification.hasApartmentId(apartmentId)).and(ContractSpecification.hasUnitId(unitId));
+        Page<Contract> contracts = contractRepository.findAll(contractSpecification,pageable);
+
+        return contracts.map(this::toContractSummaryDto);
+
     }
 
     @Scheduled(cron = "0 0 0 * * *") // every day at midnight
