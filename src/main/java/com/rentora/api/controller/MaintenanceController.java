@@ -69,10 +69,14 @@ public class MaintenanceController {
     @GetMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<MaintenanceDetailDTO>> getMaintenanceById(
             @PathVariable UUID maintenanceId,
+            @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         MaintenanceDetailDTO maintenance = maintenanceService.getMaintenanceById(maintenanceId);
         return ResponseEntity.ok(ApiResponse.success(maintenance));
     }
+
+
+
 
     @PostMapping("/users/create")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenance(
