@@ -1,6 +1,8 @@
 package com.rentora.api.controller;
 
+
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.Building.Response.BuildingSummaryDto;
 import com.rentora.api.model.dto.ExtraService.Response.ServiceInfoDTO;
 import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UnitServiceRepository;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -34,6 +37,15 @@ public class ApartmentServiceController {
             ) {
         List<ServiceInfoDTO> services  = apartmentServiceService.getApartmentService(apartmentId);
 
-        return ResponseEntity.ok(ApiResponse.success(services));
+        return ResponseEntity.ok(ApiResponse.success("success",services));
     }
+
+//    @GetMapping("/no/paginate")
+//    public ResponseEntity<ApiResponse<List<BuildingSummaryDto>>> getBuildingsNoPaginate(
+//            @PathVariable UUID apartmentId) {
+//
+//
+//        List<BuildingSummaryDto> buildings = buildingService.getBuildingsByApartmentNoPaginate(apartmentId);
+//        return ResponseEntity.ok(ApiResponse.success(buildings));
+//    }
 }
