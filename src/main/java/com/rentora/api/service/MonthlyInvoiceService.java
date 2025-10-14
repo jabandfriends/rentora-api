@@ -99,6 +99,7 @@ public class MonthlyInvoiceService {
 
         // Calculate adhoc and unit service amounts
         BigDecimal totalAdhocAmount = adhocInvoiceRepository.findByUnit(activeContract.getUnit()).stream()
+                .filter(AdhocInvoice::getIncludeInMonthly)
                 .map(AdhocInvoice::getFinalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
