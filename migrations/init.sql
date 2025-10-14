@@ -633,7 +633,8 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     )
 );
 
--- Generate adhoc number trigger
+CREATE SEQUENCE IF NOT EXISTS adhoc_sequence START 1;
+
 CREATE OR REPLACE FUNCTION generate_adhoc_number()
     RETURNS TRIGGER AS $$
 BEGIN
@@ -645,8 +646,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE SEQUENCE IF NOT EXISTS adhoc_sequence START 1;
-
+-- Create trigger
 CREATE TRIGGER set_adhoc_number
     BEFORE INSERT ON adhoc_invoices
     FOR EACH ROW
