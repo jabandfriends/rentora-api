@@ -16,6 +16,7 @@ public class MaintenanceDetailDTO {
 
     //Unit
     private String unitName;
+    private UUID unitId;
 
     //tenant
     private String tenantName;
@@ -50,6 +51,6 @@ public class MaintenanceDetailDTO {
 
 
     private Maintenance.RecurringSchedule recurringSchedule;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

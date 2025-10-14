@@ -158,11 +158,7 @@ public class MaintenanceService {
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
     }
-    public MaintenanceDetailDTO getMaintenanceById(UUID maintenanceId) {
-        Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
-        return toMaintenanceDetailDto(maintenance);
-    }
+
 
         public void deleteMaintenance(UUID maintenanceId) {
             Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
@@ -192,21 +188,21 @@ public class MaintenanceService {
         dto.setDescription(maintenance.getDescription());
 
         if (maintenance.getCategory() != null)
-            dto.setCategory(maintenance.getCategory().name());
+            dto.setCategory(maintenance.getCategory());
 
         if (maintenance.getStatus() != null)
-            dto.setStatus(maintenance.getStatus().name());
+            dto.setStatus(maintenance.getStatus());
 
         if (maintenance.getPriority() != null)
-            dto.setPriority(maintenance.getPriority().name());
+            dto.setPriority(maintenance.getPriority());
 
         dto.setRequestedDate(maintenance.getRequestedDate());
 
         if (maintenance.getAppointmentDate() != null)
-            dto.setAppointmentDate(maintenance.getAppointmentDate().toLocalDate());
+            dto.setAppointmentDate(maintenance.getAppointmentDate());
 
         if (maintenance.getDueDate() != null)
-            dto.setDueDate(maintenance.getDueDate().toLocalDate());
+            dto.setDueDate(maintenance.getDueDate());
 
         dto.setStartedAt(maintenance.getStartedAt());
         dto.setCompletedAt(maintenance.getCompletedAt());
@@ -236,6 +232,7 @@ public class MaintenanceService {
                 dto.setBuildingsName(maintenance.getUnit().getFloor().getBuilding().getName());
             }
             dto.setUnitName(maintenance.getUnit().getUnitName());
+            dto.setUnitId(maintenance.getUnit().getId());
         }
 
         // --- Tenant Info ---

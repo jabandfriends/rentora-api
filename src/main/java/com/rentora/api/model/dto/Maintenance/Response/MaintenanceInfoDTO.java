@@ -14,8 +14,8 @@ public class MaintenanceInfoDTO {
     private String unitName;
     private String buildingsName;
     private String title;
-    private LocalDate appointmentDate;
-    private LocalDate dueDate;
+    private OffsetDateTime appointmentDate;
+    private OffsetDateTime dueDate;
     private Maintenance.Status status;
     private Maintenance.Priority priority;
 }
