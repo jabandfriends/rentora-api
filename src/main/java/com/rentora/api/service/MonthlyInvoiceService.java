@@ -224,7 +224,7 @@ public class MonthlyInvoiceService {
                 .contractNumber(activeContract.getContractNumber())
                 .dueDate(invoice.getDueDate())
                 .rentalType(activeContract.getRentalType())
-
+                .createdAt(invoice.getCreatedAt())
                 // === Water section ===
                 .waterAmount(waterAmount)
                 .waterMeterStart(waterUtility != null ? waterUtility.getMeterStart() : null)
