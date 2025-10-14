@@ -49,9 +49,10 @@ public class ContractService {
         return contracts.map(this::toContractSummaryDto);
     }
 
-    public Page<ContractSummaryDto> getContractsByStatusByApartmentId(UUID apartmentId, Contract.ContractStatus contractStatus, Pageable pageable) {
-        Specification<Contract> contractSpecification = ContractSpecification.hasStatus(Contract.ContractStatus.terminated).
-                and(ContractSpecification.hasApartmentId(apartmentId));
+    public Page<ContractSummaryDto> getContractsByStatusByApartmentIdByUnit(UUID apartmentId, Contract.ContractStatus contractStatus,
+                                                                      UUID unitId,Pageable pageable) {
+        Specification<Contract> contractSpecification = ContractSpecification.hasStatus(contractStatus)
+                        .and(ContractSpecification.hasApartmentId(apartmentId)).and(ContractSpecification.hasUnitId(unitId));
         Page<Contract> contracts = contractRepository.findAll(contractSpecification,pageable);
 
         return contracts.map(this::toContractSummaryDto);

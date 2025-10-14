@@ -41,7 +41,8 @@ public class ContractController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(required = false) Contract.ContractStatus contractStatus) {
+            @RequestParam(required = false) Contract.ContractStatus contractStatus,
+            @RequestParam(required = false) UUID unitId) {
 
         int requestPage = Math.max(page-1,0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -50,7 +51,7 @@ public class ContractController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ContractSummaryDto> contracts = contractService.getContractsByStatusByApartmentId(apartmentId,contractStatus, pageable);
+        Page<ContractSummaryDto> contracts = contractService.getContractsByStatusByApartmentIdByUnit(apartmentId,contractStatus,unitId, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(contracts,page)));
     }

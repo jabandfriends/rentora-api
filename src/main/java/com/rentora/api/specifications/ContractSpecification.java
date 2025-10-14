@@ -21,11 +21,19 @@ public class ContractSpecification {
         };
     }
 
+    public static Specification<Contract> hasUnitId(UUID id) {
+        return (root, query, criteriaBuilder) -> {
+            if (id == null ) return null;
+            return criteriaBuilder.equal(root.get("unit").get("id"), id);
+        };
+    }
+
     public static Specification<Contract> hasStatus(Contract.ContractStatus status) {
         return (root, query, criteriaBuilder) -> {
             if (status == null ) return null;
             return criteriaBuilder.equal(root.get("status"), status);
         };
     }
+
 
 }
