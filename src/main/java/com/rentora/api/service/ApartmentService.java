@@ -51,7 +51,7 @@ public class ApartmentService {
 
     private final ApartmentUserRepository apartmentUserRepository;
 
-    private final ServiceRepository serviceRepository;
+    private final ApartmentServiceRepository serviceRepository;
 
     private final UtilityRepository utilityRepository;
 
