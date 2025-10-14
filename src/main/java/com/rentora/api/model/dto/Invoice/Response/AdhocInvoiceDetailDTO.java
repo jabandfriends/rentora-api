@@ -19,7 +19,7 @@ public class AdhocInvoiceDetailDTO {
     private AdhocInvoice.PaymentStatus paymentStatus;
     private AdhocInvoice.InvoiceStatus status;
     private AdhocInvoice.InvoicePriority priority;
-    private String category;
+    private AdhocInvoice.AdhocInvoiceCategory category;
 
     //Amount
     private BigDecimal finalAmount;
