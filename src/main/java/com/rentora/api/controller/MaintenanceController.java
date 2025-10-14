@@ -42,7 +42,6 @@ public class MaintenanceController {
     private final MaintenanceService maintenanceService;
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceInfoDTO>>> getMaintenance(
-            @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -62,10 +61,17 @@ public class MaintenanceController {
         // Call the service method with the correct parameters
         Page<MaintenanceInfoDTO> response = maintenanceService.getMaintenance(
                 apartmentId, search, status, pageable);
-        MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(response.getContent());
+        MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(apartmentId);
 
         // The ApiResponse.success method should be adjusted to accept the correct DTO
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(response,page,maintenanceInfoDto)));
+    }
+    @GetMapping("/{maintenanceId}")
+    public ResponseEntity<ApiResponse<MaintenanceDetailDTO>> getMaintenanceById(
+            @PathVariable UUID maintenanceId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        MaintenanceDetailDTO maintenance = maintenanceService.getMaintenanceById(maintenanceId);
+        return ResponseEntity.ok(ApiResponse.success(maintenance));
     }
 
     @GetMapping("/{maintenanceId}")

@@ -63,6 +63,16 @@ public class ContractController {
         return ResponseEntity.ok(ApiResponse.success(contract));
     }
 
+    @GetMapping("/unit/{unitId}")
+    public ResponseEntity<ApiResponse<ContractDetailDto>> getActiveContractByUnitId(
+            @PathVariable UUID apartmentId,
+            @PathVariable UUID unitId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        ContractDetailDto contract = contractService.getContractByUnitId(unitId);
+        return ResponseEntity.ok(ApiResponse.success(contract));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<ContractDetailDto>> createContract(
             @PathVariable UUID apartmentId,

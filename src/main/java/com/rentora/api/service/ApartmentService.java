@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,7 +51,7 @@ public class ApartmentService {
 
     private final ApartmentUserRepository apartmentUserRepository;
 
-    private final ServiceRepository serviceRepository;
+    private final ApartmentServiceRepository serviceRepository;
 
     private final UtilityRepository utilityRepository;
 
@@ -276,6 +277,23 @@ public class ApartmentService {
                 floor.setFloorName("Floor " + i);
                 floor.setTotalUnits(buildingItem.getTotalUnitPerFloor());
                 floorRepository.save(floor);
+
+                //generate unit
+                int totalUnits = buildingItem.getTotalUnitPerFloor();
+                List<Unit> units = new ArrayList<>();
+
+                for (int j = 1; j <= totalUnits; j++) {
+                    Unit unit = new Unit();
+                    unit.setFloor(floor);
+                    // Generate name like ROOM101, ROOM102, etc.
+                    String unitName = String.format("ROOM%d%02d", i, j);
+                    unit.setUnitName(unitName);
+                    unit.setStatus(Unit.UnitStatus.available);
+                    units.add(unit);
+                }
+
+                unitRepository.saveAll(units);
+
             }
 
         });
