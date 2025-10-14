@@ -7,17 +7,25 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.UUID;
 
 public class ContractSpecification {
-    public static Specification<Utility> hasId(UUID id) {
+    public static Specification<Contract> hasId(UUID id) {
         return (root, query, criteriaBuilder) -> {
             if (id == null ) return null;
             return criteriaBuilder.equal(root.get("id"), id);
         };
     }
 
-    public static Specification<Utility> hasStatus(Contract.ContractStatus status) {
+    public static Specification<Contract> hasApartmentId(UUID id) {
+        return (root, query, criteriaBuilder) -> {
+            if (id == null ) return null;
+            return criteriaBuilder.equal(root.get("unit").get("floor").get("building").get("apartment").get("id"), id);
+        };
+    }
+
+    public static Specification<Contract> hasStatus(Contract.ContractStatus status) {
         return (root, query, criteriaBuilder) -> {
             if (status == null ) return null;
             return criteriaBuilder.equal(root.get("status"), status);
         };
     }
+
 }
