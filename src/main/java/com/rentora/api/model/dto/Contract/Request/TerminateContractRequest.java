@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class TerminateContractRequest {
-    @NotNull(message = "Termination date is required")
-    private LocalDate terminationDate;
+
 
     @NotBlank(message = "Termination reason is required")
     @Size(max = 1000, message = "Termination reason cannot exceed 1000 characters")

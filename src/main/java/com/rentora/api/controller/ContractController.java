@@ -101,14 +101,14 @@ public class ContractController {
         return ResponseEntity.ok(ApiResponse.success("Contract updated successfully", contract));
     }
 
-    @PostMapping("/{contractId}/terminate")
+    @PostMapping("/{unitId}/terminate")
     public ResponseEntity<ApiResponse<ContractDetailDto>> terminateContract(
             @PathVariable UUID apartmentId,
-            @PathVariable UUID contractId,
+            @PathVariable UUID unitId,
             @Valid @RequestBody TerminateContractRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ContractDetailDto contract = contractService.terminateContract(contractId, request, currentUser.getId());
+        ContractDetailDto contract = contractService.terminateContract(unitId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Contract terminated successfully", contract));
     }
 }
