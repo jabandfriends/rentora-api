@@ -43,10 +43,10 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UnitRepository unitRepository;
 
-    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status,Boolean isRecurring,
+    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status,Boolean isRecurring,UUID unitId,
                                                    Pageable pageable) {
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name))
-                .and(MaintenanceSpecification.hasRecurring(isRecurring));
+                .and(MaintenanceSpecification.hasRecurring(isRecurring)).and(MaintenanceSpecification.hasUnitId(unitId));
         //status check
         if (status != null) {
             log.info("status: {}", status);
