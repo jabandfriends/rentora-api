@@ -43,10 +43,11 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UnitRepository unitRepository;
 
-    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status,Boolean isRecurring,UUID unitId,
-                                                   Pageable pageable) {
+    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Boolean isRecurring, UUID unitId,
+                                                   Maintenance.Priority priority,Pageable pageable) {
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name))
-                .and(MaintenanceSpecification.hasRecurring(isRecurring)).and(MaintenanceSpecification.hasUnitId(unitId));
+                .and(MaintenanceSpecification.hasRecurring(isRecurring)).and(MaintenanceSpecification.hasUnitId(unitId))
+                .and(MaintenanceSpecification.hasPriority(priority));
         //status check
         if (status != null) {
             log.info("status: {}", status);
@@ -63,10 +64,10 @@ public class MaintenanceService {
         long totalCompleteMaintenances =  maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.completed, apartmentId);
         long totalPendingMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.pending, apartmentId);
         long totalInprogressMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.in_progress, apartmentId);
-
+        long totalUrgentMaintenance = maintenanceRepository.countMaintenanceByApartmentAndPriority(apartmentId, Maintenance.Priority.urgent);
 
         return MaintenanceMetadataResponseDto.builder().totalMaintenance(totalMaintenance).completedCount(totalCompleteMaintenances)
-                .pendingCount(totalPendingMaintenances).inProgressCount(totalInprogressMaintenances).build();
+                .pendingCount(totalPendingMaintenances).urgentCount(totalUrgentMaintenance).inProgressCount(totalInprogressMaintenances).build();
 
     }
 
@@ -322,7 +323,7 @@ public class MaintenanceService {
         //recurring
         dto.setIsRecurring(maintenance.getIsRecurring());
         dto.setRecurringSchedule(maintenance.getRecurringSchedule());
-
+        dto.setCreatedAt(maintenance.getCreatedAt());
 
         return dto;
 

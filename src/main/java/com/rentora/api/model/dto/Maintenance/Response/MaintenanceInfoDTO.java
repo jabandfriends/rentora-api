@@ -21,4 +21,5 @@ public class MaintenanceInfoDTO {
 
     private Boolean isRecurring;
     private Maintenance.RecurringSchedule recurringSchedule;
+    private OffsetDateTime createdAt;
 }

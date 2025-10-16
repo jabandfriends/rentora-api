@@ -40,6 +40,7 @@ public class MonthlyInvoiceService {
     private final UnitUtilityRepository unitUtilityRepository;
     private final ApartmentRepository apartmentRepository;
     private final ApartmentPaymentRepository apartmentPaymentRepository;
+    private final PaymentRepository paymentRepository;
 
     public Page<MonthlyInvoiceResponseDto> getAllMonthlyInvoice(Invoice.PaymentStatus paymentStatus, String unitName,String buildingName,
                                      UUID apartmentId, Pageable pageable){
@@ -142,6 +143,17 @@ public class MonthlyInvoiceService {
 
         // Save invoice
         invoiceRepository.save(monthlyInvoice);
+
+        //payment
+        Payment payment = new Payment();
+        payment.setAmount(monthlyInvoice.getTotalAmount());
+
+        ApartmentPayment apartmentPayment = apartmentPaymentRepository.findByApartmentAndIsActive(
+                monthlyInvoice.getApartment(),true
+        ).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        payment.setPaymentMethod(apartmentPayment.getMethodType().toString());
+        paymentRepository.save(payment);
 
         log.info("Monthly invoice created for unit {} for month {}-{}", unitId, readingDate, dueDate);
     }
