@@ -176,8 +176,9 @@ public class ContractService {
         return toContractDetailDto(savedContract);
     }
 
-    public ContractDetailDto terminateContract(UUID contractId, TerminateContractRequest request, UUID terminatedByUserId) {
-        Contract contract = contractRepository.findById(contractId)
+    public ContractDetailDto terminateContract(UUID roomNumber, TerminateContractRequest request, UUID terminatedByUserId) {
+        Specification<Contract> spec = ContractSpecification.hasUnitId(roomNumber).and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+        Contract contract = contractRepository.findOne(spec)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
         if (contract.getStatus() != Contract.ContractStatus.active) {
@@ -188,7 +189,7 @@ public class ContractService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         contract.setStatus(Contract.ContractStatus.terminated);
-        contract.setTerminationDate(request.getTerminationDate());
+        contract.setTerminationDate(LocalDate.now());
         contract.setTerminationReason(request.getTerminationReason());
         contract.setTerminatedByUser(terminatedByUser);
 
