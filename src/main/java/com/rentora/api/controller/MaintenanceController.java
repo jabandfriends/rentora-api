@@ -48,7 +48,8 @@ public class MaintenanceController {
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Maintenance.Status status
+            @RequestParam(required = false) Maintenance.Status status,
+            @RequestParam(required = false) Boolean isRecurring
     ) {
 
         int requestedPage = Math.max(page - 1, 0);
@@ -60,7 +61,7 @@ public class MaintenanceController {
 
         // Call the service method with the correct parameters
         Page<MaintenanceInfoDTO> response = maintenanceService.getMaintenance(
-                apartmentId, search, status, pageable);
+                apartmentId, search, status,isRecurring, pageable);
         MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(apartmentId);
 
         // The ApiResponse.success method should be adjusted to accept the correct DTO

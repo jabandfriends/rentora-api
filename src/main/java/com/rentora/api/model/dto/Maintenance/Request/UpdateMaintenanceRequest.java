@@ -29,16 +29,16 @@ public class UpdateMaintenanceRequest {
 //    @DecimalMin(value = "0.0", message = "actualHours cannot be negative")
 //    private BigDecimal actualHours;
 //
-//    @DecimalMin(value = "0.0", message = "estimatedCost cannot be negative")
-//    private BigDecimal estimatedCost;
+    @DecimalMin(value = "0.0", message = "estimatedCost cannot be negative")
+    private BigDecimal estimatedCost;
 //
 //    @DecimalMin(value = "0.0", message = "actualCost cannot be negative")
 //    private BigDecimal actualCost;
 //
 //    private String workSummary;
 //
-//    private Boolean isEmergency;
-//    private Boolean isRecurring;
+    private Boolean isEmergency;
+    private Boolean isRecurring;
 //
     private Maintenance.RecurringSchedule recurringSchedule;
 }
