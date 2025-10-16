@@ -114,7 +114,7 @@ public class Maintenance {
     @Column(name = "recurring_schedule", length = 20)
     private RecurringSchedule recurringSchedule;
     public enum RecurringSchedule {
-        weekly,monthly,quarterly
+        weekly,monthly,quarterly,yearly
     }
 
     @CreationTimestamp

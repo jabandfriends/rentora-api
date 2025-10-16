@@ -18,4 +18,7 @@ public class MaintenanceInfoDTO {
     private OffsetDateTime dueDate;
     private Maintenance.Status status;
     private Maintenance.Priority priority;
+
+    private Boolean isRecurring;
+    private Maintenance.RecurringSchedule recurringSchedule;
 }
