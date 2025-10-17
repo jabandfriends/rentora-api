@@ -494,7 +494,7 @@ CREATE TABLE IF NOT EXISTS maintenance_requests (
     
     is_emergency BOOLEAN DEFAULT false,
     is_recurring BOOLEAN DEFAULT false,
-    recurring_schedule VARCHAR(20), -- weekly, monthly, quarterly
+    recurring_schedule VARCHAR(20) CHECK (recurring_schedule IN ('weekly','monthly','quarterly','yearly')), -- weekly, monthly, quarterly
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

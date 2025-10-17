@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -38,6 +39,7 @@ public class MonthlyInvoiceService {
     private final ContractRepository contractRepository;
     private final UnitUtilityRepository unitUtilityRepository;
     private final ApartmentRepository apartmentRepository;
+    private final ApartmentPaymentRepository apartmentPaymentRepository;
 
     public Page<MonthlyInvoiceResponseDto> getAllMonthlyInvoice(Invoice.PaymentStatus paymentStatus, String unitName,String buildingName,
                                      UUID apartmentId, Pageable pageable){
@@ -182,7 +184,12 @@ public class MonthlyInvoiceService {
         return BigDecimal.ZERO;
     }
     private MonthlyInvoiceDetailResponseDto toMonthlyInvoiceDetailDto(Invoice invoice) {
-
+        //find current Apartment
+        Apartment apartment = invoice.getApartment();
+        //find active payment apartment
+        ApartmentPayment currentPayment = apartmentPaymentRepository
+                .findByApartmentAndIsActive(apartment, true)
+                .orElse(null);
         // === find water utility ===
         Specification<UnitUtilities> waterSpec = UnitUtilitySpecification.hasUtilityName("water")
                 .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
@@ -209,7 +216,16 @@ public class MonthlyInvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
         // === build response ===
+
         return MonthlyInvoiceDetailResponseDto.builder()
+                //apartment Payment
+                .apartmentPaymentMethodType(currentPayment != null ? currentPayment.getMethodType(): null)
+                .bankName( currentPayment != null ? currentPayment.getBankName() : null)
+                .bankAccountNumber(currentPayment != null ? currentPayment.getBankAccountNumber():null)
+                .accountHolderName(currentPayment != null ? currentPayment.getAccountHolderName() : null)
+                .promptpayNumber(currentPayment != null ? currentPayment.getPromptpayNumber():null)
+
+                //invoice
                 .invoiceId(invoice.getId())
                 .invoiceNumber(invoice.getInvoiceNumber())
                 .unitName(invoice.getUnit().getUnitName())

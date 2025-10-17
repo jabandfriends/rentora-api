@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.MonthlyInvoice.Response;
 
+import com.rentora.api.model.entity.ApartmentPayment;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Utility;
@@ -57,5 +58,12 @@ public class MonthlyInvoiceDetailResponseDto {
     private BigDecimal electricTotalCost;
 
     private OffsetDateTime createdAt;
+
+    //apartment method
+    private ApartmentPayment.MethodType apartmentPaymentMethodType;
+    private String bankName;
+    private String bankAccountNumber;
+    private final String accountHolderName;
+    private final String promptpayNumber;
 
 }

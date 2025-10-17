@@ -41,4 +41,6 @@ public interface ContractRepository extends JpaRepository<Contract, UUID>, JpaSp
             "WHERE c.endDate < CURRENT_DATE " +
             "AND c.status NOT IN ('terminated', 'renewed', 'expired')")
     void expireOldContracts();
+
+    Optional<Contract> findByContractNumber(String contractNumber);
 }
