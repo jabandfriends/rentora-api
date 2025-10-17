@@ -71,31 +71,6 @@ public class MaintenanceService {
 
     }
 
-
-//        List<MaintenanceDetailDTO> maintenanceDTOS = maintenance.map(MaintenanceService::toMaintenanceDetailDto).getContent();
-//        long totalMaintenance = maintenance.getTotalElements();
-//        long pending = maintenance.stream()
-//                .filter(m -> m.getStatus() == Maintenance.Status.pending)
-//                .count();
-//        long in_progress = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.in_progress).count();
-//        long assigned = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.assigned).count();
-//
-////        return maintenance.map(maintenances -> {
-////            MaintenanceDetailDTO dto = toMaintenanceDetailDto(maintenances);
-//        // Create the response object and populate it
-//        MaintenancePageResponse response = new MaintenancePageResponse();
-//        response.setMaintenances(maintenanceDTOS);
-//        response.setTotalMaintenance(totalMaintenance);
-//        response.setPendingCount(pending);
-//        response.setAssignedCount(assigned);
-//        response.setInProgressCount(in_progress);
-//        response.setCurrentPage(maintenance.getNumber());
-//        response.setTotalPages(maintenance.getTotalPages());
-//
-//        return response;
-//    };
-
-
     public ExecuteMaintenanceResponse createMaintenance(UUID createByUserId, CreateMaintenanceRequest request) {
 
         Unit unit = unitRepository.findById(request.getUnitId())
