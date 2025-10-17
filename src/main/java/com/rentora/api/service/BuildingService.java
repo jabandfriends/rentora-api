@@ -6,6 +6,7 @@ import com.rentora.api.model.dto.Building.Response.BuildingDetailDto;
 import com.rentora.api.model.dto.Building.Response.BuildingSummaryDto;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Building;
+import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
@@ -91,6 +92,14 @@ public class BuildingService {
     public BuildingDetailDto updateBuilding(UUID buildingId, UpdateBuildingRequest request, UUID userId) {
         Building building = buildingRepository.findByIdAndUserId(buildingId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Building not found or access denied"));
+
+        long currentFloor = floorRepository.countByBuilding(building);
+        log.info(currentFloor + " floors found in building: {}", building.getName());
+        log.info(request.getTotalFloors() + " total floors want to update {}", building.getName());
+        if(currentFloor > request.getTotalFloors()) {
+            throw new BadRequestException("Total floors cannot be lower than current floor");
+        }
+
 
         if (request.getName() != null) {
             // Check if new name conflicts with existing buildings

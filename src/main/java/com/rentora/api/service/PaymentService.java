@@ -1,15 +1,18 @@
 package com.rentora.api.service;
 
+
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
 import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
 import com.rentora.api.model.entity.Payment;
 import com.rentora.api.repository.PaymentRepository;
 import com.rentora.api.specifications.PaymentSpecification;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
 
 @Slf4j
 @Service
