@@ -6,6 +6,7 @@ import com.rentora.api.model.dto.Building.Response.BuildingDetailDto;
 import com.rentora.api.model.dto.Building.Response.BuildingSummaryDto;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Building;
+import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
@@ -21,7 +22,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -45,6 +48,13 @@ public class BuildingService {
         }
 
         return buildings.map(this::toBuildingSummaryDto);
+    }
+
+    public List<BuildingSummaryDto> getBuildingsByApartmentNoPaginate(UUID apartmentId) {
+        List<Building> buildings = buildingRepository.findByApartmentId(apartmentId);
+        return buildings.stream()
+                .map(this::toBuildingSummaryDto)
+                .collect(Collectors.toList());
     }
 
     public BuildingDetailDto getBuildingById(UUID buildingId, UUID userId) {
@@ -82,6 +92,14 @@ public class BuildingService {
     public BuildingDetailDto updateBuilding(UUID buildingId, UpdateBuildingRequest request, UUID userId) {
         Building building = buildingRepository.findByIdAndUserId(buildingId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Building not found or access denied"));
+
+        long currentFloor = floorRepository.countByBuilding(building);
+        log.info(currentFloor + " floors found in building: {}", building.getName());
+        log.info(request.getTotalFloors() + " total floors want to update {}", building.getName());
+        if(currentFloor > request.getTotalFloors()) {
+            throw new BadRequestException("Total floors cannot be lower than current floor");
+        }
+
 
         if (request.getName() != null) {
             // Check if new name conflicts with existing buildings
@@ -132,6 +150,7 @@ public class BuildingService {
         // Get counts
         dto.setFloorCount(floorRepository.countByBuildingId(building.getId()));
         dto.setUnitCount(unitRepository.countByBuildingId(building.getId()));
+        dto.setOccupiedUnitCount(unitRepository.countByBuildingIdAndStatus(building.getId(), Unit.UnitStatus.occupied));
 
         return dto;
     }

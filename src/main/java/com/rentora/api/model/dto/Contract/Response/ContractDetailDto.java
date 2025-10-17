@@ -4,16 +4,15 @@ import com.rentora.api.model.entity.Contract;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 public class ContractDetailDto {
-    private String id;
+    private UUID contractId;
     private String contractNumber;
-    private String unitId;
     private String unitName;
     private String buildingName;
     private String apartmentName;
-    private String tenantId;
     private String tenantName;
     private String tenantEmail;
     private String tenantPhone;
@@ -42,10 +41,11 @@ public class ContractDetailDto {
     private String createdAt;
     private String updatedAt;
 
+    private BigDecimal waterMeterStart;
+    private BigDecimal electricMeterStart;
+
+
     // Additional detail info
-    private Boolean isActive;
-    private Boolean isExpiringSoon;
     private Long daysUntilExpiry;
-    private BigDecimal totalPaidDeposit;
     private Integer contractDurationDays;
 }

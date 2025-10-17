@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 public interface BuildingRepository extends JpaRepository<Building, UUID> {
 
     Page<Building> findByApartmentId(UUID apartmentId, Pageable pageable);
+    List<Building> findByApartmentId(UUID apartmentId);
 
     @Query("SELECT b FROM Building b WHERE b.apartment.id = :apartmentId AND b.name LIKE %:name%")
     Page<Building> findByApartmentIdAndNameContaining(@Param("apartmentId") UUID apartmentId,
@@ -30,4 +32,5 @@ public interface BuildingRepository extends JpaRepository<Building, UUID> {
     long countByApartmentId(UUID apartmentId);
 
     boolean existsByApartmentIdAndName(UUID apartmentId, String name);
+
 }

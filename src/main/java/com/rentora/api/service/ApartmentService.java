@@ -1,11 +1,13 @@
 package com.rentora.api.service;
 
 import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
+import com.rentora.api.model.dto.Apartment.Metadata.UpdateApartmentPaymentRequestDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 
+import com.rentora.api.model.dto.Apartment.Response.ApartmentPaymentSummaryResponseDto;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.entity.*;
@@ -13,6 +15,7 @@ import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;
+import com.rentora.api.repository.UserRepository;
 import com.rentora.api.specifications.ApartmentSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,7 +53,7 @@ public class ApartmentService {
 
     private final ApartmentUserRepository apartmentUserRepository;
 
-    private final ServiceRepository serviceRepository;
+    private final ApartmentServiceRepository serviceRepository;
 
     private final UtilityRepository utilityRepository;
 
@@ -57,8 +61,73 @@ public class ApartmentService {
 
     private final FloorRepository floorRepository;
 
-    public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Apartment.ApartmentStatus status, Pageable pageable) {
+    private final ApartmentPaymentRepository paymentRepository;
 
+    public List<ApartmentPaymentSummaryResponseDto> getApartmentPayments(UUID apartmentId){
+        Apartment apartment = apartmentRepository.findById(apartmentId).orElseThrow(() -> new ResourceNotFoundException("Apartment not found"));
+        List<ApartmentPayment> apartmentPayments = paymentRepository.findByApartment(apartment);
+
+        return apartmentPayments.stream().map(this::apartmentPaymentSummaryResponseDto).toList();
+    }
+
+    public ApartmentPaymentSummaryResponseDto getApartmentPaymentById(UUID apartmentPaymentId){
+        ApartmentPayment apartmentPayment = paymentRepository.findById(apartmentPaymentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+        return apartmentPaymentSummaryResponseDto(apartmentPayment);
+    }
+
+    public ApartmentPaymentSummaryResponseDto getActiveApartmentPaymentById(UUID apartmentId){
+        Apartment apartment = apartmentRepository.findById(apartmentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        ApartmentPayment apartmentPayment = paymentRepository.findByApartmentAndIsActive(apartment,true).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+        return apartmentPaymentSummaryResponseDto(apartmentPayment);
+    }
+
+    //update apartmentPaymentById
+    public void updateApartmentPayment(UUID apartmentPaymentId,UpdateApartmentPaymentRequestDto requestDto){
+
+        ApartmentPayment apartmentPayment = paymentRepository.findById(apartmentPaymentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if(requestDto.getMethodType() != null){
+            apartmentPayment.setMethodType(requestDto.getMethodType());
+            apartmentPayment.setMethodName(requestDto.getMethodType());
+        }
+        if(requestDto.getBankName() != null && !requestDto.getBankName().isEmpty()){
+            apartmentPayment.setBankName(requestDto.getBankName());
+        }
+        if(requestDto.getBankAccountNumber() != null && !requestDto.getBankAccountNumber().isEmpty()){
+            apartmentPayment.setBankAccountNumber(requestDto.getBankAccountNumber());
+        }
+        if(requestDto.getAccountHolderName() != null && !requestDto.getAccountHolderName().isEmpty()){
+            apartmentPayment.setAccountHolderName(requestDto.getAccountHolderName());
+        }
+        if(requestDto.getPromptpayNumber() != null && !requestDto.getPromptpayNumber().isEmpty()){
+            apartmentPayment.setPromptpayNumber(requestDto.getPromptpayNumber());
+        }
+        if(requestDto.getInstructions() != null && !requestDto.getInstructions().isEmpty()){
+            apartmentPayment.setInstructions(requestDto.getInstructions());
+        }
+        if(requestDto.getIsActive() != null){
+            if(requestDto.getIsActive()){
+                Apartment apartment = apartmentRepository.findById(apartmentPayment.getApartment().getId()).orElseThrow(() -> new ResourceNotFoundException("Apartment not found"));
+
+                apartmentPaymentRepository.deactivateOtherPayments(apartment.getId(), apartmentPayment.getId());
+            }
+            apartmentPayment.setIsActive(requestDto.getIsActive());
+        }if(requestDto.getDisplayOrder() != null){
+            apartmentPayment.setDisplayOrder(requestDto.getDisplayOrder());
+        }
+
+        apartmentPaymentRepository.save(apartmentPayment);
+    }
+
+    //delete apartmentPayment
+    public void deleteApartmentPayment(UUID apartmentPaymentId){
+        ApartmentPayment payment = paymentRepository.findById(apartmentPaymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("ApartmentPayment not found"));
+        paymentRepository.delete(payment);
+    }
+
+    public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Apartment.ApartmentStatus status, Pageable pageable) {
 
         Specification<Apartment> spec = ApartmentSpecification.hasUserId(userId).and(ApartmentSpecification.hasName(search)).and(ApartmentSpecification.hasStatus(status));
         Page<Apartment> apartments = apartmentRepository.findAll(spec, pageable);
@@ -275,6 +344,23 @@ public class ApartmentService {
                 floor.setFloorName("Floor " + i);
                 floor.setTotalUnits(buildingItem.getTotalUnitPerFloor());
                 floorRepository.save(floor);
+
+                //generate unit
+                int totalUnits = buildingItem.getTotalUnitPerFloor();
+                List<Unit> units = new ArrayList<>();
+
+                for (int j = 1; j <= totalUnits; j++) {
+                    Unit unit = new Unit();
+                    unit.setFloor(floor);
+                    // Generate name like ROOM101, ROOM102, etc.
+                    String unitName = String.format("ROOM%d%02d", i, j);
+                    unit.setUnitName(unitName);
+                    unit.setStatus(Unit.UnitStatus.available);
+                    units.add(unit);
+                }
+
+                unitRepository.saveAll(units);
+
             }
 
         });
@@ -315,6 +401,19 @@ public class ApartmentService {
         dto.setActiveContractCount(contractRepository.countActiveByApartmentId(apartment.getId()));
 
         return dto;
+    }
+    private ApartmentPaymentSummaryResponseDto apartmentPaymentSummaryResponseDto(ApartmentPayment apartmentPayment) {
+        return ApartmentPaymentSummaryResponseDto.builder()
+                .ApartmentPaymentId(apartmentPayment.getId())
+                .methodType(apartmentPayment.getMethodName())
+                .bankName(apartmentPayment.getBankName())
+                .bankAccountNumber(apartmentPayment.getBankAccountNumber())
+                .accountHolderName(apartmentPayment.getAccountHolderName())
+                .promptpayNumber(apartmentPayment.getPromptpayNumber())
+                .isActive(apartmentPayment.getIsActive())
+                .displayOrder(apartmentPayment.getDisplayOrder())
+                .createByUserName(apartmentPayment.getCreatedBy().getFullName())
+                .build();
     }
 
     private ApartmentDetailDTO toApartmentDetailDto(Apartment apartment) {

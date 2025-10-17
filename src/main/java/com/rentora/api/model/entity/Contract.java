@@ -3,6 +3,7 @@ package com.rentora.api.model.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "contracts")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 public class Contract {
     @Id
@@ -95,6 +97,12 @@ public class Contract {
 
     @Column(name = "signed_at")
     private LocalDateTime signedAt;
+
+    @Column(name="electricity_meter_start_reading" ,nullable = false)
+    private BigDecimal electricityMeterStartReading;
+
+    @Column(name = "water_meter_start_reading", nullable = false)
+    private BigDecimal waterMeterStartReading;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")

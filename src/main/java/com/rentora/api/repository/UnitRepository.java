@@ -1,9 +1,12 @@
 package com.rentora.api.repository;
 
+import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.Unit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UnitRepository extends JpaRepository<Unit, UUID> {
+public interface UnitRepository extends JpaRepository<Unit, UUID>, JpaSpecificationExecutor<Unit> {
 
     @Query("SELECT u FROM Unit u " +
             "JOIN u.floor f " +
@@ -21,7 +24,6 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
     Page<Unit> findByApartmentId(@Param("apartmentId") UUID apartmentId, Pageable pageable);
 
     Page<Unit> findByFloorId(UUID floorId, Pageable pageable);
-
     @Query("SELECT u FROM Unit u " +
             "JOIN u.floor f " +
             "JOIN f.building b " +
@@ -47,6 +49,7 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
             "WHERE b.apartment.id = :apartmentId")
     long countByApartmentId(@Param("apartmentId") UUID apartmentId);
 
+
     @Query("SELECT COUNT(u) FROM Unit u " +
             "JOIN u.floor f " +
             "JOIN f.building b " +
@@ -65,4 +68,6 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
                                     @Param("status") Unit.UnitStatus status);
 
     boolean existsByFloorIdAndUnitName(UUID floorId, String unitName);
+
+    long countByFloor(Floor floor);
 }

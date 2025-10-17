@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "units")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 public class Unit {
 
@@ -40,8 +41,6 @@ public class Unit {
 
     public enum UnitType {
         apartment,studio,penthouse,commercial
-
-
     }
 
     private Integer bedrooms = 1;
@@ -71,8 +70,6 @@ public class Unit {
 
     @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private List<Contract> contracts;
 
     @CreationTimestamp

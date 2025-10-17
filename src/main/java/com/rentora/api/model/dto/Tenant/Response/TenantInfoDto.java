@@ -24,7 +24,5 @@ public class TenantInfoDto {
     private boolean accountStatus;
     private boolean occupiedStatus;
     private String unitName;
-
-
-
+    
 }

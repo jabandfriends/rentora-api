@@ -3,6 +3,7 @@ package com.rentora.api.model.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @Table(name = "maintenance_requests")
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 public class Maintenance {
     @Id
@@ -112,15 +114,15 @@ public class Maintenance {
     @Column(name = "recurring_schedule", length = 20)
     private RecurringSchedule recurringSchedule;
     public enum RecurringSchedule {
-        weekly,monthly,quarterly
+        weekly,monthly,quarterly,yearly
     }
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
 }

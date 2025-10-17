@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -28,7 +29,6 @@ import java.util.UUID;
 @RequestMapping("/api/apartments/{apartmentId}/buildings")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class BuildingController {
-
 
     private final BuildingService buildingService;
     @GetMapping
@@ -54,6 +54,15 @@ public class BuildingController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(buildings,page)));
     }
 
+    @GetMapping("/no/paginate")
+    public ResponseEntity<ApiResponse<List<BuildingSummaryDto>>> getBuildingsNoPaginate(
+            @PathVariable UUID apartmentId) {
+
+
+        List<BuildingSummaryDto> buildings = buildingService.getBuildingsByApartmentNoPaginate(apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(buildings));
+    }
+
     @GetMapping("/{buildingId}")
     public ResponseEntity<ApiResponse<BuildingDetailDto>> getBuildingById(
             @PathVariable UUID apartmentId,
@@ -75,7 +84,6 @@ public class BuildingController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Building created successfully", building));
     }
-
     @PutMapping("/{buildingId}")
     public ResponseEntity<ApiResponse<BuildingDetailDto>> updateBuilding(
             @PathVariable UUID apartmentId,

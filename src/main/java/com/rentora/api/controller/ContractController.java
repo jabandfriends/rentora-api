@@ -7,6 +7,7 @@ import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
 import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.entity.Contract;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ContractService;
 import jakarta.validation.Valid;
@@ -39,7 +40,9 @@ public class ContractController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) Contract.ContractStatus contractStatus,
+            @RequestParam(required = false) UUID unitId) {
 
         int requestPage = Math.max(page-1,0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -48,10 +51,11 @@ public class ContractController {
 
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
-        Page<ContractSummaryDto> contracts = contractService.getContractsByApartment(apartmentId, pageable);
+        Page<ContractSummaryDto> contracts = contractService.getContractsByStatusByApartmentIdByUnit(apartmentId,contractStatus,unitId, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(contracts,page)));
     }
+
 
     @GetMapping("/{contractId}")
     public ResponseEntity<ApiResponse<ContractDetailDto>> getContractById(
@@ -60,6 +64,18 @@ public class ContractController {
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
         ContractDetailDto contract = contractService.getContractById(contractId);
+        return ResponseEntity.ok(ApiResponse.success(contract));
+    }
+
+
+
+    @GetMapping("/unit/{unitId}")
+    public ResponseEntity<ApiResponse<ContractDetailDto>> getActiveContractByUnitId(
+            @PathVariable UUID apartmentId,
+            @PathVariable UUID unitId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        ContractDetailDto contract = contractService.getContractByUnitId(unitId);
         return ResponseEntity.ok(ApiResponse.success(contract));
     }
 
@@ -85,14 +101,14 @@ public class ContractController {
         return ResponseEntity.ok(ApiResponse.success("Contract updated successfully", contract));
     }
 
-    @PostMapping("/{contractId}/terminate")
+    @PostMapping("/{unitId}/terminate")
     public ResponseEntity<ApiResponse<ContractDetailDto>> terminateContract(
             @PathVariable UUID apartmentId,
-            @PathVariable UUID contractId,
+            @PathVariable UUID unitId,
             @Valid @RequestBody TerminateContractRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ContractDetailDto contract = contractService.terminateContract(contractId, request, currentUser.getId());
+        ContractDetailDto contract = contractService.terminateContract(unitId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Contract terminated successfully", contract));
     }
 }

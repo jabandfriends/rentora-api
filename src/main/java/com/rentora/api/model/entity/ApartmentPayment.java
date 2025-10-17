@@ -2,12 +2,14 @@ package com.rentora.api.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "apartment_payment_methods")
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ApartmentPayment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -39,7 +41,6 @@ public class ApartmentPayment {
 
     @Column(name = "promptpay_qr_url")
     private String promptpayQrUrl;
-
 
     private String instructions;
 

@@ -2,10 +2,13 @@ package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Unit.Metadata.UnitMetadataDto;
 import com.rentora.api.model.dto.Unit.Request.CreateUnitRequest;
 import com.rentora.api.model.dto.Unit.Request.UpdateUnitRequest;
 import com.rentora.api.model.dto.Unit.Response.UnitDetailDto;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
+import com.rentora.api.model.dto.Unit.Response.UnitWithUtilityAndMonthlyInvoiceStatus;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.UnitService;
@@ -23,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Slf4j
@@ -37,22 +41,17 @@ public class UnitController {
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<UnitSummaryDto>>> getUnits(
             @PathVariable UUID apartmentId,
-            @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "unitName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) Unit.UnitStatus status,
-            @RequestParam(required = false) String unitType,
-            @RequestParam(required = false) UUID floorId) {
+            @RequestParam(required = false) Unit.UnitType unitType,
+            @RequestParam(required = false) String buildingName,
+            @RequestParam(required = false) UUID floorId,
+            @RequestParam(required = false) String search) {
 
         int requestPage = Math.max(page-1,0);
-        Unit.UnitType type = null;
-        try {
-            type = EnumUtils.parseUnitType(unitType);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
 
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
@@ -61,11 +60,39 @@ public class UnitController {
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<UnitSummaryDto> units = unitService.getUnitsByApartment(
-                apartmentId, status, type, floorId, pageable);
+                apartmentId, status, unitType,search, buildingName,floorId, pageable);
+
+        UnitMetadataDto unitsMetadata = unitService.getUnitsMetadata(units.getContent(),apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(units,page,unitsMetadata)));
+    }
+    //getUnitsWithMonthlyInvoiceByBuildingAndDate
+    @GetMapping("/monthly")
+    public ResponseEntity<ApiResponse<PaginatedResponse<UnitWithUtilityAndMonthlyInvoiceStatus>>> getUnitsWithMonthlyInvoice(
+            @PathVariable UUID apartmentId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "unitName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) Unit.UnitStatus status,
+            @RequestParam LocalDate readingDate,
+            @RequestParam(required = false) String buildingName,
+
+            @RequestParam(required = false) String roomNumber) {
+
+        int requestPage = Math.max(page-1,0);
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestPage, size, sort);
+
+        Page<UnitWithUtilityAndMonthlyInvoiceStatus> units = unitService.getUnitsWithMonthlyInvoiceByBuildingAndDate(
+               roomNumber,buildingName,status,readingDate, pageable);
+
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));
     }
-
     @GetMapping("/{unitId}")
     public ResponseEntity<ApiResponse<UnitDetailDto>> getUnitById(
             @PathVariable UUID apartmentId,
