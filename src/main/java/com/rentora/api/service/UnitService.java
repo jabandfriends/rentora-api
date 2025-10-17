@@ -145,6 +145,11 @@ public class UnitService {
         Floor floor = floorRepository.findById(request.getFloorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Floor not found"));
 
+        long totalCurrentUnitInThisFloor = unitRepository.countByFloor(floor);
+
+        if(totalCurrentUnitInThisFloor >= floor.getTotalUnits()) throw new BadRequestException("Unit this floor already" +
+                "full");
+
         // Check if unit name already exists on this floor
         if (unitRepository.existsByFloorIdAndUnitName(request.getFloorId(), request.getUnitName())) {
             throw new BadRequestException("Unit name already exists on this floor");
@@ -230,6 +235,9 @@ public class UnitService {
         dto.setBuildingName(unit.getFloor().getBuilding().getName());
         dto.setApartmentName(unit.getFloor().getBuilding().getApartment().getName());
         dto.setCreatedAt(unit.getCreatedAt() != null ? unit.getCreatedAt().toString() : null);
+
+        dto.setBalconyCount(unit.getBalconyCount());
+        dto.setParkingSpaces(unit.getParkingSpaces());
 
 
         // Get current tenant if any

@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -16,7 +17,10 @@ public interface FloorRepository extends JpaRepository<Floor, UUID> {
 
     long countByBuildingId(UUID buildingId);
 
+    Optional<Floor> findByBuildingAndFloorNumber(Building building, Integer floorNumber);
     List<Floor> findByBuilding(Building building);
+
+    long countByBuilding(Building building);
 
     @Query("SELECT COUNT(u) FROM Unit u JOIN u.floor f WHERE f.building.id = :buildingId")
     long countUnitsByBuildingId(@Param("buildingId") UUID buildingId);
