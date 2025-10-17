@@ -29,4 +29,7 @@ public class UnitSummaryDto {
     private Contract.ContractStatus contractStatus;
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
+
+    private Integer balconyCount;
+    private Integer parkingSpaces = 0;
 }
