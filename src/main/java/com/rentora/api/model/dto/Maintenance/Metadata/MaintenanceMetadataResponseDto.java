@@ -10,4 +10,5 @@ public class MaintenanceMetadataResponseDto {
     private long pendingCount;
     private long completedCount;
     private long inProgressCount;
+    private long urgentCount;
 }

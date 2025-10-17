@@ -13,7 +13,7 @@ public class CreateUnitRequest {
     private UUID floorId;
 
     @NotBlank(message = "Unit name is required")
-    @Size(max = 50, message = "Unit name cannot exceed 50 characters")
+
     private String unitName;
 
     private Unit.UnitType unitType = Unit.UnitType.apartment;

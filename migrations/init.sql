@@ -494,7 +494,7 @@ CREATE TABLE IF NOT EXISTS maintenance_requests (
     
     is_emergency BOOLEAN DEFAULT false,
     is_recurring BOOLEAN DEFAULT false,
-    recurring_schedule VARCHAR(20), -- weekly, monthly, quarterly
+    recurring_schedule VARCHAR(20) CHECK (recurring_schedule IN ('weekly','monthly','quarterly','yearly')), -- weekly, monthly, quarterly
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -632,6 +632,30 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
         due_date IS NULL OR due_date >= invoice_date
     )
 );
+
+CREATE SEQUENCE IF NOT EXISTS adhoc_sequence START 1;
+
+CREATE OR REPLACE FUNCTION generate_adhoc_number()
+    RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.adhoc_number IS NULL THEN
+        NEW.adhoc_number := 'ADHOC-' || TO_CHAR(NOW(), 'YYYYMM') || '-' ||
+                            LPAD(nextval('adhoc_sequence')::text, 5, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger
+CREATE TRIGGER set_adhoc_number
+    BEFORE INSERT ON adhoc_invoices
+    FOR EACH ROW
+EXECUTE FUNCTION generate_adhoc_number();
+
+CREATE TRIGGER update_adhoc_invoices_updated_at
+    BEFORE UPDATE ON adhoc_invoices
+    FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
 -- =========================================
 -- 19. ENHANCED INDEXES

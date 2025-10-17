@@ -1,8 +1,13 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
+import com.rentora.api.model.dto.Apartment.Response.ApartmentPaymentSummaryResponseDto;
 import com.rentora.api.model.dto.ExtraService.Response.ServiceInfoDTO;
+import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.model.entity.ApartmentPayment;
 import com.rentora.api.model.entity.ServiceEntity;
+import com.rentora.api.repository.ApartmentPaymentRepository;
+import com.rentora.api.repository.ApartmentRepository;
 import com.rentora.api.repository.ApartmentServiceRepository;
 import com.rentora.api.repository.UnitRepository;
 import jakarta.transaction.Transactional;
@@ -23,6 +28,7 @@ public class ApartmentServiceService {
 
     private final UnitRepository unitRepository;
     private final ApartmentServiceRepository serviceRepository;
+
 
     public List<ServiceInfoDTO> getApartmentService(UUID apartmentId) {
 
@@ -45,4 +51,6 @@ public class ApartmentServiceService {
 
         return dto;
     }
+
+
 }

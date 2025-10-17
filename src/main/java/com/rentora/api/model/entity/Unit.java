@@ -70,8 +70,6 @@ public class Unit {
 
     @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private List<Contract> contracts;
 
     @CreationTimestamp

@@ -3,7 +3,9 @@ package com.rentora.api.model.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,8 +43,11 @@ public class AdhocInvoice {
     @Column(columnDefinition = "text")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 30)
-    private String category;
+    private AdhocInvoiceCategory category; //miscellaneous,penalty
+
+
 
     @Column(name = "final_amount", precision = 10, scale = 2)
     private BigDecimal finalAmount;
@@ -95,9 +100,11 @@ public class AdhocInvoice {
     @Column(name = "priority", length = 20)
     private InvoicePriority priority = InvoicePriority.normal;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "receipt_urls", columnDefinition = "jsonb")
     private String receiptUrls; // JSON string
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "images", columnDefinition = "jsonb")
     private String images; // JSON string
 
@@ -122,5 +129,8 @@ public class AdhocInvoice {
 
     public enum InvoicePriority {
         normal, high
+    }
+    public enum AdhocInvoiceCategory{
+        miscellaneous,penalty
     }
 }

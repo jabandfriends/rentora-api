@@ -48,8 +48,12 @@ public class MaintenanceController {
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Maintenance.Status status
-    ) {
+            @RequestParam(required = false) Maintenance.Status status,
+            @RequestParam(required = false) Boolean isRecurring,
+            @RequestParam(required = false) UUID unitId,
+            @RequestParam(required = false) Maintenance.Priority priority
+
+            ) {
 
         int requestedPage = Math.max(page - 1, 0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -60,7 +64,7 @@ public class MaintenanceController {
 
         // Call the service method with the correct parameters
         Page<MaintenanceInfoDTO> response = maintenanceService.getMaintenance(
-                apartmentId, search, status, pageable);
+                apartmentId, search, status,isRecurring,unitId,priority, pageable);
         MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(apartmentId);
 
         // The ApiResponse.success method should be adjusted to accept the correct DTO
@@ -69,10 +73,14 @@ public class MaintenanceController {
     @GetMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<MaintenanceDetailDTO>> getMaintenanceById(
             @PathVariable UUID maintenanceId,
+            @PathVariable UUID apartmentId,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         MaintenanceDetailDTO maintenance = maintenanceService.getMaintenanceById(maintenanceId);
         return ResponseEntity.ok(ApiResponse.success(maintenance));
     }
+
+
+
 
     @PostMapping("/users/create")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenance(

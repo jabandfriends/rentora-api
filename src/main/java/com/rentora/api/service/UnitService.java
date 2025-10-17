@@ -5,20 +5,18 @@ import com.rentora.api.model.dto.Unit.Request.CreateUnitRequest;
 import com.rentora.api.model.dto.Unit.Request.UpdateUnitRequest;
 import com.rentora.api.model.dto.Unit.Response.UnitDetailDto;
 import com.rentora.api.model.dto.Unit.Response.UnitSummaryDto;
-import com.rentora.api.model.entity.Contract;
-import com.rentora.api.model.entity.Floor;
-import com.rentora.api.model.entity.Unit;
+import com.rentora.api.model.dto.Unit.Response.UnitWithUtilityAndMonthlyInvoiceStatus;
+import com.rentora.api.model.entity.*;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
-import com.rentora.api.repository.ContractRepository;
-import com.rentora.api.repository.FloorRepository;
-import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.repository.*;
 import com.rentora.api.specifications.UnitSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -41,6 +40,10 @@ public class UnitService {
 
     private final ContractRepository contractRepository;
 
+    private final InvoiceRepository invoiceRepository;
+
+    private final UnitUtilityRepository unitUtilityRepository;
+
     public Page<UnitSummaryDto> getUnitsByApartment(UUID apartmentId, Unit.UnitStatus status,
                                                     Unit.UnitType unitType,String searchByRoomNumber,String buildingName, UUID floorId, Pageable pageable) {
         Page<Unit> units;
@@ -52,6 +55,37 @@ public class UnitService {
         return units.map(this::toUnitSummaryDto);
     }
 
+    //get all units with monthly invoice is already created or not filter by date
+    public Page<UnitWithUtilityAndMonthlyInvoiceStatus> getUnitsWithMonthlyInvoiceByBuildingAndDate(String roomNumber, String buildingName, Unit.UnitStatus unitStatus, LocalDate genDate, Pageable pageable) {
+
+        Specification<Unit> spec = UnitSpecification.hasStatus(unitStatus).and(UnitSpecification.hasName(roomNumber))
+                .and(UnitSpecification.hasBuildingName(buildingName));
+
+        Page<Unit> units = unitRepository.findAll(spec, pageable);
+
+        //generation month
+
+        List<UnitWithUtilityAndMonthlyInvoiceStatus> result = new ArrayList<>();
+        for (Unit unit : units.getContent()) {
+            boolean isMonthlyCreated = invoiceRepository.findByUnitAndGenMonth(unit, genDate).isPresent();
+            List<UnitUtilities> currentUnitUtility = unitUtilityRepository.findByUnitAndUsageMonth(unit,genDate);
+            if(currentUnitUtility.isEmpty()){
+                continue;
+            }
+            result.add(UnitWithUtilityAndMonthlyInvoiceStatus.builder()
+                    .unitId(unit.getId())
+                    .unitName(unit.getUnitName())
+                    .buildingName(unit.getFloor().getBuilding().getName())
+                    .unitStatus(unit.getStatus())
+                    .isMonthlyInvoiceCreated(isMonthlyCreated)
+                    .build());
+        }
+
+        // return as Page
+        return new PageImpl<>(result, pageable, units.getTotalElements());
+
+
+    }
     public UnitMetadataDto getUnitsMetadata(List<UnitSummaryDto> units, UUID apartmentId) {
 
         //total unit
@@ -110,6 +144,11 @@ public class UnitService {
         // Verify floor exists and user has access
         Floor floor = floorRepository.findById(request.getFloorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Floor not found"));
+
+        long totalCurrentUnitInThisFloor = unitRepository.countByFloor(floor);
+
+        if(totalCurrentUnitInThisFloor >= floor.getTotalUnits()) throw new BadRequestException("Unit this floor already" +
+                "full");
 
         // Check if unit name already exists on this floor
         if (unitRepository.existsByFloorIdAndUnitName(request.getFloorId(), request.getUnitName())) {
@@ -181,7 +220,8 @@ public class UnitService {
         log.info("Unit deleted: {}", unit.getUnitName());
     }
 
-    private UnitSummaryDto toUnitSummaryDto(Unit unit) {
+
+    public UnitSummaryDto toUnitSummaryDto(Unit unit) {
         UnitSummaryDto dto = new UnitSummaryDto();
         dto.setId(unit.getId().toString());
         dto.setUnitName(unit.getUnitName());
@@ -195,6 +235,9 @@ public class UnitService {
         dto.setBuildingName(unit.getFloor().getBuilding().getName());
         dto.setApartmentName(unit.getFloor().getBuilding().getApartment().getName());
         dto.setCreatedAt(unit.getCreatedAt() != null ? unit.getCreatedAt().toString() : null);
+
+        dto.setBalconyCount(unit.getBalconyCount());
+        dto.setParkingSpaces(unit.getParkingSpaces());
 
 
         // Get current tenant if any

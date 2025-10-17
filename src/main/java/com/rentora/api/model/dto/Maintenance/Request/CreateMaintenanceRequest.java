@@ -49,8 +49,6 @@ public class CreateMaintenanceRequest {
     private Boolean isEmergency;
     private Boolean isRecurring;
 
-
-
     private Maintenance.RecurringSchedule recurringSchedule;
 
 

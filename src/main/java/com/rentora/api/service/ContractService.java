@@ -9,12 +9,14 @@ import com.rentora.api.model.entity.*;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ContractSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,16 @@ public class ContractService {
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
         return contracts.map(this::toContractSummaryDto);
+    }
+
+    public Page<ContractSummaryDto> getContractsByStatusByApartmentIdByUnit(UUID apartmentId, Contract.ContractStatus contractStatus,
+                                                                      UUID unitId,Pageable pageable) {
+        Specification<Contract> contractSpecification = ContractSpecification.hasStatus(contractStatus)
+                        .and(ContractSpecification.hasApartmentId(apartmentId)).and(ContractSpecification.hasUnitId(unitId));
+        Page<Contract> contracts = contractRepository.findAll(contractSpecification,pageable);
+
+        return contracts.map(this::toContractSummaryDto);
+
     }
 
     @Scheduled(cron = "0 0 0 * * *") // every day at midnight
@@ -130,33 +142,6 @@ public class ContractService {
         unit.setStatus(Unit.UnitStatus.occupied);
         unitRepository.save(unit);
 
-        //get all utility
-        List<Utility> utilities = utilityRepository.findByApartmentId(unit.getFloor().getBuilding().getApartment().getId());
-
-        for(Utility utility : utilities) {
-            UnitUtilities initialReading = new UnitUtilities();
-            initialReading.setUnit(unit);
-            initialReading.setReadingDate(contract.getStartDate());
-            initialReading.setUsageMonth(contract.getStartDate().withDayOfMonth(1));
-            initialReading.setUtility(utility);
-
-            BigDecimal waterStart = request.getWaterMeterStart() != null ? request.getWaterMeterStart() : BigDecimal.ZERO;
-            BigDecimal electricStart = request.getElectricMeterStart() != null ? request.getElectricMeterStart() : BigDecimal.ZERO;
-            // Set meterStart from frontend DTO
-            if (utility.getUtilityName().equalsIgnoreCase("electric")) {
-                initialReading.setMeterStart(electricStart);
-            } else if (utility.getUtilityName().equalsIgnoreCase("water")) {
-                initialReading.setMeterStart(waterStart);
-            } else {
-                initialReading.setMeterStart(BigDecimal.ZERO); // default for others
-            }
-
-            initialReading.setMeterEnd(initialReading.getMeterStart());
-            initialReading.setUsageAmount(BigDecimal.ZERO);
-
-            unitUtilityRepository.save(initialReading);
-        }
-
 
         log.info("Contract created: {} for unit: {} and tenant: {}",
                 savedContract.getContractNumber(), unit.getUnitName(), tenant.getEmail());
@@ -191,8 +176,9 @@ public class ContractService {
         return toContractDetailDto(savedContract);
     }
 
-    public ContractDetailDto terminateContract(UUID contractId, TerminateContractRequest request, UUID terminatedByUserId) {
-        Contract contract = contractRepository.findById(contractId)
+    public ContractDetailDto terminateContract(UUID roomNumber, TerminateContractRequest request, UUID terminatedByUserId) {
+        Specification<Contract> spec = ContractSpecification.hasUnitId(roomNumber).and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+        Contract contract = contractRepository.findOne(spec)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
         if (contract.getStatus() != Contract.ContractStatus.active) {
@@ -203,7 +189,7 @@ public class ContractService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         contract.setStatus(Contract.ContractStatus.terminated);
-        contract.setTerminationDate(request.getTerminationDate());
+        contract.setTerminationDate(LocalDate.now());
         contract.setTerminationReason(request.getTerminationReason());
         contract.setTerminatedByUser(terminatedByUser);
 

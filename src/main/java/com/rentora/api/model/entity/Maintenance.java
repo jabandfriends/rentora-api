@@ -114,15 +114,15 @@ public class Maintenance {
     @Column(name = "recurring_schedule", length = 20)
     private RecurringSchedule recurringSchedule;
     public enum RecurringSchedule {
-        weekly,monthly,quarterly
+        weekly,monthly,quarterly,yearly
     }
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
 }

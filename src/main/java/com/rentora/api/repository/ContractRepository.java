@@ -1,9 +1,11 @@
 package com.rentora.api.repository;
 
 import com.rentora.api.model.entity.Contract;
+import com.rentora.api.model.entity.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ContractRepository extends JpaRepository<Contract, UUID> {
+public interface ContractRepository extends JpaRepository<Contract, UUID>, JpaSpecificationExecutor<Contract> {
 
     @Query("SELECT c FROM Contract c " +
             "JOIN c.unit u " +
@@ -32,7 +34,6 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
             "JOIN u.floor f " +
             "JOIN f.building b " +
             "WHERE b.apartment.id = :apartmentId AND c.status = 'active'")
-
     long countActiveByApartmentId(@Param("apartmentId") UUID apartmentId);
 
     @Modifying
@@ -40,4 +41,6 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
             "WHERE c.endDate < CURRENT_DATE " +
             "AND c.status NOT IN ('terminated', 'renewed', 'expired')")
     void expireOldContracts();
+
+    Optional<Contract> findByContractNumber(String contractNumber);
 }

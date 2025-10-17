@@ -42,7 +42,6 @@ public class ApartmentPayment {
     @Column(name = "promptpay_qr_url")
     private String promptpayQrUrl;
 
-
     private String instructions;
 
     @Column(name = "is_active" )

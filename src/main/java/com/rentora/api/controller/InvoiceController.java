@@ -4,16 +4,22 @@ import java.util.UUID;
 
 import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Request.CreateAdhocInvoiceRequest;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
+import com.rentora.api.model.dto.Invoice.Response.ExecuteAdhocInvoiceResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.AdhocInvoice;
+import com.rentora.api.security.UserPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.rentora.api.model.dto.ApiResponse;
@@ -25,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/invoices")
+@RequestMapping("/api/invoices/{apartmentId}")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class InvoiceController {
     
@@ -89,7 +95,7 @@ public class InvoiceController {
 //         return ResponseEntity.ok(ApiResponse.success(invoice));
 //     }
 
-    @GetMapping("/{apartmentId}")
+    @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getInvoices(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -114,7 +120,7 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summary, page, overall)));
     }
 
-    @GetMapping("/{apartmentId}/overdue")
+    @GetMapping("/overdue")
     public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getOverdueInvoices(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -137,7 +143,7 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(overdue, page, overall)));
     }
 
-    @GetMapping("/{apartmentId}/detail/{adhocInvoiceId}")
+    @GetMapping("/detail/{adhocInvoiceId}")
     public ResponseEntity<ApiResponse<AdhocInvoiceDetailDTO>> getInvoicesById(
             @PathVariable UUID adhocInvoiceId,
             @PathVariable UUID apartmentId) {
@@ -146,5 +152,14 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(invoice));
     }
 
+    @PostMapping("/adhocInvoice/create")
+    public ResponseEntity<ApiResponse<ExecuteAdhocInvoiceResponse>> createInvoice(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID apartmentId,
+            @Valid @RequestBody CreateAdhocInvoiceRequest request){
+
+        ExecuteAdhocInvoiceResponse response = adhocInvoiceService.createAdhocInvoice(currentUser.getId(), apartmentId, request);
+        return new ResponseEntity<>(ApiResponse.success("Adhoc invoice created successfully",response), HttpStatus.CREATED);
+    }
 
 }

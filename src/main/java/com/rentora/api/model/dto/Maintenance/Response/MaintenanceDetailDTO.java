@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.Maintenance.Response;
 
+import com.rentora.api.model.entity.Maintenance;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class MaintenanceDetailDTO {
 
     //Unit
     private String unitName;
+    private UUID unitId;
 
     //tenant
     private String tenantName;
@@ -26,14 +28,14 @@ public class MaintenanceDetailDTO {
 
     private String title;
     private String description;
-    private String category;
-    private String status;
-    private String priority;
+    private Maintenance.Category category;
+    private Maintenance.Status status;
+    private Maintenance.Priority priority;
     private LocalDate requestedDate;
-    private LocalDate appointmentDate;
+    private OffsetDateTime appointmentDate;
     private OffsetDateTime startedAt;
     private OffsetDateTime completedAt;
-    private LocalDate dueDate;
+    private OffsetDateTime dueDate;
     private BigDecimal estimatedHours;
     private BigDecimal actualHours;
     private BigDecimal estimatedCost;
@@ -47,7 +49,8 @@ public class MaintenanceDetailDTO {
     private Boolean isEmergency;
     private Boolean isRecurring;
 
-    private String recurringSchedule;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+
+    private Maintenance.RecurringSchedule recurringSchedule;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

@@ -84,7 +84,6 @@ public class BuildingController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Building created successfully", building));
     }
-
     @PutMapping("/{buildingId}")
     public ResponseEntity<ApiResponse<BuildingDetailDto>> updateBuilding(
             @PathVariable UUID apartmentId,

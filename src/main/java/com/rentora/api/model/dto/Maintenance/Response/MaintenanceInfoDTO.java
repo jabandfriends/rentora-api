@@ -4,6 +4,7 @@ import com.rentora.api.model.entity.Maintenance;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -13,8 +14,12 @@ public class MaintenanceInfoDTO {
     private String unitName;
     private String buildingsName;
     private String title;
-    private LocalDate appointmentDate;
-    private LocalDate dueDate;
+    private OffsetDateTime appointmentDate;
+    private OffsetDateTime dueDate;
     private Maintenance.Status status;
     private Maintenance.Priority priority;
+
+    private Boolean isRecurring;
+    private Maintenance.RecurringSchedule recurringSchedule;
+    private OffsetDateTime createdAt;
 }
