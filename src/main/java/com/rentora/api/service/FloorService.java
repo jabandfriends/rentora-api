@@ -133,11 +133,17 @@ public class FloorService {
     }
 
     public FloorResponseRequestDto toFloorResponseRequestDto(Floor floor) {
+        long totalAvailableUnits = unitRepository.countByFloorAndStatus(floor, Unit.UnitStatus.available);
+        long totalMaintenanceUnits = unitRepository.countByFloorAndStatus(floor, Unit.UnitStatus.maintenance);
+        long totalOccupiedUnits =  unitRepository.countByFloorAndStatus(floor, Unit.UnitStatus.occupied);
         return FloorResponseRequestDto.builder()
                 .floorId(floor.getId())
                 .floorName(floor.getFloorName())
                 .floorNumber(floor.getFloorNumber())
                 .totalUnits(floor.getTotalUnits())
+                .occupiedUnits(totalOccupiedUnits)
+                .maintenanceUnits(totalMaintenanceUnits)
+                .availableUnits(totalAvailableUnits)
                 .buildingId(floor.getBuilding().getId())
                 .buildingName(floor.getBuilding().getName())
                 .build();

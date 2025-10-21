@@ -12,6 +12,9 @@ public class FloorResponseRequestDto {
     private String floorName;
     private Integer floorNumber;
     private Integer totalUnits;
+    private Long occupiedUnits;
+    private Long availableUnits;
+    private Long maintenanceUnits;
     private UUID buildingId;
     private String buildingName;
 }

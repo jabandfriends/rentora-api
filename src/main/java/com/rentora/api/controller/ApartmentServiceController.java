@@ -27,8 +27,6 @@ import java.util.UUID;
 public class ApartmentServiceController {
 
     private final ApartmentServiceService apartmentServiceService;
-    private final UnitRepository unitRepository;
-    private final UnitServiceRepository unitServiceRepository;
 
     @GetMapping("/apartment-services")
     public ResponseEntity<ApiResponse<List<ServiceInfoDTO>>> getAllServiceDetails
@@ -40,12 +38,4 @@ public class ApartmentServiceController {
         return ResponseEntity.ok(ApiResponse.success("success",services));
     }
 
-//    @GetMapping("/no/paginate")
-//    public ResponseEntity<ApiResponse<List<BuildingSummaryDto>>> getBuildingsNoPaginate(
-//            @PathVariable UUID apartmentId) {
-//
-//
-//        List<BuildingSummaryDto> buildings = buildingService.getBuildingsByApartmentNoPaginate(apartmentId);
-//        return ResponseEntity.ok(ApiResponse.success(buildings));
-//    }
 }

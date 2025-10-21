@@ -59,7 +59,7 @@ public class TenantService {
         Long totalTenant = apartmentUserRepository.countByApartmentId(apartmentId);
         Long totalOccupiedTenant= userRepository.countByApartmentIdAndIsActiveTrueWithContractStatus(apartmentId, Contract.ContractStatus.active);
         Long totalActiveTenant = apartmentUserRepository.countByApartmentIdAndIsActiveTrue(apartmentId);
-        Long totalUnoccupiedTenant = userRepository.countByApartmentIdAndIsActiveTrueWithFalseContractStatus(apartmentId , Contract.ContractStatus.active);
+        Long totalUnoccupiedTenant = userRepository.countUsersWithoutOrInactiveContract(apartmentId, Contract.ContractStatus.active);
 
         return TenantsMetadataResponseDto.builder().totalTenants(totalTenant).totalActiveTenants(totalActiveTenant)
                 .totalOccupiedTenants(totalOccupiedTenant).totalUnoccupiedTenants(totalUnoccupiedTenant).build();
