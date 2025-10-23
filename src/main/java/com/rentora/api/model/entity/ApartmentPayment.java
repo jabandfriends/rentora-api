@@ -55,7 +55,7 @@ public class ApartmentPayment {
     private User createdBy;
 
     public enum MethodType {
-      bank_transfer,promptpay,credit_card,cash,cheque
+      bank_transfer,promptpay
     }
 
 }
