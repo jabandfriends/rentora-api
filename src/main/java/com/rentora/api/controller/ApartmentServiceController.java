@@ -1,7 +1,11 @@
 package com.rentora.api.controller;
 
+
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.Building.Response.BuildingSummaryDto;
 import com.rentora.api.model.dto.ExtraService.Response.ServiceInfoDTO;
+import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.repository.UnitServiceRepository;
 import com.rentora.api.service.ApartmentServiceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,21 +17,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/apartments/{apartmentId}/all-room/detail/test")
+@RequestMapping("/api/apartments/{apartmentId}")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class ApartmentServiceController {
 
     private final ApartmentServiceService apartmentServiceService;
 
-    @GetMapping
+    @GetMapping("/apartment-services")
     public ResponseEntity<ApiResponse<List<ServiceInfoDTO>>> getAllServiceDetails
             (@PathVariable UUID apartmentId) {
         List<ServiceInfoDTO> services  = apartmentServiceService.getApartmentService(apartmentId);
 
-        return ResponseEntity.ok(ApiResponse.success(services));
+        return ResponseEntity.ok(ApiResponse.success("success",services));
     }
+
 }
