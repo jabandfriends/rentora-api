@@ -815,7 +815,190 @@ CHECK (amount > 0);
 ALTER TABLE unit_utilities ADD CONSTRAINT check_meter_readings 
 CHECK (meter_end IS NULL OR meter_start IS NULL OR meter_end >= meter_start);
 
+--==================================================
+-- MOCK DATA ----------------------------------------
+--==================================================
+-- Create Apartment and return ID
+DO $$
+DECLARE
+    v_apartment_id UUID;
+    v_admin_user_id UUID;
+    v_admin_apartment_user_id UUID;
+BEGIN
+    SELECT id INTO v_admin_user_id FROM users WHERE email = 'admin@example.com';
 
+    INSERT INTO apartments (id, name, address, city, created_by_user_id, status)
+    VALUES (
+               gen_random_uuid(),
+               'GreenVille Apartment',
+               '123 Sukhumvit Rd, Bangkok',
+               'Bangkok',
+               v_admin_user_id,
+               'active'
+           )
+    RETURNING id INTO v_apartment_id;
+
+    INSERT INTO apartment_users (id, apartment_id, user_id, role, created_by_user_id)
+    VALUES (
+               gen_random_uuid(),
+               v_apartment_id,
+               v_admin_user_id,
+               'admin',
+               v_admin_user_id
+           )
+    RETURNING id INTO v_admin_apartment_user_id;
+
+    RAISE NOTICE '✅ Apartment Created: %, Admin Linked: %', v_apartment_id, v_admin_apartment_user_id;
+END $$;
+
+DO $$
+DECLARE
+    v_apartment_id UUID;
+    v_building_id UUID;
+BEGIN
+    SELECT id INTO v_apartment_id FROM apartments WHERE name = 'GreenVille Apartment';
+
+    INSERT INTO buildings (id, apartment_id, name, total_floors)
+    VALUES (
+               gen_random_uuid(),
+               v_apartment_id,
+               'Building A',
+               2
+           )
+    RETURNING id INTO v_building_id;
+
+    RAISE NOTICE '🏢 Building Created: %', v_building_id;
+END $$;
+
+DO $$
+DECLARE
+    v_building_id UUID;
+    v_floor1_id UUID;
+    v_floor2_id UUID;
+BEGIN
+    SELECT id INTO v_building_id FROM buildings WHERE name = 'Building A';
+
+    INSERT INTO floors (id, building_id, floor_number, floor_name, total_units)
+    VALUES
+        (gen_random_uuid(), v_building_id, 1, 'First Floor', 12),
+        (gen_random_uuid(), v_building_id, 2, 'Second Floor', 12);
+
+    RAISE NOTICE '🏬 Floors created for Building A';
+END $$;
+
+-- Floor 1
+DO $$
+DECLARE
+    v_floor_id UUID;
+    i INT;
+BEGIN
+    SELECT id INTO v_floor_id FROM floors WHERE floor_number = 1;
+
+    FOR i IN 1..12 LOOP
+            INSERT INTO units (id, floor_id, unit_name, bedrooms, bathrooms, square_meters, status)
+            VALUES (
+                       gen_random_uuid(),
+                       v_floor_id,
+                       FORMAT('A1-%02s', i),
+                       1,
+                       1,
+                       35.00,
+                       'available'
+                   );
+        END LOOP;
+
+    RAISE NOTICE '✅ Floor 1: 12 units created';
+END $$;
+
+-- Floor 2
+DO $$
+DECLARE
+    v_floor_id UUID;
+    i INT;
+BEGIN
+    SELECT id INTO v_floor_id FROM floors WHERE floor_number = 2;
+
+    FOR i IN 1..12 LOOP
+            INSERT INTO units (id, floor_id, unit_name, bedrooms, bathrooms, square_meters, status)
+            VALUES (
+                       gen_random_uuid(),
+                       v_floor_id,
+                       FORMAT('A2-%02s', i),
+                       1,
+                       1,
+                       35.00,
+                       'available'
+                   );
+        END LOOP;
+
+    RAISE NOTICE '✅ Floor 2: 12 units created';
+END $$;
+
+DO $$
+    DECLARE
+        v_apartment_id UUID;
+    BEGIN
+        SELECT id INTO v_apartment_id FROM apartments WHERE name = 'GreenVille Apartment';
+
+        -- Electricity
+        INSERT INTO utilities (id, apartment_id, utility_name, utility_type, category, unit_price, billing_cycle, is_active)
+        VALUES (
+                   gen_random_uuid(),
+                   v_apartment_id,
+                   'electric',
+                   'meter',      -- meter-based
+                   'utility',
+                   4.50,         -- THB per kWh example
+                   'monthly',
+                   TRUE
+               );
+
+        -- Water
+        INSERT INTO utilities (id, apartment_id, utility_name, utility_type, category, unit_price, billing_cycle, is_active)
+        VALUES (
+                   gen_random_uuid(),
+                   v_apartment_id,
+                   'water',
+                   'meter',      -- meter-based
+                   'utility',
+                   25.00,        -- THB per cubic meter example
+                   'monthly',
+                   TRUE
+               );
+
+        RAISE NOTICE '✅ Utilities (Water & Electricity) added for Apartment %', v_apartment_id;
+    END $$;
+DO $$
+    DECLARE
+        v_apartment_id UUID;
+        v_admin_user_id UUID;
+    BEGIN
+        -- Get apartment id
+        SELECT id INTO v_apartment_id FROM apartments WHERE name = 'GreenVille Apartment';
+
+        -- Get admin user id
+        SELECT id INTO v_admin_user_id FROM users WHERE email = 'admin@example.com';
+
+        -- Bank Transfer
+        INSERT INTO apartment_payment_methods (
+            id, apartment_id, method_name, method_type, bank_name, bank_account_number, account_holder_name,
+            processing_fee_percentage, is_active, created_by_user_id
+        )
+        VALUES (
+                   gen_random_uuid(),
+                   v_apartment_id,
+                   'Bank Transfer',
+                   'bank_transfer',
+                   'Bangkok Bank',
+                   '123-456-7890',
+                   'GreenVille Apartment Co., Ltd.',
+                   0.0,
+                   TRUE,
+                   v_admin_user_id
+               );
+
+        RAISE NOTICE '✅ Apartment Payment Methods added for Apartment %', v_apartment_id;
+    END $$;
 -- Function to clean up old audit logs (older than 2 years)
 CREATE OR REPLACE FUNCTION cleanup_old_audit_logs()
 RETURNS INTEGER AS $$
