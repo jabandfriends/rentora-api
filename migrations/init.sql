@@ -969,36 +969,69 @@ DO $$
         RAISE NOTICE '✅ Utilities (Water & Electricity) added for Apartment %', v_apartment_id;
     END $$;
 DO $$
-    DECLARE
-        v_apartment_id UUID;
-        v_admin_user_id UUID;
-    BEGIN
-        -- Get apartment id
-        SELECT id INTO v_apartment_id FROM apartments WHERE name = 'GreenVille Apartment';
+DECLARE
+    v_apartment_id UUID;
+    v_admin_user_id UUID;
+BEGIN
+    -- Get apartment id
+    SELECT id INTO v_apartment_id FROM apartments WHERE name = 'GreenVille Apartment';
 
-        -- Get admin user id
-        SELECT id INTO v_admin_user_id FROM users WHERE email = 'admin@example.com';
+    -- Get admin user id
+    SELECT id INTO v_admin_user_id FROM users WHERE email = 'admin@example.com';
 
-        -- Bank Transfer
-        INSERT INTO apartment_payment_methods (
-            id, apartment_id, method_name, method_type, bank_name, bank_account_number, account_holder_name,
-            processing_fee_percentage, is_active, created_by_user_id
-        )
-        VALUES (
-                   gen_random_uuid(),
-                   v_apartment_id,
-                   'Bank Transfer',
-                   'bank_transfer',
-                   'Bangkok Bank',
-                   '123-456-7890',
-                   'GreenVille Apartment Co., Ltd.',
-                   0.0,
-                   TRUE,
-                   v_admin_user_id
-               );
+    -- Bank Transfer
+    INSERT INTO apartment_payment_methods (
+        id, apartment_id, method_name, method_type, bank_name, bank_account_number, account_holder_name,
+        processing_fee_percentage, is_active, created_by_user_id
+    )
+    VALUES (
+               gen_random_uuid(),
+               v_apartment_id,
+               'Bank Transfer',
+               'bank_transfer',
+               'Bangkok Bank',
+               '123-456-7890',
+               'GreenVille Apartment Co., Ltd.',
+               0.0,
+               TRUE,
+               v_admin_user_id
+           );
 
-        RAISE NOTICE '✅ Apartment Payment Methods added for Apartment %', v_apartment_id;
-    END $$;
+    RAISE NOTICE '✅ Apartment Payment Methods added for Apartment %', v_apartment_id;
+END $$;
+
+DO $$
+DECLARE
+    v_apartment_id UUID;
+BEGIN
+    -- Get apartment id
+    SELECT id INTO v_apartment_id FROM apartments WHERE name = 'GreenVille Apartment';
+
+    -- ===============================
+    -- Add default extra services with proper categories
+    -- ===============================
+    INSERT INTO extra_services (
+        apartment_id,
+        service_name,
+        description,
+        price,
+        billing_type,
+        category,
+        requires_approval,
+        max_quantity,
+        is_active,
+        created_at,
+        updated_at
+    )
+    VALUES
+        (v_apartment_id, 'Gym Access', 'Access to the apartment gym facilities', 500, 'monthly', 'gym', false, 1, TRUE, NOW(), NOW()),
+        (v_apartment_id, 'Swimming Pool', 'Access to the swimming pool', 300, 'monthly', 'pool', false, 1, TRUE, NOW(), NOW()),
+        (v_apartment_id, 'Reserved Parking', 'Reserved parking space per month', 1000, 'monthly', 'parking', true, 1, TRUE, NOW(), NOW()),
+        (v_apartment_id, 'Housekeeping', 'Weekly housekeeping service', 800, 'monthly', 'service', true, 1, TRUE, NOW(), NOW()),
+        (v_apartment_id, 'Security Monitoring', '24/7 security monitoring', 400, 'monthly', 'security', false, 1, TRUE, NOW(), NOW());
+
+    RAISE NOTICE '✅ Default apartment extra services added for Apartment %', v_apartment_id;
+END $$;
 -- Function to clean up old audit logs (older than 2 years)
 CREATE OR REPLACE FUNCTION cleanup_old_audit_logs()
 RETURNS INTEGER AS $$
