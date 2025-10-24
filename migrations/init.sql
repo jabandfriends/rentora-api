@@ -636,7 +636,7 @@ CREATE TABLE IF NOT EXISTS supplies (
     name VARCHAR(100) NOT NULL,
 
     -- Category as VARCHAR with allowed values
-    category VARCHAR(50) NOT NULL CHECK (category IN ('Electrical', 'Plumbing', 'Cleaning', 'HVAC', 'Painting', 'General')),
+    category VARCHAR(50) NOT NULL CHECK (category IN ('electrical', 'plumbing', 'cleaning', 'hvac', 'painting', 'general')),
 
     description TEXT,
     unit VARCHAR(20) NOT NULL,  -- e.g., pcs, liters, boxes
