@@ -46,7 +46,7 @@ public class SupplyTransaction {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    private enum SupplyTransactionType {
+    public enum SupplyTransactionType {
         purchase,use,adjustment
     }
 

@@ -56,7 +56,21 @@ public class Supply {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    private enum SupplyCategory{
+    public enum SupplyCategory{
         electrical,plumbing,cleaning,hvac,painting,general
+    }
+
+    public enum SupplyStockStatus{
+        in_stock,out_of_stock,low_stock
+    }
+
+    //helper method
+    public SupplyStockStatus getSupplyStockStatus(){
+        if(this.stockQuantity == 0) return SupplyStockStatus.out_of_stock;
+        if(stockQuantity<minStock) return SupplyStockStatus.low_stock;
+        else {
+           return SupplyStockStatus.in_stock;
+        }
+
     }
 }
