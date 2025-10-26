@@ -29,6 +29,8 @@ import java.util.UUID;
 public class SupplyService {
     private final SupplyMapper supplyMapper;
 
+    private final SupplyTransactionService supplyTransactionService;
+
     private final SupplyRepository supplyRepository;
     private final ApartmentRepository apartmentRepository;
 
@@ -74,9 +76,11 @@ public class SupplyService {
     }
 
     //update supply
-    public void updateSupplies(UUID supplyId, UpdateSupplyRequestDto request) {
+    public void updateSupplies(UUID supplyId,UUID userId, UpdateSupplyRequestDto request) {
         if (supplyId == null) throw new BadRequestException("Please provide the supply id to update supply");
+
         Supply supply = supplyRepository.findById(supplyId).orElseThrow(() -> new BadRequestException("Supply not found"));
+        supplyTransactionService.createSupplyUpdateTransaction(supply,request,userId);
         supplyMapper.toUpdateSupply(supply, request);
 
         supplyRepository.save(supply);

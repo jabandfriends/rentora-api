@@ -21,6 +21,6 @@ public class SupplyTransactionSpecification {
     public static Specification<SupplyTransaction> hasSupplyName(String supplyName) {
         if (supplyName == null || supplyName.isEmpty()) return null;
         return ((root, query, cb) ->
-                cb.equal(root.get("supply").get("name"), supplyName) );
+                cb.like(cb.lower(root.get("supply").get("name")),"%"+ supplyName.toLowerCase() + "%") );
     }
 }

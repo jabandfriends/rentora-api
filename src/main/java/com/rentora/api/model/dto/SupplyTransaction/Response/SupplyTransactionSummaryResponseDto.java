@@ -12,6 +12,7 @@ public class SupplyTransactionSummaryResponseDto {
     private LocalDateTime transactionDate;
     private String supplyName;
     private SupplyTransaction.SupplyTransactionType supplyTransactionType;
-    private Integer quantity;
+    private String quantity;
     private String note;
+    private String changeByUser;
 }

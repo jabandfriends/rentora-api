@@ -18,5 +18,6 @@ public class SupplySummaryResponseDto {
     private String supplyUnit;
     private Supply.SupplyCategory supplyCategory;
     private Supply.SupplyStockStatus supplyStockStatus;
+    private String supplyDescription;
     private BigDecimal supplyTotalCost;
 }

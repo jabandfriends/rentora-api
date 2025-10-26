@@ -1,9 +1,13 @@
 package com.rentora.api.service;
 
+import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.mapper.SupplyTransactionMapper;
+import com.rentora.api.model.dto.Supply.Request.UpdateSupplyRequestDto;
 import com.rentora.api.model.dto.SupplyTransaction.Response.SupplyTransactionSummaryResponseDto;
-import com.rentora.api.model.entity.SupplyTransaction;
+import com.rentora.api.model.entity.*;
+import com.rentora.api.repository.ApartmentUserRepository;
 import com.rentora.api.repository.SupplyTransactionRepository;
+import com.rentora.api.repository.UserRepository;
 import com.rentora.api.specifications.SupplyTransactionSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +27,56 @@ public class SupplyTransactionService {
     private final SupplyTransactionMapper supplyTransactionMapper;
 
     private final SupplyTransactionRepository supplyTransactionRepository;
+    private final ApartmentUserRepository apartmentUserRepository;
+    private final UserRepository userRepository;
 
     public Page<SupplyTransactionSummaryResponseDto> getSupplyTransactions(UUID apartmentId, String supplyName,
                                                                            SupplyTransaction.SupplyTransactionType category, Pageable pageable) {
         Specification<SupplyTransaction> supplyTransactionSpecification = SupplyTransactionSpecification.hasApartmentId(apartmentId)
-                .and(SupplyTransactionSpecification.hasSupplyName(supplyName).and(SupplyTransactionSpecification.hasCategory(category)));
+                .and(SupplyTransactionSpecification.hasSupplyName(supplyName));
 
         Page<SupplyTransaction> supplyTransactions = supplyTransactionRepository.findAll(supplyTransactionSpecification,pageable);
 
         return supplyTransactions.map(supplyTransactionMapper::supplyTransactionSummaryResponseDto);
+    }
+
+    // Create a transaction when supply quantity changes (without maintenance)
+    public void createSupplyUpdateTransaction(Supply supply, UpdateSupplyRequestDto request, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        Apartment apartment = supply.getApartment();
+
+        ApartmentUser apartmentUser = apartmentUserRepository.findByApartmentAndUser(apartment, user)
+                .orElseThrow(() -> new BadRequestException("Apartment User not found"));
+
+        int newQuantity = request.getStockQuantity();
+        int oldQuantity = supply.getStockQuantity();
+        int difference = newQuantity - oldQuantity; // positive means added, negative means removed
+
+        if (difference == 0) {
+            // No change in quantity → no need to log transaction
+            return;
+        }
+
+        SupplyTransaction transaction = getSupplyTransaction(supply, apartmentUser, difference);
+
+        supplyTransactionRepository.save(transaction);
+    }
+
+    private SupplyTransaction getSupplyTransaction(Supply supply, ApartmentUser apartmentUser, int difference) {
+        SupplyTransaction transaction = new SupplyTransaction();
+        transaction.setSupply(supply);
+        transaction.setApartmentUser(apartmentUser);
+        transaction.setQuantity(Math.abs(difference));
+
+        if (difference > 0) {
+            transaction.setTransactionType(SupplyTransaction.SupplyTransactionType.purchase);
+            transaction.setNote(supply.getName() + " Added to stock " + difference + " units to stock");
+        } else {
+            transaction.setTransactionType(SupplyTransaction.SupplyTransactionType.adjustment);
+            transaction.setNote(supply.getName() + " stock removed " + Math.abs(difference) + " units from stock");
+        }
+        return transaction;
     }
 }

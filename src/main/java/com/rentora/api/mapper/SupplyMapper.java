@@ -31,7 +31,7 @@ public class SupplyMapper {
     public void toUpdateSupply(Supply supply, UpdateSupplyRequestDto request) {
         if(request.getName() != null && !request.getName().isEmpty()) supply.setName(request.getName());
         if(request.getCategory() != null) supply.setCategory(request.getCategory());
-        if(request.getDescription() != null && !request.getDescription().isEmpty()) supply.setDescription(request.getDescription());
+        if(request.getDescription() != null) supply.setDescription(request.getDescription());
         if(request.getUnit() != null && !request.getUnit().isEmpty()) supply.setUnit(request.getUnit());
         if(request.getStockQuantity() != null) supply.setStockQuantity(request.getStockQuantity());
         if(request.getMinStock() != null) supply.setMinStock(request.getMinStock());
@@ -49,6 +49,7 @@ public class SupplyMapper {
                 .supplyName(supply.getName())
                 .supplyQuantity(supply.getStockQuantity())
                 .supplyMinStock(supply.getMinStock())
+                .supplyDescription(supply.getDescription())
                 .supplyUnit(supply.getUnit())
                 .supplyUnitPrice(supply.getCostPerUnit())
                 .supplyCategory(supply.getCategory())

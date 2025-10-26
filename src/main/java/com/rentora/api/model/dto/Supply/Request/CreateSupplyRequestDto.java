@@ -7,10 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class
-
-
-CreateSupplyRequestDto {
+public class CreateSupplyRequestDto {
     @NotBlank(message = "Supply name is required")
     @Size(max = 100, message = "Supply name must be at most 100 characters")
     private String name;

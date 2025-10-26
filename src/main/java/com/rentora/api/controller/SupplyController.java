@@ -14,7 +14,6 @@ import com.rentora.api.service.SupplyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,8 +68,8 @@ public class SupplyController {
     }
 
     @PutMapping("/edit/{supplyId}")
-    public ResponseEntity<ApiResponse<Objects>> updateSupply(@PathVariable UUID supplyId, @RequestBody @Valid UpdateSupplyRequestDto request){
-        supplyService.updateSupplies(supplyId,request);
+    public ResponseEntity<ApiResponse<Objects>> updateSupply(@PathVariable UUID supplyId,@AuthenticationPrincipal UserPrincipal currentUser, @RequestBody @Valid UpdateSupplyRequestDto request){
+        supplyService.updateSupplies(supplyId,currentUser.getId(),request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
