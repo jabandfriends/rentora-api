@@ -1,17 +1,24 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Payment.Response.PaymentMetadata;
 import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
+import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
+import com.rentora.api.model.entity.Payment;
 import com.rentora.api.repository.PaymentRepository;
 import com.rentora.api.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -26,5 +33,27 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PaymentMonthlyAvenue>> getMonthlyRevenue(@PathVariable UUID apartmentId) {
         PaymentMonthlyAvenue summary = paymentService.getMonthlyData(apartmentId);
         return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<PaginatedResponse<PaymentResponseDto>>> getAllPayments(
+            @PathVariable UUID apartmentId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) Payment.PaymentStatus status,
+            @RequestParam(required = false) String buildingName
+            ) {
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+        Page<PaymentResponseDto> payments = paymentService.getAllPayments(apartmentId,buildingName,status,pageable);
+        PaymentMetadata metadata = paymentService.getPaymentMetadata(apartmentId);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(payments,page,metadata)));
     }
 }
