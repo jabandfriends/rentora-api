@@ -40,6 +40,7 @@ public class SupplyService {
 
         Specification<Supply> supplySpecification = SupplySpecification.hasApartmentId(apartmentId).and(
                 SupplySpecification.hasName(supplyName).and(SupplySpecification.hasCategory(supplyCategory))
+                        .and(SupplySpecification.hasNotDelete())
         );
         Page<Supply> supplies = supplyRepository.findAll(supplySpecification,pageable);
 
@@ -50,9 +51,9 @@ public class SupplyService {
     public SupplyMetaDataDto getSupplyMetadata(UUID apartmentId) {
         Apartment  apartment = apartmentRepository.findById(apartmentId).orElseThrow(() -> new BadRequestException("apartment not found"));
 
-        long totalSupplies = supplyRepository.countByApartment(apartment);
-        long totalLowStockSupplies = supplyRepository.countLowStockByApartment(apartment);
-        BigDecimal totalCostSupplies = supplyRepository.totalCostSuppliesByApartment(apartment);
+        long totalSupplies = supplyRepository.countByApartmentAndIsDeleted(apartment,false);
+        long totalLowStockSupplies = supplyRepository.countLowStockByApartment(apartment,false);
+        BigDecimal totalCostSupplies = supplyRepository.totalCostSuppliesByApartment(apartment,false);
 
         return supplyMapper.toSupplyMetaDataDto(totalSupplies,totalLowStockSupplies,totalCostSupplies);
     }
@@ -72,7 +73,9 @@ public class SupplyService {
         if (supplyId == null) throw new BadRequestException("Please provide the supply id to delete supply");
 
         Supply supply = supplyRepository.findById(supplyId).orElseThrow(() -> new BadRequestException("Supply not found"));
-        supplyRepository.delete(supply);
+        supply.setIsDeleted(true);
+
+        supplyRepository.save(supply);
     }
 
     //update supply

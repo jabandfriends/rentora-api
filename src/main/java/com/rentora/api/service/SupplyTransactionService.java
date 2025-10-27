@@ -40,6 +40,30 @@ public class SupplyTransactionService {
         return supplyTransactions.map(supplyTransactionMapper::supplyTransactionSummaryResponseDto);
     }
 
+    // Create a transaction when maintenance use supply
+    public void createMaintenanceUseSupplyTransaction(MaintenanceSupply maintenanceSupply,UUID userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        Apartment apartment = maintenanceSupply.getSupply().getApartment();
+
+        ApartmentUser apartmentUser = apartmentUserRepository.findByApartmentAndUser(apartment, user)
+                .orElseThrow(() -> new BadRequestException("Apartment User not found"));
+
+        int supplyUsage = maintenanceSupply.getQuantityUsed();
+        String maintenanceTitle = maintenanceSupply.getMaintenance().getTitle();
+        String supplyName = maintenanceSupply.getSupply().getName();
+        SupplyTransaction supplyTransaction = new SupplyTransaction();
+        supplyTransaction.setApartmentUser(apartmentUser);
+        supplyTransaction.setMaintenance(maintenanceSupply.getMaintenance());
+        supplyTransaction.setSupply(maintenanceSupply.getSupply());
+        supplyTransaction.setQuantity(supplyUsage);
+        supplyTransaction.setTransactionType(SupplyTransaction.SupplyTransactionType.use);
+        supplyTransaction.setNote(maintenanceTitle + " use " + supplyUsage + " " + maintenanceSupply.getSupply().getUnit()
+        +" " + "of " + supplyName);
+
+        supplyTransactionRepository.save(supplyTransaction);
+    }
     // Create a transaction when supply quantity changes (without maintenance)
     public void createSupplyUpdateTransaction(Supply supply, UpdateSupplyRequestDto request, UUID userId) {
         User user = userRepository.findById(userId)

@@ -13,10 +13,11 @@ import java.util.UUID;
 public interface SupplyRepository extends JpaRepository<Supply, UUID>, JpaSpecificationExecutor<Supply> {
 
     long countByApartment(Apartment apartment);
+    long countByApartmentAndIsDeleted(Apartment apartment, boolean isDeleted);
 
-    @Query("SELECT COUNT(s) FROM Supply s WHERE s.apartment = :apartment AND s.stockQuantity < s.minStock")
-    long countLowStockByApartment(@Param("apartment") Apartment apartment);
+    @Query("SELECT COUNT(s) FROM Supply s WHERE s.apartment = :apartment AND s.stockQuantity < s.minStock AND s.isDeleted = :isDeleted")
+    long countLowStockByApartment(@Param("apartment") Apartment apartment,@Param("isDeleted") Boolean isDeleted);
 
-    @Query("SELECT COALESCE(SUM(s.costPerUnit * s.stockQuantity), 0) FROM Supply s WHERE s.apartment = :apartment")
-    BigDecimal totalCostSuppliesByApartment(Apartment apartment);
+    @Query("SELECT COALESCE(SUM(s.costPerUnit * s.stockQuantity), 0) FROM Supply s WHERE s.apartment = :apartment AND s.isDeleted = :isDeleted")
+    BigDecimal totalCostSuppliesByApartment(Apartment apartment,@Param("isDeleted") Boolean isDeleted);
 }

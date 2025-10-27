@@ -27,4 +27,8 @@ public class SupplySpecification {
         if (category == null) return null;
         return ((root, query, cb) -> cb.equal(root.get("category"), category) );
     }
+
+    public static Specification<Supply> hasNotDelete() {
+        return ((root, query, cb) -> cb.equal(root.get("isDeleted"), Boolean.FALSE) );
+    }
 }

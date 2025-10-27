@@ -32,7 +32,7 @@ public class SupplyTransactionsController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String supplyName,
             @RequestParam(required = false) SupplyTransaction.SupplyTransactionType transactionType
             ){

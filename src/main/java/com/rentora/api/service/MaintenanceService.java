@@ -7,10 +7,7 @@ import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
-import com.rentora.api.model.entity.Contract;
-import com.rentora.api.model.entity.Maintenance;
-import com.rentora.api.model.entity.Unit;
-import com.rentora.api.model.entity.User;
+import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.MaintenanceRepository;
 import com.rentora.api.repository.UnitRepository;
@@ -43,6 +40,8 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UnitRepository unitRepository;
 
+    private final MaintenanceSupplyService maintenanceSupplyService;
+
     public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Boolean isRecurring, UUID unitId,
                                                    Maintenance.Priority priority,Pageable pageable) {
         Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name))
@@ -71,36 +70,10 @@ public class MaintenanceService {
 
     }
 
-
-//        List<MaintenanceDetailDTO> maintenanceDTOS = maintenance.map(MaintenanceService::toMaintenanceDetailDto).getContent();
-//        long totalMaintenance = maintenance.getTotalElements();
-//        long pending = maintenance.stream()
-//                .filter(m -> m.getStatus() == Maintenance.Status.pending)
-//                .count();
-//        long in_progress = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.in_progress).count();
-//        long assigned = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.assigned).count();
-//
-////        return maintenance.map(maintenances -> {
-////            MaintenanceDetailDTO dto = toMaintenanceDetailDto(maintenances);
-//        // Create the response object and populate it
-//        MaintenancePageResponse response = new MaintenancePageResponse();
-//        response.setMaintenances(maintenanceDTOS);
-//        response.setTotalMaintenance(totalMaintenance);
-//        response.setPendingCount(pending);
-//        response.setAssignedCount(assigned);
-//        response.setInProgressCount(in_progress);
-//        response.setCurrentPage(maintenance.getNumber());
-//        response.setTotalPages(maintenance.getTotalPages());
-//
-//        return response;
-//    };
-
-
-    public ExecuteMaintenanceResponse createMaintenance(UUID createByUserId, CreateMaintenanceRequest request) {
+    public ExecuteMaintenanceResponse createMaintenance(UUID userId, CreateMaintenanceRequest request) {
 
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
-        UUID unitId = unit.getId();
 
         //current ternant base on contract
         List<Contract> contracts = unit.getContracts();
@@ -135,7 +108,14 @@ public class MaintenanceService {
             maintenance.setStatus(request.getStatus());
         }
 
+
+
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
+
+        //save maintenance supply usage
+        request.getSuppliesUsage().forEach(supply -> {
+            maintenanceSupplyService.maintenanceUseSupply(maintenance,supply.getSupplyId(),supply.getSupplyUsedQuantity(),userId);
+        });
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 

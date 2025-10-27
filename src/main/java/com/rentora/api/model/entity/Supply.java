@@ -48,6 +48,8 @@ public class Supply {
     @Column(name = "cost_per_unit")
     private BigDecimal costPerUnit = BigDecimal.ZERO;
 
+    private Boolean isDeleted =  Boolean.FALSE;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
@@ -55,6 +57,7 @@ public class Supply {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
 
     public enum SupplyCategory{
         electrical,plumbing,cleaning,hvac,painting,general

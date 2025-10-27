@@ -643,7 +643,7 @@ CREATE TABLE IF NOT EXISTS supplies (
     stock_quantity INT DEFAULT 0 CHECK (stock_quantity >= 0),
     min_stock INT DEFAULT 5 CHECK (min_stock >= 0), -- alert when below this
     cost_per_unit NUMERIC(10,2) DEFAULT 0 CHECK (cost_per_unit >= 0),
-
+    is_deleted BOOLEAN default false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
