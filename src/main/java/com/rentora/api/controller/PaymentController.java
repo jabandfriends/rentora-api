@@ -40,8 +40,8 @@ public class PaymentController {
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) Payment.PaymentStatus status,
             @RequestParam(required = false) String buildingName
             ) {
