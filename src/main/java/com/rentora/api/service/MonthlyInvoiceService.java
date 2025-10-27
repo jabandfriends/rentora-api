@@ -146,6 +146,7 @@ public class MonthlyInvoiceService {
 
         //payment
         Payment payment = new Payment();
+        payment.setInvoice(monthlyInvoice);
         payment.setAmount(monthlyInvoice.getTotalAmount());
 
         ApartmentPayment apartmentPayment = apartmentPaymentRepository.findByApartmentAndIsActive(
@@ -153,6 +154,7 @@ public class MonthlyInvoiceService {
         ).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
         payment.setPaymentMethod(apartmentPayment.getMethodType().toString());
+        payment.setPaymentMethodEntity(apartmentPayment);
         paymentRepository.save(payment);
 
         log.info("Monthly invoice created for unit {} for month {}-{}", unitId, readingDate, dueDate);
