@@ -411,7 +411,7 @@ CREATE TABLE IF NOT EXISTS payments (
     received_by_user_id UUID REFERENCES users(id),
     
     -- Dates
-    paid_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    paid_at TIMESTAMPTZ ,
     processed_at TIMESTAMPTZ,
     
     -- Status and verification
@@ -987,7 +987,7 @@ BEGIN
     VALUES (
                gen_random_uuid(),
                v_apartment_id,
-               'Bank Transfer',
+               'bank_transfer',
                'bank_transfer',
                'Bangkok Bank',
                '123-456-7890',
