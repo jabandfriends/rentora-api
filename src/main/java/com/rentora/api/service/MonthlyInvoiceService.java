@@ -75,6 +75,13 @@ public class MonthlyInvoiceService {
                 .totalOverdueMonthlyInvoice(totalOverdueMonthlyInvoices).build();
     }
 
+    public void attachPdfToInvoice(String invoiceNumber, String fileKey) {
+        Invoice invoice = invoiceRepository.findByInvoiceNumber(invoiceNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
+        invoice.setPdf(fileKey);
+        invoiceRepository.save(invoice);
+    }
+
     public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate, Integer paymentDueDays) {
         Invoice monthlyInvoice = new Invoice();
         //find current
@@ -195,6 +202,7 @@ public class MonthlyInvoiceService {
         }
         return BigDecimal.ZERO;
     }
+
     private MonthlyInvoiceDetailResponseDto toMonthlyInvoiceDetailDto(Invoice invoice) {
         //find current Apartment
         Apartment apartment = invoice.getApartment();
