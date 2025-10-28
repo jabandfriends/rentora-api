@@ -4,6 +4,7 @@ import com.rentora.api.model.entity.Floor;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -14,6 +15,8 @@ public class MonthlyUtilityUnitDetailDTO {
     private Integer floorNumber;
     private String buildingName;
 
-    private MonthlyUtilityGroupInfo utilityGroups;
+    private Map<String, List<MonthlyUtilityUsageSummaryDTO>> utilityGroupName;
+
+    // private MonthlyUtilityGroupInfo utilityGroups;
 
 }

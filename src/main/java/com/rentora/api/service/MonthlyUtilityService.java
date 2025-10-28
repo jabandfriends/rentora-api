@@ -1,18 +1,14 @@
 package com.rentora.api.service;
 
-import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityGroupInfo;
-import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityGroupNameDTO;
 import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityUnitDetailDTO;
 import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityUsageSummaryDTO;
 import com.rentora.api.model.entity.UnitUtilities;
 import com.rentora.api.repository.MonthlyUtilityRepository;
 import com.rentora.api.repository.UnitUtilityRepository;
-import com.rentora.api.specifications.UnitUtilitySpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.format.TextStyle;
@@ -55,36 +51,19 @@ public class MonthlyUtilityService {
         unitUtility.setFloorNumber(floorNumber);
         unitUtility.setBuildingName(buildingName);
 
-        MonthlyUtilityGroupInfo monthlyUtilityGroupInfo = new MonthlyUtilityGroupInfo();
-        unitUtility.setUtilityGroups(monthlyUtilityGroupInfo);
+
+        Map<String, List<MonthlyUtilityUsageSummaryDTO>> utilityGroupName = unitUtilities.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                entity -> entity.getUtility().getUtilityName(),
+                                Collectors.mapping(this::toMonthlyUtilityUsageSummaryDTO, Collectors.toList())
+                        )
+                );
+
+        unitUtility.setUtilityGroupName(utilityGroupName);
 
 
         return unitUtility;
-    }
-
-    public
-
-
-    public MonthlyUtilityGroupNameDTO toMonthlyUtilityNameDTO (List<UnitUtilities> unitUtilities) {
-
-
-        List<MonthlyUtilityUsageSummaryDTO> monthlyUsages = new ArrayList();
-        for (UnitUtilities unitUtility : unitUtilities) {
-
-            String utilityName = unitUtility.getUtility().getUtilityName();
-
-            MonthlyUtilityGroupNameDTO utilityGroupName = new MonthlyUtilityGroupNameDTO();
-            utilityGroupName.setUtilityName(utilityName);
-
-
-            MonthlyUtilityUsageSummaryDTO monthlyUsage = toMonthlyUtilityUsageSummaryDTO(unitUtility);
-            monthlyUsages.add(monthlyUsage);
-            utilityGroupName.setMonthlyUsages(monthlyUsages);
-
-        }
-
-
-        return ;
     }
 
 
