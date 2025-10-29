@@ -38,6 +38,10 @@ public class SupplyTransaction {
     @Column(name = "transaction_type")
     private SupplyTransactionType transactionType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "number_type")
+    private SupplyTransactionNumberType numberType = SupplyTransactionNumberType.positive;
+
     @Column(name = "quantity" , nullable = false)
     private Integer quantity;
 
@@ -48,6 +52,9 @@ public class SupplyTransaction {
 
     public enum SupplyTransactionType {
         purchase,use,adjustment
+    }
+    public enum SupplyTransactionNumberType {
+        negative,positive
     }
 
 

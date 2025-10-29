@@ -10,14 +10,6 @@ import org.springframework.stereotype.Component;
 public class SupplyTransactionMapper {
 
     public SupplyTransactionSummaryResponseDto supplyTransactionSummaryResponseDto(SupplyTransaction supplyTransaction) {
-        String quantityText;
-
-        if (supplyTransaction.getTransactionType() == SupplyTransaction.SupplyTransactionType.adjustment ||
-        supplyTransaction.getTransactionType() == SupplyTransaction.SupplyTransactionType.use) {
-            quantityText = "-" + supplyTransaction.getQuantity();
-        } else {
-            quantityText = "+" + supplyTransaction.getQuantity();
-        }
 
         Maintenance maintenance =  supplyTransaction.getMaintenance();
 
@@ -25,7 +17,8 @@ public class SupplyTransactionMapper {
                 .transactionDate(supplyTransaction.getCreatedAt())
                 .supplyName(supplyTransaction.getSupply().getName())
                 .supplyTransactionType(supplyTransaction.getTransactionType())
-                .quantity(quantityText)
+                .quantity(supplyTransaction.getQuantity())
+                .numberType(supplyTransaction.getNumberType())
                 .note(supplyTransaction.getNote())
                 .changeByUser(supplyTransaction.getApartmentUser().getUser().getFullName())
                 .build();

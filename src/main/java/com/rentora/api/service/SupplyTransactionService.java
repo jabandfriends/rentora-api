@@ -5,6 +5,7 @@ import com.rentora.api.mapper.SupplyTransactionMapper;
 import com.rentora.api.model.dto.Supply.Request.UpdateSupplyRequestDto;
 import com.rentora.api.model.dto.SupplyTransaction.Response.SupplyTransactionSummaryResponseDto;
 import com.rentora.api.model.entity.*;
+import com.rentora.api.repository.ApartmentRepository;
 import com.rentora.api.repository.ApartmentUserRepository;
 import com.rentora.api.repository.SupplyTransactionRepository;
 import com.rentora.api.repository.UserRepository;
@@ -29,6 +30,7 @@ public class SupplyTransactionService {
     private final SupplyTransactionRepository supplyTransactionRepository;
     private final ApartmentUserRepository apartmentUserRepository;
     private final UserRepository userRepository;
+    private final ApartmentRepository  apartmentRepository;
 
     public Page<SupplyTransactionSummaryResponseDto> getSupplyTransactions(UUID apartmentId, String supplyName,
                                                                            SupplyTransaction.SupplyTransactionType category, Pageable pageable) {
@@ -53,11 +55,13 @@ public class SupplyTransactionService {
         int supplyUsage = maintenanceSupply.getQuantityUsed();
         String maintenanceTitle = maintenanceSupply.getMaintenance().getTitle();
         String supplyName = maintenanceSupply.getSupply().getName();
+
         SupplyTransaction supplyTransaction = new SupplyTransaction();
         supplyTransaction.setApartmentUser(apartmentUser);
         supplyTransaction.setMaintenance(maintenanceSupply.getMaintenance());
         supplyTransaction.setSupply(maintenanceSupply.getSupply());
         supplyTransaction.setQuantity(supplyUsage);
+        supplyTransaction.setNumberType(SupplyTransaction.SupplyTransactionNumberType.negative);
         supplyTransaction.setTransactionType(SupplyTransaction.SupplyTransactionType.use);
         supplyTransaction.setNote(maintenanceTitle + " use " + supplyUsage + " " + maintenanceSupply.getSupply().getUnit()
         +" " + "of " + supplyName);
@@ -96,11 +100,33 @@ public class SupplyTransactionService {
 
         if (difference > 0) {
             transaction.setTransactionType(SupplyTransaction.SupplyTransactionType.purchase);
+            transaction.setNumberType(SupplyTransaction.SupplyTransactionNumberType.positive);
             transaction.setNote(supply.getName() + " Added to stock " + difference + " units to stock");
         } else {
             transaction.setTransactionType(SupplyTransaction.SupplyTransactionType.adjustment);
+            transaction.setNumberType(SupplyTransaction.SupplyTransactionNumberType.negative);
             transaction.setNote(supply.getName() + " stock removed " + Math.abs(difference) + " units from stock");
         }
         return transaction;
+    }
+
+    //create custom transaction
+    public void createCustomMaintenanceSupplyTransaction(SupplyTransaction.SupplyTransactionType supplyTransactionType, User user
+    ,Maintenance maintenance , Supply supply , Integer usageValue,String note,UUID apartmentId,
+                                                         SupplyTransaction.SupplyTransactionNumberType numberType) {
+        Apartment apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(()-> new BadRequestException("Apartment User not found"));
+
+        ApartmentUser apartmentUser = apartmentUserRepository.findByApartmentAndUser(apartment, user)
+                .orElseThrow(() -> new BadRequestException("Apartment User not found"));
+        SupplyTransaction supplyTransaction = new SupplyTransaction();
+        supplyTransaction.setSupply(supply);
+        supplyTransaction.setMaintenance(maintenance);
+        supplyTransaction.setTransactionType(supplyTransactionType);
+        supplyTransaction.setNote(note);
+        supplyTransaction.setQuantity(usageValue);
+        supplyTransaction.setApartmentUser(apartmentUser);
+        supplyTransaction.setNumberType(numberType);
+        supplyTransactionRepository.save(supplyTransaction);
     }
 }

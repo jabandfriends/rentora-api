@@ -11,11 +11,12 @@ import java.util.UUID;
 @Builder
 public class SupplyTransactionSummaryResponseDto {
     private LocalDateTime transactionDate;
+    private SupplyTransaction.SupplyTransactionNumberType numberType;
     private String maintenanceNumber;
     private UUID maintenanceId;
     private String supplyName;
     private SupplyTransaction.SupplyTransactionType supplyTransactionType;
-    private String quantity;
+    private Integer quantity;
     private String note;
     private String changeByUser;
 }

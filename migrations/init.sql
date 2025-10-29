@@ -668,6 +668,7 @@ CREATE TABLE IF NOT EXISTS supply_transactions (
    maintenance_request_id UUID REFERENCES maintenance_requests(id),
    apartment_user_id UUID REFERENCES apartment_users(id) ON DELETE SET NULL,
    transaction_type VARCHAR(20) CHECK (transaction_type IN ('purchase', 'use', 'adjustment')),
+    number_type VARCHAR(20) CHECK (number_type IN('negative','positive')),
    quantity INT NOT NULL,
    note TEXT,
    created_at TIMESTAMPTZ DEFAULT NOW()

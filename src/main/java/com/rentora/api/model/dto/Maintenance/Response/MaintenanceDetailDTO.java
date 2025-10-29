@@ -1,9 +1,11 @@
 package com.rentora.api.model.dto.Maintenance.Response;
 
+import com.rentora.api.model.dto.Maintenance.Request.MaintenanceSupplyUsageRequest;
 import com.rentora.api.model.entity.Maintenance;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -53,4 +55,7 @@ public class MaintenanceDetailDTO {
     private Maintenance.RecurringSchedule recurringSchedule;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+
+    //supply usage
+    private List<MaintenanceSupplyResponseDto> suppliesUsage;
 }
