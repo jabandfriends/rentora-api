@@ -9,6 +9,7 @@ public class PaymentMapper {
     public PaymentResponseDto toPaymentResponseDto(Payment payment) {
         return PaymentResponseDto.builder()
                 .paymentId(payment.getId())
+                .paymentNumber(payment.getPaymentNumber())
                 .paymentMethod(payment.getPaymentMethod())
                 .paymentStatus(payment.getPaymentStatus())
                 .verificationStatus(payment.getVerificationStatus())
