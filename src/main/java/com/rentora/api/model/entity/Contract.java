@@ -33,15 +33,6 @@ public class Contract {
     @JoinColumn(name = "tenant_user_id")
     private User tenant;
 
-    @Column(name = "guarantor_name", length = 100)
-    private String guarantorName;
-
-    @Column(name = "guarantor_phone", length = 15)
-    private String guarantorPhone;
-
-    @Column(name = "guarantor_id_number", length = 20)
-    private String guarantorIdNumber;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "rental_type", nullable = false)
     private RentalType rentalType;

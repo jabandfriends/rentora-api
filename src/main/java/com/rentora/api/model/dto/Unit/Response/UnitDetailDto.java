@@ -15,7 +15,7 @@ public class UnitDetailDto {
     private BigDecimal squareMeters;
     private Integer balconyCount;
     private Integer parkingSpaces;
-    private Unit.UnitStatus status;
+    private Unit.UnitStatus unitStatus;
     private Unit.FurnishingStatus furnishingStatus;
     private String floorPlanUrl;
     private String notes;
