@@ -1,7 +1,9 @@
 package com.rentora.api.service;
 
 
+import com.rentora.api.mapper.PaymentMapper;
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.Payment.Response.PaymentMetadata;
 import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
 import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
 import com.rentora.api.model.entity.Payment;
@@ -13,18 +15,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
+
 
 
 @Slf4j
@@ -33,13 +35,30 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class PaymentService {
     private final PaymentRepository paymentRepository;
+    private final PaymentMapper paymentMapper;
 
     //get all payment
-    public List<PaymentResponseDto> getAllPayments(UUID apartmentId,String buildingName ,Payment.PaymentStatus paymentStatus) {
-        Specification<Payment> specification = PaymentSpecification.hasPaymentStatus(paymentStatus).and(PaymentSpecification.hasApartment(apartmentId));
-        List<Payment> payments = paymentRepository.findAll(specification);
+    public Page<PaymentResponseDto> getAllPayments(UUID apartmentId, String buildingName , Payment.PaymentStatus paymentStatus, Pageable pageable) {
+        Specification<Payment> specification = PaymentSpecification.hasPaymentStatus(paymentStatus).and(PaymentSpecification.hasApartment(apartmentId))
+                .and(PaymentSpecification.hasBuilding(buildingName));
+        Page<Payment> payments = paymentRepository.findAll(specification,pageable);
 
-        return payments.stream().map(this::toPaymentResponseDto).toList();
+        return payments.map(paymentMapper::toPaymentResponseDto);
+    }
+
+    //get metadata
+    public PaymentMetadata getPaymentMetadata(UUID apartmentId) {
+        long totalPayment = paymentRepository.countPaymentByApartment(apartmentId);
+        long totalPaymentComplete = paymentRepository.countPaymentByApartmentIdAndStatus(apartmentId, Payment.PaymentStatus.completed);
+        long totalPaymentPending = paymentRepository.countPaymentByApartmentIdAndStatus(apartmentId, Payment.PaymentStatus.pending);
+        long totalPaymentFailed = paymentRepository.countPaymentByApartmentIdAndStatus(apartmentId, Payment.PaymentStatus.failed);
+
+        return PaymentMetadata.builder()
+                .totalPayments(totalPayment)
+                .totalPaymentsComplete(totalPaymentComplete)
+                .totalPaymentsPending(totalPaymentPending)
+                .totalPaymentsFailed(totalPaymentFailed)
+                .build();
     }
 
     public PaymentMonthlyAvenue getMonthlyData(UUID apartmentId) {
@@ -63,17 +82,5 @@ public class PaymentService {
                 .build();
     }
 
-    public PaymentResponseDto toPaymentResponseDto(Payment payment) {
-        return PaymentResponseDto.builder()
-                .paymentId(payment.getId())
-                .paymentMethod(payment.getPaymentMethod())
-                .paymentStatus(payment.getPaymentStatus())
-                .verificationStatus(payment.getVerificationStatus())
-                .amount(payment.getAmount())
-                .tenantName(payment.getInvoice().getTenant().getFullName())
-                .unitName(payment.getInvoice().getUnit().getUnitName())
-                .buildingName(payment.getInvoice().getUnit().getFloor().getBuilding().getName())
-                .floorName(payment.getInvoice().getUnit().getFloor().getFloorName())
-                .build();
-    }
+
 }
