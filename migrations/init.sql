@@ -636,14 +636,14 @@ CREATE TABLE IF NOT EXISTS supplies (
     name VARCHAR(100) NOT NULL,
 
     -- Category as VARCHAR with allowed values
-    category VARCHAR(50) NOT NULL CHECK (category IN ('Electrical', 'Plumbing', 'Cleaning', 'HVAC', 'Painting', 'General')),
+    category VARCHAR(50) NOT NULL CHECK (category IN ('electrical', 'plumbing', 'cleaning', 'hvac', 'painting', 'general')),
 
     description TEXT,
     unit VARCHAR(20) NOT NULL,  -- e.g., pcs, liters, boxes
     stock_quantity INT DEFAULT 0 CHECK (stock_quantity >= 0),
     min_stock INT DEFAULT 5 CHECK (min_stock >= 0), -- alert when below this
     cost_per_unit NUMERIC(10,2) DEFAULT 0 CHECK (cost_per_unit >= 0),
-
+    is_deleted BOOLEAN default false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -668,6 +668,7 @@ CREATE TABLE IF NOT EXISTS supply_transactions (
    maintenance_request_id UUID REFERENCES maintenance_requests(id),
    apartment_user_id UUID REFERENCES apartment_users(id) ON DELETE SET NULL,
    transaction_type VARCHAR(20) CHECK (transaction_type IN ('purchase', 'use', 'adjustment')),
+    number_type VARCHAR(20) CHECK (number_type IN('negative','positive')),
    quantity INT NOT NULL,
    note TEXT,
    created_at TIMESTAMPTZ DEFAULT NOW()
