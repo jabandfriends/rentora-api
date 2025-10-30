@@ -19,6 +19,8 @@ public interface AdhocInvoiceRepository extends JpaRepository<AdhocInvoice, UUID
     Page<AdhocInvoice> findByApartmentIdAndPaymentStatus(UUID apartmentId, AdhocInvoice.PaymentStatus status, Pageable pageable);
 
     List<AdhocInvoice> findByUnit(Unit unit);
+
+    List<AdhocInvoice> findByUnitAndIncludeInMonthlyAndPaymentStatus(Unit unit,Boolean includeInMonthly,AdhocInvoice.PaymentStatus paymentStatus);
 }
 
 
