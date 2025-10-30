@@ -1,11 +1,13 @@
 package com.rentora.api.model.dto.Maintenance.Request;
 
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceSupplyResponseDto;
 import com.rentora.api.model.entity.Maintenance;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -26,19 +28,15 @@ public class UpdateMaintenanceRequest {
     @DecimalMin(value = "0.0", message = "estimatedHours cannot be negative")
     private BigDecimal estimatedHours;
 
-//    @DecimalMin(value = "0.0", message = "actualHours cannot be negative")
-//    private BigDecimal actualHours;
-//
-//    @DecimalMin(value = "0.0", message = "estimatedCost cannot be negative")
-//    private BigDecimal estimatedCost;
-//
-//    @DecimalMin(value = "0.0", message = "actualCost cannot be negative")
-//    private BigDecimal actualCost;
-//
-//    private String workSummary;
-//
-//    private Boolean isEmergency;
-//    private Boolean isRecurring;
+
+    @DecimalMin(value = "0.0", message = "estimatedCost cannot be negative")
+    private BigDecimal estimatedCost;
+
+    private Boolean isEmergency;
+    private Boolean isRecurring;
 //
     private Maintenance.RecurringSchedule recurringSchedule;
+
+    //supply system
+    private List<MaintenanceSupplyResponseDto> suppliesUsage;
 }

@@ -39,7 +39,7 @@ public class ContractController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) Contract.ContractStatus contractStatus,
             @RequestParam(required = false) UUID unitId) {
@@ -101,14 +101,14 @@ public class ContractController {
         return ResponseEntity.ok(ApiResponse.success("Contract updated successfully", contract));
     }
 
-    @PostMapping("/{contractId}/terminate")
+    @PostMapping("/{unitId}/terminate")
     public ResponseEntity<ApiResponse<ContractDetailDto>> terminateContract(
             @PathVariable UUID apartmentId,
-            @PathVariable UUID contractId,
+            @PathVariable UUID unitId,
             @Valid @RequestBody TerminateContractRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ContractDetailDto contract = contractService.terminateContract(contractId, request, currentUser.getId());
+        ContractDetailDto contract = contractService.terminateContract(unitId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Contract terminated successfully", contract));
     }
 }

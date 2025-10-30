@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.MonthlyInvoice.Response;
 
+import com.rentora.api.model.entity.ApartmentPayment;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Utility;
@@ -9,6 +10,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -21,8 +23,6 @@ public class MonthlyInvoiceDetailResponseDto {
     private String tenantName;
     private BigDecimal totalAmount; //rent + utility + service + else
     private Invoice.PaymentStatus paymentStatus;
-
-    //new
 
     private String tenantPhone;
     private String tenantEmail;
@@ -57,5 +57,17 @@ public class MonthlyInvoiceDetailResponseDto {
     private BigDecimal electricTotalCost;
 
     private OffsetDateTime createdAt;
+
+    //apartment method
+    private ApartmentPayment.MethodType apartmentPaymentMethodType;
+    private String bankName;
+    private String bankAccountNumber;
+    private final String accountHolderName;
+    private final String promptpayNumber;
+
+    //serviceList
+    private List<UnitServiceList> serviceList;
+    //adhoc
+    private List<UnitAdhocInvoice> unitAdhocInvoices;
 
 }

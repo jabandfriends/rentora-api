@@ -48,8 +48,12 @@ public class MaintenanceController {
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Maintenance.Status status
-    ) {
+            @RequestParam(required = false) Maintenance.Status status,
+            @RequestParam(required = false) Boolean isRecurring,
+            @RequestParam(required = false) UUID unitId,
+            @RequestParam(required = false) Maintenance.Priority priority
+
+            ) {
 
         int requestedPage = Math.max(page - 1, 0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -60,7 +64,7 @@ public class MaintenanceController {
 
         // Call the service method with the correct parameters
         Page<MaintenanceInfoDTO> response = maintenanceService.getMaintenance(
-                apartmentId, search, status, pageable);
+                apartmentId, search, status,isRecurring,unitId,priority, pageable);
         MaintenanceMetadataResponseDto maintenanceInfoDto = maintenanceService.getMaintenanceMetadata(apartmentId);
 
         // The ApiResponse.success method should be adjusted to accept the correct DTO
@@ -89,11 +93,12 @@ public class MaintenanceController {
 
     @PutMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> updateMaintenance(
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID apartmentId,
             @PathVariable UUID maintenanceId,
             @RequestBody @Valid UpdateMaintenanceRequest request) {
 
-        ExecuteMaintenanceResponse response = maintenanceService.updateMaintenance(maintenanceId, request);
+        ExecuteMaintenanceResponse response = maintenanceService.updateMaintenance(apartmentId,currentUser.getId(),maintenanceId, request);
         return ResponseEntity.ok(ApiResponse.success("Maintenance update successfully", response));
     }
 

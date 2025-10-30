@@ -1,5 +1,6 @@
 package com.rentora.api.repository;
 
+import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.Unit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,7 +25,6 @@ public interface UnitRepository extends JpaRepository<Unit, UUID>, JpaSpecificat
     Page<Unit> findByApartmentId(@Param("apartmentId") UUID apartmentId, Pageable pageable);
 
     Page<Unit> findByFloorId(UUID floorId, Pageable pageable);
-
     @Query("SELECT u FROM Unit u " +
             "JOIN u.floor f " +
             "JOIN f.building b " +
@@ -68,4 +69,9 @@ public interface UnitRepository extends JpaRepository<Unit, UUID>, JpaSpecificat
                                     @Param("status") Unit.UnitStatus status);
 
     boolean existsByFloorIdAndUnitName(UUID floorId, String unitName);
+
+    long countByFloor(Floor floor);
+
+    long countByFloorAndStatus(Floor floor, Unit.UnitStatus status);
+
 }

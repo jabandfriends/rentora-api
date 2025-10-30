@@ -57,4 +57,16 @@ public class MaintenanceSpecification {
     public static Specification<Maintenance> hasStatus(Maintenance.Status status) {
         return (root, query, criteriaBuilder) -> status == null ? null : criteriaBuilder.equal(root.get("status"), status);
     }
+
+    public static Specification<Maintenance> hasRecurring(Boolean isRecurring) {
+        return (root, query, criteriaBuilder) -> isRecurring == null ? null : criteriaBuilder.equal(root.get("isRecurring"), isRecurring);
+    }
+
+    public static Specification<Maintenance> hasUnitId(UUID unitId) {
+        return (root, query, criteriaBuilder) -> unitId == null ? null : criteriaBuilder.equal(root.get("unit").get("id"), unitId);
+    }
+
+    public static Specification<Maintenance> hasPriority(Maintenance.Priority priority) {
+        return (root, query, criteriaBuilder) -> priority == null ? null : criteriaBuilder.equal(root.get("priority"), priority);
+    }
 }

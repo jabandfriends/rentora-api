@@ -56,7 +56,9 @@ public class UnitService {
     }
 
     //get all units with monthly invoice is already created or not filter by date
-    public Page<UnitWithUtilityAndMonthlyInvoiceStatus> getUnitsWithMonthlyInvoiceByBuildingAndDate(String roomNumber, String buildingName, Unit.UnitStatus unitStatus, LocalDate genDate, Pageable pageable) {
+    public Page<UnitWithUtilityAndMonthlyInvoiceStatus> getUnitsWithMonthlyInvoiceByBuildingAndDate(String roomNumber
+            , String buildingName, Unit.UnitStatus unitStatus, LocalDate genDate,Boolean isExceptDailyContract
+            , Pageable pageable) {
 
         Specification<Unit> spec = UnitSpecification.hasStatus(unitStatus).and(UnitSpecification.hasName(roomNumber))
                 .and(UnitSpecification.hasBuildingName(buildingName));
@@ -68,6 +70,21 @@ public class UnitService {
         List<UnitWithUtilityAndMonthlyInvoiceStatus> result = new ArrayList<>();
         for (Unit unit : units.getContent()) {
             boolean isMonthlyCreated = invoiceRepository.findByUnitAndGenMonth(unit, genDate).isPresent();
+            //filter daily
+            Optional<Contract> contractOpt = contractRepository.findActiveContractByUnitId(unit.getId());
+            // skip units with no contract
+            if (contractOpt.isEmpty()) {
+                continue;
+            }
+            Contract activeContract = contractOpt.get();
+
+            // ✅ filter daily contract here
+            if (Boolean.TRUE.equals(isExceptDailyContract)
+                    && activeContract.getRentalType() == Contract.RentalType.daily) {
+                continue;
+            }
+            if(activeContract.getRentalType().equals(Contract.RentalType.daily) && isExceptDailyContract) continue;
+
             List<UnitUtilities> currentUnitUtility = unitUtilityRepository.findByUnitAndUsageMonth(unit,genDate);
             if(currentUnitUtility.isEmpty()){
                 continue;
@@ -144,6 +161,11 @@ public class UnitService {
         // Verify floor exists and user has access
         Floor floor = floorRepository.findById(request.getFloorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Floor not found"));
+
+        long totalCurrentUnitInThisFloor = unitRepository.countByFloor(floor);
+
+        if(totalCurrentUnitInThisFloor >= floor.getTotalUnits()) throw new BadRequestException("Unit this floor already" +
+                "full");
 
         // Check if unit name already exists on this floor
         if (unitRepository.existsByFloorIdAndUnitName(request.getFloorId(), request.getUnitName())) {
@@ -231,6 +253,9 @@ public class UnitService {
         dto.setApartmentName(unit.getFloor().getBuilding().getApartment().getName());
         dto.setCreatedAt(unit.getCreatedAt() != null ? unit.getCreatedAt().toString() : null);
 
+        dto.setBalconyCount(unit.getBalconyCount());
+        dto.setParkingSpaces(unit.getParkingSpaces());
+
 
         // Get current tenant if any
         contractRepository.findActiveContractByUnitId(unit.getId())
@@ -258,7 +283,7 @@ public class UnitService {
         dto.setSquareMeters(unit.getSquareMeters());
         dto.setBalconyCount(unit.getBalconyCount());
         dto.setParkingSpaces(unit.getParkingSpaces());
-        dto.setStatus(unit.getStatus());
+        dto.setUnitStatus(unit.getStatus());
         dto.setFurnishingStatus(unit.getFurnishingStatus());
         dto.setFloorPlanUrl(unit.getFloorPlan());
         dto.setNotes(unit.getNotes());

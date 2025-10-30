@@ -20,4 +20,8 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID>,
     @Query("SELECT COUNT(m) FROM Maintenance m " + "JOIN m.unit u " + "JOIN u.floor f "+ "JOIN f.building b " +
     "WHERE b.apartment.id = :apartmentId")
     long countMaintenanceByApartmentId(@Param("apartmentId") UUID apartmentId);
+
+    @Query("SELECT COUNT(m) FROM Maintenance m " + "JOIN m.unit u " + "JOIN u.floor f "+ "JOIN f.building b " +
+            "WHERE b.apartment.id = :apartmentId AND m.priority = :priority ")
+    long countMaintenanceByApartmentAndPriority(@Param("apartmentId") UUID apartmentId, @Param("priority") Maintenance.Priority priority);
 }

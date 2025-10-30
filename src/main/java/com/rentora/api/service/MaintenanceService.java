@@ -3,18 +3,14 @@ package com.rentora.api.service;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
+import com.rentora.api.model.dto.Maintenance.Request.MaintenanceSupplyUsageRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
-import com.rentora.api.model.entity.Contract;
-import com.rentora.api.model.entity.Maintenance;
-import com.rentora.api.model.entity.Unit;
-import com.rentora.api.model.entity.User;
-import com.rentora.api.repository.ContractRepository;
-import com.rentora.api.repository.MaintenanceRepository;
-import com.rentora.api.repository.UnitRepository;
-import com.rentora.api.repository.UserRepository;
+import com.rentora.api.model.dto.Maintenance.Response.MaintenanceSupplyResponseDto;
+import com.rentora.api.model.entity.*;
+import com.rentora.api.repository.*;
 import com.rentora.api.specifications.MaintenanceSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +23,11 @@ import org.springframework.stereotype.Service;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,12 +36,16 @@ import java.util.UUID;
 public class MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
-    private final UserRepository userRepository;
     private final UnitRepository unitRepository;
-    private final ContractRepository contractRepository;
+    private final MaintenanceSupplyRepository  maintenanceSupplyRepository;
 
-    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Pageable pageable) {
-        Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name));
+    private final MaintenanceSupplyService maintenanceSupplyService;
+
+    public Page<MaintenanceInfoDTO> getMaintenance(UUID apartmentId, String name, Maintenance.Status status, Boolean isRecurring, UUID unitId,
+                                                   Maintenance.Priority priority,Pageable pageable) {
+        Specification<Maintenance> spec = MaintenanceSpecification.hasApartmentId(apartmentId).and(MaintenanceSpecification.hasName(name))
+                .and(MaintenanceSpecification.hasRecurring(isRecurring)).and(MaintenanceSpecification.hasUnitId(unitId))
+                .and(MaintenanceSpecification.hasPriority(priority));
         //status check
         if (status != null) {
             log.info("status: {}", status);
@@ -62,43 +62,17 @@ public class MaintenanceService {
         long totalCompleteMaintenances =  maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.completed, apartmentId);
         long totalPendingMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.pending, apartmentId);
         long totalInprogressMaintenances = maintenanceRepository.countMaintenanceByStatusAndApartmentId(Maintenance.Status.in_progress, apartmentId);
-
+        long totalUrgentMaintenance = maintenanceRepository.countMaintenanceByApartmentAndPriority(apartmentId, Maintenance.Priority.urgent);
 
         return MaintenanceMetadataResponseDto.builder().totalMaintenance(totalMaintenance).completedCount(totalCompleteMaintenances)
-                .pendingCount(totalPendingMaintenances).inProgressCount(totalInprogressMaintenances).build();
+                .pendingCount(totalPendingMaintenances).urgentCount(totalUrgentMaintenance).inProgressCount(totalInprogressMaintenances).build();
 
     }
 
-
-//        List<MaintenanceDetailDTO> maintenanceDTOS = maintenance.map(MaintenanceService::toMaintenanceDetailDto).getContent();
-//        long totalMaintenance = maintenance.getTotalElements();
-//        long pending = maintenance.stream()
-//                .filter(m -> m.getStatus() == Maintenance.Status.pending)
-//                .count();
-//        long in_progress = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.in_progress).count();
-//        long assigned = maintenance.stream().filter(m -> m.getStatus() == Maintenance.Status.assigned).count();
-//
-////        return maintenance.map(maintenances -> {
-////            MaintenanceDetailDTO dto = toMaintenanceDetailDto(maintenances);
-//        // Create the response object and populate it
-//        MaintenancePageResponse response = new MaintenancePageResponse();
-//        response.setMaintenances(maintenanceDTOS);
-//        response.setTotalMaintenance(totalMaintenance);
-//        response.setPendingCount(pending);
-//        response.setAssignedCount(assigned);
-//        response.setInProgressCount(in_progress);
-//        response.setCurrentPage(maintenance.getNumber());
-//        response.setTotalPages(maintenance.getTotalPages());
-//
-//        return response;
-//    };
-
-
-    public ExecuteMaintenanceResponse createMaintenance(UUID createByUserId, CreateMaintenanceRequest request) {
+    public ExecuteMaintenanceResponse createMaintenance(UUID userId, CreateMaintenanceRequest request) {
 
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
-        UUID unitId = unit.getId();
 
         //current ternant base on contract
         List<Contract> contracts = unit.getContracts();
@@ -125,22 +99,60 @@ public class MaintenanceService {
         maintenance.setEstimatedCost(request.getEstimatedCost());
         maintenance.setRequestedDate(LocalDate.now());
         maintenance.setIsEmergency(request.getIsEmergency());
+        maintenance.setIsRecurring(request.getIsRecurring());
+        if(request.getRecurringSchedule() != null ) {
+            maintenance.setRecurringSchedule(request.getRecurringSchedule());
+        }
         if (request.getStatus() != null) {
             maintenance.setStatus(request.getStatus());
         }
 
+
+
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
+
+        //save maintenance supply usage
+        request.getSuppliesUsage().forEach(supply -> {
+            maintenanceSupplyService.maintenanceUseSupply(maintenance,supply.getSupplyId(),supply.getSupplyUsedQuantity(),userId);
+        });
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
     }
 
-    public ExecuteMaintenanceResponse updateMaintenance(UUID maintenanceId, UpdateMaintenanceRequest request) {
+    public ExecuteMaintenanceResponse updateMaintenance(UUID apartmentId,UUID userId,UUID maintenanceId, UpdateMaintenanceRequest request) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId).orElseThrow(() -> new ResourceNotFoundException("Maintenance not found"));
+        List<MaintenanceSupply> beforeMaintenanceData = maintenanceSupplyRepository.findByMaintenance(maintenance);
+
+
+        List<MaintenanceSupplyResponseDto> currentMaintenance = request.getSuppliesUsage();
+
+        // Track current IDs for deletion check
+        Set<UUID> currentMaintenanceSupplyIds = currentMaintenance.stream()
+                .map(MaintenanceSupplyResponseDto::getMaintenanceSupplyId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Handle new + updated
+        for (MaintenanceSupplyResponseDto current : currentMaintenance) {
+            if (current.getMaintenanceSupplyId() == null) {
+                //save maintenance supply usage
+                maintenanceSupplyService.maintenanceUseSupply(maintenance,current.getSupplyId(),current.getSupplyUsedQuantity(),userId);
+            } else {
+                // Existing record → UPDATE
+                maintenanceSupplyService.maintenanceUpdateSupply(apartmentId,current.getMaintenanceSupplyId(),
+                        current.getSupplyId(),current.getSupplyUsedQuantity(),userId);
+            }
+        }
+
+        List<MaintenanceSupply> toDeleteMaintenanceSupply = beforeMaintenanceData.stream()
+                .filter(before -> !currentMaintenanceSupplyIds.contains(before.getId()))
+                .toList();
+        maintenanceSupplyService.removeMaintenanceList(apartmentId, toDeleteMaintenanceSupply, userId);
+        maintenanceSupplyRepository.deleteAll(toDeleteMaintenanceSupply);
 
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
-        String unitName = unit.getUnitName();
 
         if (request.getTitle() != null) maintenance.setTitle(request.getTitle());
         if (request.getDescription() != null) maintenance.setDescription(request.getDescription());
@@ -152,6 +164,46 @@ public class MaintenanceService {
         if (request.getEstimatedHours() != null) maintenance.setEstimatedHours(request.getEstimatedHours());
         if (request.getRecurringSchedule() != null) maintenance.setRecurringSchedule(request.getRecurringSchedule());
         if (request.getUnitId() != null) maintenance.setUnit(unit);
+        if (request.getEstimatedCost() != null) maintenance.setEstimatedCost(request.getEstimatedCost());
+        if(request.getIsEmergency() != null) maintenance.setIsEmergency(request.getIsEmergency());
+        if(request.getIsRecurring() != null) maintenance.setIsRecurring(request.getIsRecurring());
+
+        if(request.getIsRecurring() != null && !request.getIsRecurring()) {
+            maintenance.setRecurringSchedule(null);
+        }
+        if (Boolean.TRUE.equals(request.getIsRecurring()) && request.getStatus().equals(Maintenance.Status.completed)) {
+            Maintenance.RecurringSchedule schedule = maintenance.getRecurringSchedule();
+
+            if (schedule != null && maintenance.getAppointmentDate() != null) {
+                // Assuming appointmentDate is LocalDateTime
+                OffsetDateTime currentDateTime = maintenance.getAppointmentDate();
+                OffsetDateTime offsetDateTime = currentDateTime; // start from current
+
+                switch (schedule) {
+                    case weekly:
+                        offsetDateTime = currentDateTime.plusWeeks(1);
+                        break;
+
+                    case monthly:
+                        offsetDateTime = currentDateTime.plusMonths(1);
+                        break;
+
+                    case quarterly:
+                        offsetDateTime = currentDateTime.plusMonths(3);
+                        break;
+
+                    case yearly:
+                        offsetDateTime = currentDateTime.plusYears(1);
+                        break;
+
+                    default:
+                        maintenance.setRecurringSchedule(null);
+                        break;
+                }
+                maintenance.setStatus(Maintenance.Status.pending);
+                maintenance.setAppointmentDate(offsetDateTime);
+            }
+        }
 
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
         log.info("Maintenance updated: {}", savedMaintenance.getTitle());
@@ -168,18 +220,37 @@ public class MaintenanceService {
             log.info("maintenance deleted: {}", maintenance.getTitle());
         }
 
+
     public MaintenanceDetailDTO getMaintenanceById(UUID maintenanceId) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
         return toMaintenanceDetailDto(maintenance);
     }
 
+    public MaintenanceSupplyResponseDto toMaintenanceSupply(MaintenanceSupply maintenanceSupply) {
+        return MaintenanceSupplyResponseDto.builder()
+                .maintenanceSupplyId(maintenanceSupply.getId())
+                .supplyUsedQuantity(maintenanceSupply.getQuantityUsed())
+
+                //supply
+                .supplyId(maintenanceSupply.getSupply().getId())
+                .supplyName(maintenanceSupply.getSupply().getName())
+                .supplyDescription(maintenanceSupply.getSupply().getDescription())
+                .supplyCategory(maintenanceSupply.getSupply().getCategory())
+                .supplyUnitPrice(maintenanceSupply.getSupply().getCostPerUnit())
+                .supplyUnit(maintenanceSupply.getSupply().getUnit())
+                .build();
+    }
     public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
 
         if (maintenance == null) {
             return dto;
         }
+        List<MaintenanceSupply> maintenanceSupplies = maintenanceSupplyRepository.findByMaintenance(maintenance);
+        List<MaintenanceSupplyResponseDto> maintenanceSupply = maintenanceSupplies.stream().map(this::toMaintenanceSupply).toList();
+
+        dto.setSuppliesUsage(maintenanceSupply);
 
         // --- Basic Maintenance Info ---
         dto.setId(maintenance.getId());
@@ -274,10 +345,15 @@ public class MaintenanceService {
         dto.setStatus(maintenance.getStatus());
         dto.setPriority(maintenance.getPriority());
 
-
+        //recurring
+        dto.setIsRecurring(maintenance.getIsRecurring());
+        dto.setRecurringSchedule(maintenance.getRecurringSchedule());
+        dto.setCreatedAt(maintenance.getCreatedAt());
 
 
         return dto;
 
     }
+
+
 }

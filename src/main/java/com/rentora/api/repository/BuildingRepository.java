@@ -32,4 +32,5 @@ public interface BuildingRepository extends JpaRepository<Building, UUID> {
     long countByApartmentId(UUID apartmentId);
 
     boolean existsByApartmentIdAndName(UUID apartmentId, String name);
+
 }

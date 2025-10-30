@@ -1,16 +1,19 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
+import com.rentora.api.model.dto.Apartment.Metadata.UpdateApartmentPaymentRequestDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
+import com.rentora.api.model.dto.Apartment.Response.ApartmentPaymentSummaryResponseDto;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
 import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.repository.ApartmentRepository;
 import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.ApartmentService;
 import jakarta.validation.Valid;
@@ -26,6 +29,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -36,7 +41,6 @@ public class ApartmentController {
 
 
     private final ApartmentService apartmentService;
-
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<ApartmentSummaryDTO>>> getApartments(
             @AuthenticationPrincipal UserPrincipal currentUser,
@@ -104,5 +108,43 @@ public class ApartmentController {
     public ResponseEntity<ApiResponse<Void>> setupApartment(@PathVariable UUID apartmentId , @Valid @RequestBody SetupApartmentRequest request, @AuthenticationPrincipal UserPrincipal currentUser) {
         apartmentService.apartmentSetup(apartmentId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Apartment setup successfully", null));
+    }
+
+    //get apartment all payment
+    @GetMapping("/{apartmentId}/payment")
+    public ResponseEntity<ApiResponse<List<ApartmentPaymentSummaryResponseDto>>> getApartmentPayments(
+            @PathVariable UUID apartmentId
+    ){
+       List<ApartmentPaymentSummaryResponseDto> apartmentPayments = apartmentService.getApartmentPayments(apartmentId);
+       return ResponseEntity.ok(ApiResponse.success(apartmentPayments));
+    }
+
+    //get apartment payment by id
+    @GetMapping("/payment/{paymentId}")
+    public ResponseEntity<ApiResponse<ApartmentPaymentSummaryResponseDto>> getApartmentPaymentById(
+            @PathVariable UUID paymentId
+    ){
+        ApartmentPaymentSummaryResponseDto apartmentPayment = apartmentService.getApartmentPaymentById(paymentId);
+        return ResponseEntity.ok(ApiResponse.success(apartmentPayment));
+    }
+
+    @GetMapping("/{apartmentId}/payment/active")
+    public ResponseEntity<ApiResponse<ApartmentPaymentSummaryResponseDto>> getActiveApartmentPaymentById(
+            @PathVariable UUID apartmentId
+    ){
+        ApartmentPaymentSummaryResponseDto apartmentPayment = apartmentService.getActiveApartmentPaymentById(apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(apartmentPayment));
+    }
+
+    @PutMapping("/payment/{paymentId}")
+    public ResponseEntity<ApiResponse<Objects>> updateApartmentPayment(@PathVariable UUID paymentId, UpdateApartmentPaymentRequestDto request){
+        apartmentService.updateApartmentPayment(paymentId, request);
+        return ResponseEntity.ok(ApiResponse.success("success", null));
+    }
+
+    @DeleteMapping("/payment/{paymentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteApartmentPayment(@PathVariable UUID paymentId){
+        apartmentService.deleteApartmentPayment(paymentId);
+        return ResponseEntity.ok(ApiResponse.success("success", null));
     }
 }

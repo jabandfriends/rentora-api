@@ -42,7 +42,6 @@ public class ApartmentPayment {
     @Column(name = "promptpay_qr_url")
     private String promptpayQrUrl;
 
-
     private String instructions;
 
     @Column(name = "is_active" )
@@ -56,7 +55,7 @@ public class ApartmentPayment {
     private User createdBy;
 
     public enum MethodType {
-      bank_transfer,promptpay,credit_card,cash,cheque
+      bank_transfer,promptpay
     }
 
 }
