@@ -43,28 +43,9 @@ public class Unit {
         apartment,studio,penthouse,commercial
     }
 
-    private Integer bedrooms = 1;
-
-    private BigDecimal bathrooms;
-
-    @Column(name = "square_meters")
-    private BigDecimal squareMeters;
-
-    @Column(name = "balcony_count")
-    private Integer balconyCount = 0;
-
-    @Column(name = "parking_spaces")
-    private Integer parkingSpaces = 0;
 
     @Enumerated(EnumType.STRING)
     private UnitStatus status = UnitStatus.available;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "furnishing_status")
-    private FurnishingStatus furnishingStatus;
-
-    @Column(name = "floor_plan_url")
-    private String floorPlan;
 
     private String notes;
 

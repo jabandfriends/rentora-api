@@ -10,14 +10,8 @@ public class UnitDetailDto {
     private String id;
     private String unitName;
     private Unit.UnitType unitType;
-    private Integer bedrooms;
-    private BigDecimal bathrooms;
-    private BigDecimal squareMeters;
-    private Integer balconyCount;
-    private Integer parkingSpaces;
+
     private Unit.UnitStatus unitStatus;
-    private Unit.FurnishingStatus furnishingStatus;
-    private String floorPlanUrl;
     private String notes;
     private String floorId;
     private String floorName;
