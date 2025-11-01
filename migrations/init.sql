@@ -142,14 +142,7 @@ CREATE TABLE IF NOT EXISTS units (
     floor_id UUID REFERENCES floors(id) ON DELETE CASCADE,
     unit_name VARCHAR(50) NOT NULL,
     unit_type VARCHAR(20) DEFAULT 'apartment', -- apartment, studio, penthouse, commercial
-    bedrooms INTEGER DEFAULT 1,
-    bathrooms NUMERIC(2,1) DEFAULT 1,
-    square_meters NUMERIC(8,2),
-    balcony_count INTEGER DEFAULT 0,
-    parking_spaces INTEGER DEFAULT 0,
     status VARCHAR(20) DEFAULT 'available' CHECK (status IN ('available', 'occupied', 'maintenance', 'reserved')),
-    furnishing_status VARCHAR(20) DEFAULT 'unfurnished' CHECK (furnishing_status IN ('furnished', 'semi_furnished', 'unfurnished')),
-    floor_plan_url TEXT,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -893,14 +886,11 @@ BEGIN
     SELECT id INTO v_floor_id FROM floors WHERE floor_number = 1;
 
     FOR i IN 1..12 LOOP
-            INSERT INTO units (id, floor_id, unit_name, bedrooms, bathrooms, square_meters, status)
+            INSERT INTO units (id, floor_id, unit_name, status)
             VALUES (
                        gen_random_uuid(),
                        v_floor_id,
                        FORMAT('A1-%02s', i),
-                       1,
-                       1,
-                       35.00,
                        'available'
                    );
         END LOOP;
@@ -917,14 +907,11 @@ BEGIN
     SELECT id INTO v_floor_id FROM floors WHERE floor_number = 2;
 
     FOR i IN 1..12 LOOP
-            INSERT INTO units (id, floor_id, unit_name, bedrooms, bathrooms, square_meters, status)
+            INSERT INTO units (id, floor_id, unit_name, status)
             VALUES (
                        gen_random_uuid(),
                        v_floor_id,
                        FORMAT('A2-%02s', i),
-                       1,
-                       1,
-                       35.00,
                        'available'
                    );
         END LOOP;

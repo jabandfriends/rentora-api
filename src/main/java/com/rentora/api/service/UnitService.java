@@ -176,14 +176,7 @@ public class UnitService {
         unit.setFloor(floor);
         unit.setUnitName(request.getUnitName());
         unit.setUnitType(request.getUnitType());
-        unit.setBedrooms(request.getBedrooms());
-        unit.setBathrooms(request.getBathrooms());
-        unit.setSquareMeters(request.getSquareMeters());
-        unit.setBalconyCount(request.getBalconyCount());
-        unit.setParkingSpaces(request.getParkingSpaces());
         unit.setStatus(Unit.UnitStatus.available);
-        unit.setFurnishingStatus(request.getFurnishingStatus());
-        unit.setFloorPlan(request.getFloorPlanUrl());
         unit.setNotes(request.getNotes());
 
         Unit savedUnit = unitRepository.save(unit);
@@ -206,14 +199,7 @@ public class UnitService {
             unit.setUnitName(request.getUnitName());
         }
         if (request.getUnitType() != null) unit.setUnitType(request.getUnitType());
-        if (request.getBedrooms() != null) unit.setBedrooms(request.getBedrooms());
-        if (request.getBathrooms() != null) unit.setBathrooms(request.getBathrooms());
-        if (request.getSquareMeters() != null) unit.setSquareMeters(request.getSquareMeters());
-        if (request.getBalconyCount() != null) unit.setBalconyCount(request.getBalconyCount());
-        if (request.getParkingSpaces() != null) unit.setParkingSpaces(request.getParkingSpaces());
         if (request.getStatus() != null) unit.setStatus(request.getStatus());
-        if (request.getFurnishingStatus() != null) unit.setFurnishingStatus(request.getFurnishingStatus());
-        if (request.getFloorPlanUrl() != null) unit.setFloorPlan(request.getFloorPlanUrl());
         if (request.getNotes() != null) unit.setNotes(request.getNotes());
 
         Unit savedUnit = unitRepository.save(unit);
@@ -243,18 +229,14 @@ public class UnitService {
         dto.setId(unit.getId().toString());
         dto.setUnitName(unit.getUnitName());
         dto.setUnitType(unit.getUnitType());
-        dto.setBedrooms(unit.getBedrooms());
-        dto.setBathrooms(unit.getBathrooms());
-        dto.setSquareMeters(unit.getSquareMeters());
+
         dto.setUnitStatus(unit.getStatus());
-        dto.setFurnishingStatus(unit.getFurnishingStatus());
         dto.setFloorName(unit.getFloor().getFloorName());
         dto.setBuildingName(unit.getFloor().getBuilding().getName());
         dto.setApartmentName(unit.getFloor().getBuilding().getApartment().getName());
         dto.setCreatedAt(unit.getCreatedAt() != null ? unit.getCreatedAt().toString() : null);
 
-        dto.setBalconyCount(unit.getBalconyCount());
-        dto.setParkingSpaces(unit.getParkingSpaces());
+
 
 
         // Get current tenant if any
@@ -278,14 +260,7 @@ public class UnitService {
         dto.setId(unit.getId().toString());
         dto.setUnitName(unit.getUnitName());
         dto.setUnitType(unit.getUnitType());
-        dto.setBedrooms(unit.getBedrooms());
-        dto.setBathrooms(unit.getBathrooms());
-        dto.setSquareMeters(unit.getSquareMeters());
-        dto.setBalconyCount(unit.getBalconyCount());
-        dto.setParkingSpaces(unit.getParkingSpaces());
         dto.setUnitStatus(unit.getStatus());
-        dto.setFurnishingStatus(unit.getFurnishingStatus());
-        dto.setFloorPlanUrl(unit.getFloorPlan());
         dto.setNotes(unit.getNotes());
         dto.setFloorId(unit.getFloor().getId().toString());
         dto.setFloorName(unit.getFloor().getFloorName());
