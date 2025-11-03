@@ -93,11 +93,12 @@ public class MaintenanceController {
 
     @PutMapping("/{maintenanceId}")
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> updateMaintenance(
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID apartmentId,
             @PathVariable UUID maintenanceId,
             @RequestBody @Valid UpdateMaintenanceRequest request) {
 
-        ExecuteMaintenanceResponse response = maintenanceService.updateMaintenance(maintenanceId, request);
+        ExecuteMaintenanceResponse response = maintenanceService.updateMaintenance(apartmentId,currentUser.getId(),maintenanceId, request);
         return ResponseEntity.ok(ApiResponse.success("Maintenance update successfully", response));
     }
 

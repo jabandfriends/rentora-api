@@ -1,5 +1,6 @@
 package com.rentora.api.service;
 
+import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.UnitService.Request.CreateUnitServiceRequest;
 import com.rentora.api.model.dto.UnitService.Response.ExecuteUnitServiceResponse;
@@ -55,6 +56,9 @@ public class UnitServiceService {
 
         ServiceEntity service = apartmentServiceRepository.findById(request.getServiceId()) // สมมติว่า Request มี getServiceId()
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: " + request.getServiceId()));
+
+        Optional<UnitServiceEntity> unitService = unitServiceRepository.findByUnitIdAndServiceEntityId(unitId,request.getServiceId());
+        if(unitService.isPresent()) throw new BadRequestException("This service already exists in this units.");
 
         UnitServiceEntity unitServiceEntity = new  UnitServiceEntity();
 

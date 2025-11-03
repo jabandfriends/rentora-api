@@ -39,7 +39,7 @@ public class ContractController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) Contract.ContractStatus contractStatus,
             @RequestParam(required = false) UUID unitId) {

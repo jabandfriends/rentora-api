@@ -1,5 +1,6 @@
 package com.rentora.api.repository;
 
+import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.model.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,4 +46,11 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpec
           AND p.paymentStatus = 'pending'
     """)
     BigDecimal getPendingPaymentByApartment(@Param("apartmentId") UUID apartmentId);
+
+    @Query("SELECT COUNT(p) FROM Payment p WHERE p.invoice.apartment.id = :apartmentId")
+    long countPaymentByApartment(@Param("apartmentId") UUID apartmentId);
+
+    @Query("SELECT COUNT(p) FROM Payment p WHERE p.invoice.apartment.id = :apartmentId AND p.paymentStatus = :paymentStatus")
+    long countPaymentByApartmentIdAndStatus(@Param("apartmentId") UUID apartmentId,
+                                            @Param("paymentStatus") Payment.PaymentStatus paymentStatus);
 }

@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/apartments/{apartmentId}/all-room/detail/{unitId}")
+@RequestMapping("/api/apartments/unit/service")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UnitServiceController {
 
@@ -30,9 +30,8 @@ public class UnitServiceController {
     private final UnitRepository unitRepository;
 
 
-    @GetMapping
+    @GetMapping("/{unitId}")
     public ResponseEntity<ApiResponse<List<UnitServiceInfoDTO>>> getUnitServicesByUnit(
-            @PathVariable UUID apartmentId,
             @PathVariable UUID unitId) {
 
         List<UnitServiceInfoDTO> serviceList  = unitServiceService.getUnitServicesByUnit(unitId);
@@ -40,7 +39,7 @@ public class UnitServiceController {
         return ResponseEntity.ok(ApiResponse.success(serviceList));
     }
 
-    @PostMapping
+    @PostMapping("/{unitId}")
     public ResponseEntity<ApiResponse<ExecuteUnitServiceResponse>> createUnitService(
             @PathVariable UUID unitId,
             @Valid @RequestBody CreateUnitServiceRequest request){
@@ -52,7 +51,6 @@ public class UnitServiceController {
 
     @DeleteMapping
     public ResponseEntity<ApiResponse<ExecuteUnitServiceResponse>> deleteUnitService(
-            @PathVariable UUID unitId,
             @RequestParam UUID unitServiceId
             ) {
         unitServiceService.deleteUnitService(unitServiceId);

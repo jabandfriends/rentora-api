@@ -43,8 +43,8 @@ public class UnitController {
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "unitName") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) Unit.UnitStatus status,
             @RequestParam(required = false) Unit.UnitType unitType,
             @RequestParam(required = false) String buildingName,
@@ -76,7 +76,7 @@ public class UnitController {
             @RequestParam(required = false) Unit.UnitStatus status,
             @RequestParam LocalDate readingDate,
             @RequestParam(required = false) String buildingName,
-
+            @RequestParam(defaultValue = "false") Boolean isExceptDailyContract,
             @RequestParam(required = false) String roomNumber) {
 
         int requestPage = Math.max(page-1,0);
@@ -88,7 +88,7 @@ public class UnitController {
         Pageable pageable = PageRequest.of(requestPage, size, sort);
 
         Page<UnitWithUtilityAndMonthlyInvoiceStatus> units = unitService.getUnitsWithMonthlyInvoiceByBuildingAndDate(
-               roomNumber,buildingName,status,readingDate, pageable);
+               roomNumber,buildingName,status,readingDate,isExceptDailyContract, pageable);
 
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(units,page)));

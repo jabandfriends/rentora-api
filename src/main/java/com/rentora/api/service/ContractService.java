@@ -40,9 +40,7 @@ public class ContractService {
 
     private final UserRepository userRepository;
 
-    private final UnitUtilityRepository unitUtilityRepository;
 
-    private final UtilityRepository utilityRepository;
 
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
@@ -109,17 +107,19 @@ public class ContractService {
         Contract contract = new Contract();
         contract.setUnit(unit);
         contract.setTenant(tenant);
-        contract.setGuarantorName(request.getGuarantorName());
-        contract.setGuarantorPhone(request.getGuarantorPhone());
-        contract.setGuarantorIdNumber(request.getGuarantorIdNumber());
         contract.setRentalType(request.getRentalType());
         contract.setStartDate(request.getStartDate());
         contract.setEndDate(request.getEndDate());
         contract.setRentalPrice(request.getRentalPrice());
         contract.setDepositAmount(request.getDepositAmount());
         contract.setAdvancePaymentMonths(request.getAdvancePaymentMonths());
-        contract.setLateFeeAmount(request.getLateFeeAmount());
-        contract.setUtilitiesIncluded(request.getUtilitiesIncluded());
+        contract.setLateFeeAmount(unit.getFloor().getBuilding().getApartment().getLateFee());
+        if(request.getRentalType().equals(Contract.RentalType.daily)){
+            contract.setUtilitiesIncluded(false);
+        }else{
+            contract.setUtilitiesIncluded(true);
+        }
+
         contract.setTermsAndConditions(request.getTermsAndConditions());
         contract.setSpecialConditions(request.getSpecialConditions());
         contract.setStatus(Contract.ContractStatus.active);
@@ -133,8 +133,6 @@ public class ContractService {
 
         //electric start meter
         contract.setElectricityMeterStartReading(request.getElectricMeterStart());
-
-
 
         Contract savedContract = contractRepository.save(contract);
 
@@ -153,15 +151,11 @@ public class ContractService {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-        if (request.getGuarantorName() != null) contract.setGuarantorName(request.getGuarantorName());
-        if (request.getGuarantorPhone() != null) contract.setGuarantorPhone(request.getGuarantorPhone());
-        if (request.getGuarantorIdNumber() != null) contract.setGuarantorIdNumber(request.getGuarantorIdNumber());
+
         if (request.getEndDate() != null) contract.setEndDate(request.getEndDate());
         if (request.getRentalPrice() != null) contract.setRentalPrice(request.getRentalPrice());
         if (request.getDepositAmount() != null) contract.setDepositAmount(request.getDepositAmount());
         if (request.getAdvancePaymentMonths() != null) contract.setAdvancePaymentMonths(request.getAdvancePaymentMonths());
-        if (request.getLateFeeAmount() != null) contract.setLateFeeAmount(request.getLateFeeAmount());
-        if (request.getUtilitiesIncluded() != null) contract.setUtilitiesIncluded(request.getUtilitiesIncluded());
         if (request.getTermsAndConditions() != null) contract.setTermsAndConditions(request.getTermsAndConditions());
         if (request.getSpecialConditions() != null) contract.setSpecialConditions(request.getSpecialConditions());
         if (request.getAutoRenewal() != null) contract.setAutoRenewal(request.getAutoRenewal());
@@ -243,9 +237,6 @@ public class ContractService {
             dto.setTenantPhone(contract.getTenant().getPhoneNumber());
         }
 
-        dto.setGuarantorName(contract.getGuarantorName());
-        dto.setGuarantorPhone(contract.getGuarantorPhone());
-        dto.setGuarantorIdNumber(contract.getGuarantorIdNumber());
         dto.setRentalType(contract.getRentalType());
         dto.setStartDate(contract.getStartDate() != null ? contract.getStartDate().toString() : null);
         dto.setEndDate(contract.getEndDate() != null ? contract.getEndDate().toString() : null);
@@ -284,7 +275,7 @@ public class ContractService {
             LocalDate end = contract.getEndDate();
 
             // Contract duration in days
-            int durationDays = (int) ChronoUnit.DAYS.between(start, end) + 1; // +1 to include start day
+            int durationDays = (int) ChronoUnit.DAYS.between(start, end);// +1 to include start day
             dto.setContractDurationDays(durationDays);
 
             // Days until expiry
