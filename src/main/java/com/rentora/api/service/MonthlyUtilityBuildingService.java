@@ -29,22 +29,17 @@ public class MonthlyUtilityBuildingService {
 
     private final MonthlyUtilityBuildingRepository monthlyUtilityBuildingRepository;
 
-    // 1. Public Method: รับ Apartment Entity และส่ง ResponseEntity กลับ
-    public ResponseEntity<ApiResponse<Map<UUID, MonthlyUtilityBuildingDetailDTO>>> getApartmentUtilitySummaryByBuilding(Apartment apartment) {
+    public Map<UUID, MonthlyUtilityBuildingDetailDTO> getApartmentUtilitySummaryByBuilding(Apartment apartment) {
 
         List<UnitUtilities> entities = monthlyUtilityBuildingRepository
                 .findAllByUnit_Floor_Building_Apartment(apartment);
 
         if (entities.isEmpty()) {
-            return ResponseEntity.ok(ApiResponse.success(
-                    "Apartment found, but no utility data retrieved for any building.",
-                    Collections.emptyMap()
-            ));
+            return Collections.emptyMap();
         }
 
-        Map<UUID, MonthlyUtilityBuildingDetailDTO> summaryMap = entities.stream()
+        return entities.stream()
                 .collect(
-                        // Grouping 1: Group By Building Object (Key for final Map)
                         Collectors.groupingBy(
                                 entity -> entity.getUnit().getFloor().getBuilding(),
                                 Collectors.collectingAndThen(
@@ -58,11 +53,6 @@ public class MonthlyUtilityBuildingService {
                         entry -> entry.getKey().getId(),
                         Map.Entry::getValue
                 ));
-
-        return ResponseEntity.ok(ApiResponse.success(
-                "Successfully retrieved building utility summary for all buildings in apartment.",
-                summaryMap
-        ));
     }
 
     private MonthlyUtilityBuildingDetailDTO processBuildingUtilities(
@@ -76,7 +66,6 @@ public class MonthlyUtilityBuildingService {
         return toMonthlyUtilityDetailDTO(building, aggregatedData);
     }
 
-    // 3. Helper Method: Logic การรวม (SUM) Usage Amount
     private Map<String, Map<LocalDate, BigDecimal>> aggregateUtilitiesByMonthAndType(
             List<UnitUtilities> unitUtilities) {
 

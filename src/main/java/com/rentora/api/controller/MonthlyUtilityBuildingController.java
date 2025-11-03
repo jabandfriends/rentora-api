@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Collections;
 
+import static com.rentora.api.model.entity.Unit.UnitType.apartment;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/apartment/{apartmentId}")
@@ -38,6 +40,18 @@ public class MonthlyUtilityBuildingController {
                         HttpStatus.NOT_FOUND,
                         "Apartment not found with ID: " + apartmentId));
 
-        return monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment);
+        Map<UUID, MonthlyUtilityBuildingDetailDTO> summaryMap =
+                monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment);
+
+        if (summaryMap.isEmpty()) {
+            return ResponseEntity.ok(ApiResponse.success(
+                    "Apartment found, but no building.",
+                    Collections.emptyMap()
+            ));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(
+                summaryMap
+        ));
     }
 }
