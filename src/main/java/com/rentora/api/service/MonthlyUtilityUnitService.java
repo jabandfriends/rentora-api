@@ -1,9 +1,9 @@
 package com.rentora.api.service;
 
-import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityUnitDetailDTO;
-import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityUsageSummaryDTO;
+import com.rentora.api.model.dto.MonthlyUtilityUnit.Response.MonthlyUtilityUnitDetailDTO;
+import com.rentora.api.model.dto.MonthlyUtilityUnit.Response.MonthlyUtilityUsageSummaryDTO;
 import com.rentora.api.model.entity.UnitUtilities;
-import com.rentora.api.repository.MonthlyUtilityRepository;
+import com.rentora.api.repository.MonthlyUtilityUnitRepository;
 import com.rentora.api.repository.UnitUtilityRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class MonthlyUtilityService {
+public class MonthlyUtilityUnitService {
 
-    private final MonthlyUtilityRepository monthlyUtilityRepository;
+    private final MonthlyUtilityUnitRepository monthlyUtilityUnitRepository;
     private final UnitUtilityRepository unitUtilityRepository;
 
     public MonthlyUtilityUnitDetailDTO getMonthlyUtilitySummary(UUID unitId) {
 
-        List<UnitUtilities> entities = monthlyUtilityRepository.findAllByUnitId(unitId);
+        List<UnitUtilities> entities = monthlyUtilityUnitRepository.findAllByUnitId(unitId);
 
         if (entities.isEmpty()) {
             return null;

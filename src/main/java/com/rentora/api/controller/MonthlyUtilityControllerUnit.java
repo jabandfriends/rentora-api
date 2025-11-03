@@ -2,9 +2,9 @@ package com.rentora.api.controller;
 
 
 import com.rentora.api.model.dto.ApiResponse;
-import com.rentora.api.model.dto.MonthlyUnitlity.Response.MonthlyUtilityUnitDetailDTO;
+import com.rentora.api.model.dto.MonthlyUtilityUnit.Response.MonthlyUtilityUnitDetailDTO;
 
-import com.rentora.api.service.MonthlyUtilityService;
+import com.rentora.api.service.MonthlyUtilityUnitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +20,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/apartment/{apartmentId}/monthly-utility")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class MonthlyUtilityController {
-    private final MonthlyUtilityService monthlyUtilityService;
+public class MonthlyUtilityControllerUnit {
+    private final MonthlyUtilityUnitService monthlyUtilityService;
 
     @GetMapping("/{unitId}")
     public ResponseEntity<ApiResponse<MonthlyUtilityUnitDetailDTO>> getUnitUtilitiesSummary(

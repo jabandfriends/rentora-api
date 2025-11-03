@@ -1,4 +1,4 @@
-package com.rentora.api.model.dto.MonthlyUnitlity.Response;
+package com.rentora.api.model.dto.MonthlyUtilityUnit.Response;
 
 import lombok.Data;
 

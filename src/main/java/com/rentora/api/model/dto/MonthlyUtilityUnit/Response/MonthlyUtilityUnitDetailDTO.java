@@ -1,6 +1,5 @@
-package com.rentora.api.model.dto.MonthlyUnitlity.Response;
+package com.rentora.api.model.dto.MonthlyUtilityUnit.Response;
 
-import com.rentora.api.model.entity.Floor;
 import lombok.Data;
 
 import java.util.List;
