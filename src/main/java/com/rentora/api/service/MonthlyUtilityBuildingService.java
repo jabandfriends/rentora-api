@@ -1,6 +1,5 @@
 package com.rentora.api.service;
 
-import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.MonthlyUtilityBuilding.Response.MonthlyUtilityBuildingDetailDTO;
 import com.rentora.api.model.dto.MonthlyUtilityBuilding.Response.MonthlyUtilityBuildingUsageSummary;
 import com.rentora.api.model.entity.Apartment;
@@ -11,8 +10,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,16 +26,16 @@ public class MonthlyUtilityBuildingService {
 
     private final MonthlyUtilityBuildingRepository monthlyUtilityBuildingRepository;
 
-    public Map<UUID, MonthlyUtilityBuildingDetailDTO> getApartmentUtilitySummaryByBuilding(Apartment apartment) {
+    public List<MonthlyUtilityBuildingDetailDTO> getApartmentUtilitySummaryByBuilding(Apartment apartment) {
 
         List<UnitUtilities> entities = monthlyUtilityBuildingRepository
                 .findAllByUnit_Floor_Building_Apartment(apartment);
 
         if (entities.isEmpty()) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
 
-        return entities.stream()
+        return new ArrayList<>(entities.stream()
                 .collect(
                         Collectors.groupingBy(
                                 entity -> entity.getUnit().getFloor().getBuilding(),
@@ -48,11 +45,7 @@ public class MonthlyUtilityBuildingService {
                                 )
                         )
                 )
-                .entrySet().stream()
-                .collect(Collectors.toMap(
-                        entry -> entry.getKey().getId(),
-                        Map.Entry::getValue
-                ));
+                .values());
     }
 
     private MonthlyUtilityBuildingDetailDTO processBuildingUtilities(
@@ -107,7 +100,7 @@ public class MonthlyUtilityBuildingService {
         return buildingDetail;
     }
 
-    private MonthlyUtilityBuildingUsageSummary toMonthlyUtilityUsageSummaryDTO(
+    public MonthlyUtilityBuildingUsageSummary toMonthlyUtilityUsageSummaryDTO(
             LocalDate monthKey,
             BigDecimal totalUsage) {
 

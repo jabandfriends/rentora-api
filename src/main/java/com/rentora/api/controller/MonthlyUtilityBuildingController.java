@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Collections;
@@ -32,7 +33,7 @@ public class MonthlyUtilityBuildingController {
     private final ApartmentRepository apartmentRepository;
 
     @GetMapping("/buildingUtility")
-    public ResponseEntity<ApiResponse<Map<UUID, MonthlyUtilityBuildingDetailDTO>>> getBuildingUtilitiesSummary(
+    public ResponseEntity<ApiResponse<List<MonthlyUtilityBuildingDetailDTO>>> getBuildingUtilitiesSummary(
             @PathVariable UUID apartmentId) {
 
         Apartment apartment = apartmentRepository.findById(apartmentId)
@@ -40,13 +41,13 @@ public class MonthlyUtilityBuildingController {
                         HttpStatus.NOT_FOUND,
                         "Apartment not found with ID: " + apartmentId));
 
-        Map<UUID, MonthlyUtilityBuildingDetailDTO> summaryMap =
+        List<MonthlyUtilityBuildingDetailDTO> summaryMap =
                 monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment);
 
         if (summaryMap.isEmpty()) {
             return ResponseEntity.ok(ApiResponse.success(
                     "Apartment found, but no building.",
-                    Collections.emptyMap()
+                    Collections.emptyList()
             ));
         }
 
