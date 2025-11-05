@@ -50,17 +50,25 @@ public class MonthlyInvoiceService {
     private final UnitServiceMapper unitServiceMapper;
     private final AdhocInvoiceMapper adhocInvoiceMapper;
 
-    public Page<MonthlyInvoiceResponseDto> getAllMonthlyInvoice(Invoice.PaymentStatus paymentStatus, String unitName,String buildingName,
+    public Page<MonthlyInvoiceResponseDto> getAllMonthlyInvoice(LocalDate genMonth, Invoice.PaymentStatus paymentStatus, String unitName,String buildingName,
                                      UUID apartmentId, Pageable pageable){
         Specification<Invoice> specification = MonthlyInvoiceSpecification.hasApartmentId(apartmentId)
                 .and(MonthlyInvoiceSpecification.hasBuildingName(buildingName)).and(MonthlyInvoiceSpecification.hasUnitName(unitName))
-                .and(MonthlyInvoiceSpecification.hasPaymentStatus(paymentStatus)).and(MonthlyInvoiceSpecification.hasContractNotDaily());
+                .and(MonthlyInvoiceSpecification.hasPaymentStatus(paymentStatus)).and(MonthlyInvoiceSpecification.hasContractNotDaily())
+                .and(MonthlyInvoiceSpecification.matchGenerationDate(genMonth));
 
         Page<Invoice> monthlyInvoices = invoiceRepository.findAll(specification,pageable);
 
 
 
         return monthlyInvoices.map(this::toMonthlyInvoiceResponseDto);
+    }
+
+    public List<MonthlyInvoiceDetailResponseDto> getAllMonthlyInvoiceDetail(UUID apartmentId,LocalDate genMonth){
+        Specification<Invoice> specification = MonthlyInvoiceSpecification.hasApartmentId(apartmentId).and(MonthlyInvoiceSpecification.matchGenerationDate(genMonth));
+        List<Invoice> monthlyInvoices = invoiceRepository.findAll(specification);
+
+        return monthlyInvoices.stream().map(this::toMonthlyInvoiceDetailDto).toList();
     }
 
     public MonthlyInvoiceDetailResponseDto getMonthlyInvoiceDetail(String invoiceNumber){
