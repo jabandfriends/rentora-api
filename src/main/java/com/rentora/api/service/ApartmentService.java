@@ -4,6 +4,7 @@ import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
 import com.rentora.api.model.dto.Apartment.Metadata.UpdateApartmentPaymentRequestDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentPaymentResponseDto;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 
@@ -63,34 +64,47 @@ public class ApartmentService {
 
     private final ApartmentPaymentRepository paymentRepository;
 
-    public List<ApartmentPaymentSummaryResponseDto> getApartmentPayments(UUID apartmentId){
+    public ApartmentPaymentSummaryResponseDto getApartmentPayments(UUID apartmentId){
         Apartment apartment = apartmentRepository.findById(apartmentId).orElseThrow(() -> new ResourceNotFoundException("Apartment not found"));
-        List<ApartmentPayment> apartmentPayments = paymentRepository.findByApartment(apartment);
+        ApartmentPayment apartmentPayments = paymentRepository.findByApartment(apartment);
 
-        return apartmentPayments.stream().map(this::apartmentPaymentSummaryResponseDto).toList();
+        return toApartmentPaymentSummaryResponseDto(apartmentPayments);
     }
 
     public ApartmentPaymentSummaryResponseDto getApartmentPaymentById(UUID apartmentPaymentId){
         ApartmentPayment apartmentPayment = paymentRepository.findById(apartmentPaymentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
-        return apartmentPaymentSummaryResponseDto(apartmentPayment);
+        return toApartmentPaymentSummaryResponseDto(apartmentPayment);
     }
 
     public ApartmentPaymentSummaryResponseDto getActiveApartmentPaymentById(UUID apartmentId){
         Apartment apartment = apartmentRepository.findById(apartmentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
         ApartmentPayment apartmentPayment = paymentRepository.findByApartmentAndIsActive(apartment,true).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
-        return apartmentPaymentSummaryResponseDto(apartmentPayment);
+        return toApartmentPaymentSummaryResponseDto(apartmentPayment);
     }
 
     //update apartmentPaymentById
-    public void updateApartmentPayment(UUID apartmentPaymentId,UpdateApartmentPaymentRequestDto requestDto){
+    public UpdateApartmentPaymentResponseDto updateApartmentPayment(UUID apartmentPaymentId, UpdateApartmentPaymentRequestDto requestDto){
 
         ApartmentPayment apartmentPayment = paymentRepository.findById(apartmentPaymentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
-        if(requestDto.getMethodType() != null){
-            apartmentPayment.setMethodType(requestDto.getMethodType());
-            apartmentPayment.setMethodName(requestDto.getMethodType());
+        String logoImgKey = null;
+        String presignedUrlStr = null;
+        if(requestDto.getPromptPayFilename() != null && !requestDto.getPromptPayFilename().isEmpty()){
+
+            if(apartmentPayment.getPromptpayQrUrl() != null && !apartmentPayment.getPromptpayQrUrl().isEmpty()){
+                s3FileService.deleteFile(apartmentPayment.getPromptpayQrUrl());
+            }
+            logoImgKey = "apartments/setting/payment/" + UUID.randomUUID() + "-" + requestDto.getPromptPayFilename();
+            try {
+                URL presignedUrl = s3FileService.generatePresignedUrlForPut(logoImgKey);
+                presignedUrlStr = presignedUrl.toString();
+                apartmentPayment.setPromptpayQrUrl(presignedUrlStr);
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned PUT URL for apartment logo: {}", e.getMessage());
+            }
         }
+
         if(requestDto.getBankName() != null && !requestDto.getBankName().isEmpty()){
             apartmentPayment.setBankName(requestDto.getBankName());
         }
@@ -106,18 +120,14 @@ public class ApartmentService {
         if(requestDto.getInstructions() != null && !requestDto.getInstructions().isEmpty()){
             apartmentPayment.setInstructions(requestDto.getInstructions());
         }
-        if(requestDto.getIsActive() != null){
-            if(requestDto.getIsActive()){
-                Apartment apartment = apartmentRepository.findById(apartmentPayment.getApartment().getId()).orElseThrow(() -> new ResourceNotFoundException("Apartment not found"));
 
-                apartmentPaymentRepository.deactivateOtherPayments(apartment.getId(), apartmentPayment.getId());
-            }
-            apartmentPayment.setIsActive(requestDto.getIsActive());
-        }if(requestDto.getDisplayOrder() != null){
-            apartmentPayment.setDisplayOrder(requestDto.getDisplayOrder());
-        }
 
         apartmentPaymentRepository.save(apartmentPayment);
+
+        return UpdateApartmentPaymentResponseDto.builder()
+                .apartmentPaymentId(apartmentPayment.getId())
+                .presignedUrl(presignedUrlStr)
+                .build();
     }
 
     //delete apartmentPayment
@@ -402,9 +412,19 @@ public class ApartmentService {
 
         return dto;
     }
-    private ApartmentPaymentSummaryResponseDto apartmentPaymentSummaryResponseDto(ApartmentPayment apartmentPayment) {
-        return ApartmentPaymentSummaryResponseDto.builder()
-                .ApartmentPaymentId(apartmentPayment.getId())
+
+    private ApartmentPaymentSummaryResponseDto toApartmentPaymentSummaryResponseDto(ApartmentPayment apartmentPayment) {
+        URL presignedUrl = null;
+        if (apartmentPayment.getPromptpayQrUrl() != null && !apartmentPayment.getPromptpayQrUrl().isBlank()) {
+            try {
+                presignedUrl = s3FileService.generatePresignedUrlForGet(apartmentPayment.getPromptpayQrUrl());
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for apartment logo: {}", e.getMessage());
+            }
+        }
+       return  ApartmentPaymentSummaryResponseDto.builder()
+                .promptpayURL(presignedUrl)
+                .apartmentPaymentId(apartmentPayment.getId())
                 .methodType(apartmentPayment.getMethodName())
                 .bankName(apartmentPayment.getBankName())
                 .bankAccountNumber(apartmentPayment.getBankAccountNumber())

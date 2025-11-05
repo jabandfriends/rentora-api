@@ -4,6 +4,7 @@ import com.rentora.api.model.dto.Apartment.Metadata.ApartmentMetadataDto;
 import com.rentora.api.model.dto.Apartment.Metadata.UpdateApartmentPaymentRequestDto;
 import com.rentora.api.model.dto.Apartment.Request.CreateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Request.SetupApartmentRequest;
+import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentPaymentResponseDto;
 import com.rentora.api.model.dto.Apartment.Request.UpdateApartmentRequest;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentDetailDTO;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentPaymentSummaryResponseDto;
@@ -110,12 +111,12 @@ public class ApartmentController {
         return ResponseEntity.ok(ApiResponse.success("Apartment setup successfully", null));
     }
 
-    //get apartment all payment
+    //get apartment  payment
     @GetMapping("/{apartmentId}/payment")
-    public ResponseEntity<ApiResponse<List<ApartmentPaymentSummaryResponseDto>>> getApartmentPayments(
+    public ResponseEntity<ApiResponse<ApartmentPaymentSummaryResponseDto>> getApartmentPayments(
             @PathVariable UUID apartmentId
     ){
-       List<ApartmentPaymentSummaryResponseDto> apartmentPayments = apartmentService.getApartmentPayments(apartmentId);
+       ApartmentPaymentSummaryResponseDto apartmentPayments = apartmentService.getApartmentPayments(apartmentId);
        return ResponseEntity.ok(ApiResponse.success(apartmentPayments));
     }
 
@@ -137,9 +138,9 @@ public class ApartmentController {
     }
 
     @PutMapping("/payment/{paymentId}")
-    public ResponseEntity<ApiResponse<Objects>> updateApartmentPayment(@PathVariable UUID paymentId, UpdateApartmentPaymentRequestDto request){
-        apartmentService.updateApartmentPayment(paymentId, request);
-        return ResponseEntity.ok(ApiResponse.success("success", null));
+    public ResponseEntity<ApiResponse<UpdateApartmentPaymentResponseDto>> updateApartmentPayment(@PathVariable UUID paymentId, UpdateApartmentPaymentRequestDto request){
+        UpdateApartmentPaymentResponseDto response = apartmentService.updateApartmentPayment(paymentId, request);
+        return ResponseEntity.ok(ApiResponse.success("success", response));
     }
 
     @DeleteMapping("/payment/{paymentId}")
