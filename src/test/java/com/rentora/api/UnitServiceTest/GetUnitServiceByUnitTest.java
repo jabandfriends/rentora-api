@@ -2,7 +2,7 @@ package com.rentora.api.UnitServiceTest;
 
 import com.rentora.api.model.dto.UnitService.Request.CreateUnitServiceRequest;
 import com.rentora.api.model.dto.UnitService.Response.UnitServiceInfoDTO;
-import com.rentora.api.model.entity.ServiceEntity;
+import com.rentora.api.model.entity.ApartmentService;
 import com.rentora.api.model.entity.UnitServiceEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,10 +37,10 @@ public class GetUnitServiceByUnitTest extends UnitServiceBaseTest {
         anotherUnitServiceEntity.setId(UUID.fromString("d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44"));
         anotherUnitServiceEntity.setUnit(mockUnit);
 
-        ServiceEntity mockService2 = new ServiceEntity();
+        ApartmentService mockService2 = new ApartmentService();
         mockService2.setServiceName("Cable TV");
         mockService2.setPrice(new BigDecimal("200.00"));
-        anotherUnitServiceEntity.setServiceEntity(mockService2);
+        anotherUnitServiceEntity.setApartmentService(mockService2);
         anotherUnitServiceEntity.setMonthlyPrice(new BigDecimal("200.00"));
 
         List<UnitServiceEntity> foundServices = Arrays.asList(

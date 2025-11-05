@@ -298,7 +298,7 @@ public class ApartmentService {
 
         //save service
         request.getServices().forEach(serviceItem -> {
-            ServiceEntity service = new ServiceEntity();
+            com.rentora.api.model.entity.ApartmentService service = new com.rentora.api.model.entity.ApartmentService();
             //save apartment fk first
             service.setApartment(apartment);
             service.setServiceName(serviceItem.getName());
