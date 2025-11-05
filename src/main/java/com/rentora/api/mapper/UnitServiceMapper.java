@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 public class UnitServiceMapper {
     public UnitServiceList toUnitServiceList(UnitServiceEntity unitServiceEntities) {
         return UnitServiceList.builder()
-                .serviceName(unitServiceEntities.getServiceEntity().getServiceName())
-                .servicePrice(unitServiceEntities.getServiceEntity().getPrice())
+                .serviceName(unitServiceEntities.getApartmentService().getServiceName())
+                .servicePrice(unitServiceEntities.getApartmentService().getPrice())
                 .build();
     }
 }

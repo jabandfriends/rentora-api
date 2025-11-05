@@ -5,13 +5,23 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.UUID;
 
-public class ServiceSpecification {
+public class ApartmentServiceSpecification {
     public static Specification<ApartmentService> hasApartmentId(UUID apartmentId) {
         return (root, query, criteriaBuilder) -> {
             if (apartmentId == null) return null;
             return criteriaBuilder.equal(
-                    root.get("floor").get("building").get("apartment").get("id"),
+                    root.get("apartment").get("id"),
                     apartmentId
+            );
+        };
+    }
+
+    public static Specification<ApartmentService> isActive(Boolean isActive) {
+        return (root, query, criteriaBuilder) -> {
+            if (isActive == null) return null;
+            return criteriaBuilder.equal(
+                    root.get("isActive"),
+                    isActive
             );
         };
     }
