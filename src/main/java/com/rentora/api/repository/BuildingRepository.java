@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.data.jpa.domain.Specification;
 
 @Repository
 public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSpecificationExecutor<Building> {
@@ -34,6 +33,12 @@ public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSp
 
     long countByApartmentId(UUID apartmentId);
 
+    @Query("SELECT COUNT(b) FROM Building b WHERE b.apartment.id = :apartmentId")
+    long countByApartment_Id(
+            @Param("apartmentId") UUID apartmentId
+    );
+
     boolean existsByApartmentIdAndName(UUID apartmentId, String name);
 
+    Page<Building> findAll(Specification<Building> spec, java.awt.print.Pageable pageable);
 }

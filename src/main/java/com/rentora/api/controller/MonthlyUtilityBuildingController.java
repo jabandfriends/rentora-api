@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -38,16 +39,18 @@ public class MonthlyUtilityBuildingController {
     public ResponseEntity<ApiResponse<PaginatedResponse<MonthlyUtilityBuildingDetailDTO>>> getBuildingUtilitiesSummary(
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "1") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
+            @RequestParam(required = false) String search
+            ) {
 
         int requestedPage = Math.max(page - 1, 0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
         Apartment apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -57,11 +60,16 @@ public class MonthlyUtilityBuildingController {
         Page<MonthlyUtilityBuildingDetailDTO> summaryPage =
                 monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment, search, pageable);
 
-        MonthlyUtilityBuildingMetadata buildingUtility = monthlyUtilityBuildingService.getMonthlyUtilityBuiildingMetadata(summaryPage.getContent());
+        MonthlyUtilityBuildingMetadata buildingUtilityMetadata =
+                monthlyUtilityBuildingService.getMonthlyUtilityBuildingMetadata(apartment, summaryPage.getContent());
+
+        PaginatedResponseWithMetadata<MonthlyUtilityBuildingDetailDTO, MonthlyUtilityBuildingMetadata> Response =
+                PaginatedResponseWithMetadata.of(summaryPage, page, buildingUtilityMetadata);
 
 
 
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summaryPage,page,buildingUtility)
-        ));
+
+        return ResponseEntity.ok(ApiResponse.success(Response)
+        );
     }
 }

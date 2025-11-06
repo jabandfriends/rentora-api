@@ -34,9 +34,17 @@ public class MonthlyUtilityBuildingService {
     private final MonthlyUtilityBuildingRepository monthlyUtilityBuildingRepository;
     private final BuildingRepository buildingRepository;
 
-    public MonthlyUtilityBuildingMetadata getMonthlyUtilityBuiildingMetadata (List<MonthlyUtilityBuildingDetailDTO> monthlyUtilityBuilding) {
+    public MonthlyUtilityBuildingMetadata getMonthlyUtilityBuildingMetadata (
+            Apartment apartment,
+            List<MonthlyUtilityBuildingDetailDTO> monthlyUtilityBuilding) {
+
+        UUID apartmentId = apartment.getId();
+
+        long totalBuildingCount = buildingRepository.countByApartment_Id(apartmentId);
+
         MonthlyUtilityBuildingMetadata monthlyUtilityBuildingMetadata = new MonthlyUtilityBuildingMetadata();
-        monthlyUtilityBuildingMetadata.setTotalUtilityBuildings(monthlyUtilityBuilding.size());
+
+        monthlyUtilityBuildingMetadata.setTotalUtilityBuildings((int) totalBuildingCount);
 
         return monthlyUtilityBuildingMetadata;
     }
