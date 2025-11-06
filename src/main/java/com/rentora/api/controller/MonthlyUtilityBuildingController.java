@@ -1,27 +1,29 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
+import com.rentora.api.model.dto.MonthlyUtilityBuilding.Metadata.MonthlyUtilityBuildingMetadata;
 import com.rentora.api.model.dto.MonthlyUtilityBuilding.Response.MonthlyUtilityBuildingDetailDTO;
+import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.repository.ApartmentRepository;
 import com.rentora.api.service.MonthlyUtilityBuildingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.Collections;
-
-import static com.rentora.api.model.entity.Unit.UnitType.apartment;
 
 @Slf4j
 @RestController
@@ -33,26 +35,33 @@ public class MonthlyUtilityBuildingController {
     private final ApartmentRepository apartmentRepository;
 
     @GetMapping("/buildingUtility")
-    public ResponseEntity<ApiResponse<List<MonthlyUtilityBuildingDetailDTO>>> getBuildingUtilitiesSummary(
-            @PathVariable UUID apartmentId) {
+    public ResponseEntity<ApiResponse<PaginatedResponse<MonthlyUtilityBuildingDetailDTO>>> getBuildingUtilitiesSummary(
+            @PathVariable UUID apartmentId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
 
         Apartment apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Apartment not found with ID: " + apartmentId));
 
-        List<MonthlyUtilityBuildingDetailDTO> summaryMap =
-                monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment);
+        Page<MonthlyUtilityBuildingDetailDTO> summaryPage =
+                monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment, search, pageable);
 
-        if (summaryMap.isEmpty()) {
-            return ResponseEntity.ok(ApiResponse.success(
-                    "Apartment found, but no building.",
-                    Collections.emptyList()
-            ));
-        }
+        MonthlyUtilityBuildingMetadata buildingUtility = monthlyUtilityBuildingService.getMonthlyUtilityBuiildingMetadata(summaryPage.getContent());
 
-        return ResponseEntity.ok(ApiResponse.success(
-                summaryMap
+
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summaryPage,page,buildingUtility)
         ));
     }
 }

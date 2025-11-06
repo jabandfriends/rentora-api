@@ -3,7 +3,9 @@ package com.rentora.api.repository;
 import com.rentora.api.model.entity.Building;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,9 +13,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.domain.Specification;
 
 @Repository
-public interface BuildingRepository extends JpaRepository<Building, UUID> {
+public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSpecificationExecutor<Building> {
 
     Page<Building> findByApartmentId(UUID apartmentId, Pageable pageable);
     List<Building> findByApartmentId(UUID apartmentId);
