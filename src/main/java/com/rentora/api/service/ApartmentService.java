@@ -90,8 +90,9 @@ public class ApartmentService {
 
         String logoImgKey = null;
         String presignedUrlStr = null;
+        log.info(requestDto.toString());
         if(requestDto.getPromptPayFilename() != null && !requestDto.getPromptPayFilename().isEmpty()){
-
+            log.info("Prompt Pay Filename found : ", requestDto.getPromptPayFilename());
             if(apartmentPayment.getPromptpayQrUrl() != null && !apartmentPayment.getPromptpayQrUrl().isEmpty()){
                 s3FileService.deleteFile(apartmentPayment.getPromptpayQrUrl());
             }
@@ -99,7 +100,7 @@ public class ApartmentService {
             try {
                 URL presignedUrl = s3FileService.generatePresignedUrlForPut(logoImgKey);
                 presignedUrlStr = presignedUrl.toString();
-                apartmentPayment.setPromptpayQrUrl(presignedUrlStr);
+                apartmentPayment.setPromptpayQrUrl(logoImgKey);
             } catch (Exception e) {
                 log.warn("Failed to generate presigned PUT URL for apartment logo: {}", e.getMessage());
             }
@@ -260,8 +261,10 @@ public class ApartmentService {
 
         String logoImgKey = null;
         String presignedUrlStr = null;
+        log.info("image promptpay ",request.getLogoFileName() );
         if (request.getLogoFileName() != null) {
             logoImgKey = "apartments/logo/" + UUID.randomUUID() + "-" + request.getLogoFileName();
+
             try {
                 URL presignedUrl = s3FileService.generatePresignedUrlForPut(logoImgKey);
                 presignedUrlStr = presignedUrl.toString();

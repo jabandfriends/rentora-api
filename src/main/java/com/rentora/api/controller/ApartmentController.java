@@ -138,7 +138,8 @@ public class ApartmentController {
     }
 
     @PutMapping("/payment/{paymentId}")
-    public ResponseEntity<ApiResponse<UpdateApartmentPaymentResponseDto>> updateApartmentPayment(@PathVariable UUID paymentId, UpdateApartmentPaymentRequestDto request){
+    public ResponseEntity<ApiResponse<UpdateApartmentPaymentResponseDto>> updateApartmentPayment(@PathVariable UUID paymentId,
+                                                                                                 @Valid @RequestBody UpdateApartmentPaymentRequestDto request){
         UpdateApartmentPaymentResponseDto response = apartmentService.updateApartmentPayment(paymentId, request);
         return ResponseEntity.ok(ApiResponse.success("success", response));
     }
