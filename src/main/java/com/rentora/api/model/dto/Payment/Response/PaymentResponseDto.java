@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.net.URL;
 import java.util.UUID;
 
 @Data
@@ -20,4 +21,5 @@ public class PaymentResponseDto {
     private String unitName;
     private String buildingName;
     private String floorName;
+    private URL receiptUrl;
 }
