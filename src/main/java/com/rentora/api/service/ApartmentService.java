@@ -90,9 +90,7 @@ public class ApartmentService {
 
         String logoImgKey = null;
         String presignedUrlStr = null;
-        log.info(requestDto.toString());
         if(requestDto.getPromptPayFilename() != null && !requestDto.getPromptPayFilename().isEmpty()){
-            log.info("Prompt Pay Filename found : ", requestDto.getPromptPayFilename());
             if(apartmentPayment.getPromptpayQrUrl() != null && !apartmentPayment.getPromptpayQrUrl().isEmpty()){
                 s3FileService.deleteFile(apartmentPayment.getPromptpayQrUrl());
             }

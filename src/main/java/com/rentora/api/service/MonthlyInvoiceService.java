@@ -93,7 +93,7 @@ public class MonthlyInvoiceService {
 
     public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate, Integer paymentDueDays) {
         Invoice monthlyInvoice = new Invoice();
-        //find current
+        // find current
         User currentAdmin = userRepository.findById(admin.getId()).orElseThrow(()-> new ResourceNotFoundException("User not found"));
         // Get active contract
         Contract activeContract = contractRepository.findActiveContractByUnitId(unitId)

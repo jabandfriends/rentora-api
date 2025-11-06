@@ -1,4 +1,4 @@
-package com.rentora.api.model.dto.Payment.Request;
+package com.rentora.api.model.dto.Payment.Response;
 
 import lombok.Builder;
 import lombok.Data;

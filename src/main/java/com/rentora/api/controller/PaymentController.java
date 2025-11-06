@@ -3,9 +3,11 @@ package com.rentora.api.controller;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Payment.Request.UpdatePaymentRequestDto;
 import com.rentora.api.model.dto.Payment.Response.PaymentMetadata;
 import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
 import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
+import com.rentora.api.model.dto.Payment.Response.UpdatePaymentResponseDto;
 import com.rentora.api.model.entity.Payment;
 import com.rentora.api.repository.PaymentRepository;
 import com.rentora.api.service.PaymentService;
@@ -24,18 +26,18 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/payments/{apartmentId}")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @GetMapping("/monthly")
+    @GetMapping("/{apartmentId}/monthly")
     public ResponseEntity<ApiResponse<PaymentMonthlyAvenue>> getMonthlyRevenue(@PathVariable UUID apartmentId) {
         PaymentMonthlyAvenue summary = paymentService.getMonthlyData(apartmentId);
         return ResponseEntity.ok(ApiResponse.success(summary));
     }
 
-    @GetMapping
+    @GetMapping("/{apartmentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<PaymentResponseDto>>> getAllPayments(
             @PathVariable UUID apartmentId,
             @RequestParam(defaultValue = "1") int page,
@@ -55,5 +57,12 @@ public class PaymentController {
         PaymentMetadata metadata = paymentService.getPaymentMetadata(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(payments,page,metadata)));
+    }
+
+    @PutMapping("/{paymentId}")
+    public ResponseEntity<ApiResponse<UpdatePaymentResponseDto>> updatePayment(@PathVariable UUID paymentId,
+                                                                               @RequestBody UpdatePaymentRequestDto updatePaymentRequestDto) {
+        UpdatePaymentResponseDto updatePaymentResponseDto = paymentService.updatePayment(paymentId, updatePaymentRequestDto);
+        return ResponseEntity.ok(ApiResponse.success(updatePaymentResponseDto));
     }
 }
