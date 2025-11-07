@@ -1,6 +1,9 @@
 package com.rentora.api.controller;
 
+import com.rentora.api.mapper.UserMapper;
 import com.rentora.api.model.dto.Apartment.Response.ApartmentSummaryDTO;
+import com.rentora.api.model.dto.ApartmentUser.Request.ApartmentUserCreateRequestDto;
+import com.rentora.api.model.dto.ApartmentUser.Request.ApartmentUserUpdateRequestDto;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Authentication.CreateUserRequest;
 import com.rentora.api.model.dto.Authentication.FirstTimePasswordResetRequestDto;
@@ -46,6 +49,8 @@ public class TenantController {
     private final TenantService tenantService;
     private final AuthService authService;
     private final ApartmentUserService  apartmentUserService;
+
+    private final UserMapper userMapper;
     @GetMapping("/{apartmentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<TenantInfoDto>>> getTenants(@PathVariable UUID apartmentId, @RequestParam(defaultValue = "1") int page,
                                                                                  @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir, @RequestParam(required = false) String isActive){
@@ -74,8 +79,15 @@ public class TenantController {
         ));
     }
 
-    @PutMapping("/update/{userId}") public ResponseEntity<ApiResponse<Object>> updateTenant(@PathVariable UUID userId , @Valid @RequestBody UpdateUserRequestDto request){
-        authService.updateUser(userId,request);
+    @PutMapping("/update/{userId}") public ResponseEntity<ApiResponse<Object>> updateTenant(@PathVariable UUID userId ,
+                                                                                            @Valid @RequestBody ApartmentUserUpdateRequestDto request){
+        UpdateUserRequestDto updateRequest = userMapper.toUpdateUserRequestFromApartmentUserRequest(request);
+        authService.updateUser(userId,updateRequest);
+
+        //update apartment user
+        apartmentUserService.updateApartmentUser(request);
+
+        //update role
         return ResponseEntity.ok(ApiResponse.success(
                 "User information updated successfully", null
         ));
@@ -89,10 +101,13 @@ public class TenantController {
     }
 
     @PostMapping("/{apartmentId}")
-    public ResponseEntity<ApiResponse<CreateApartmentUserResponseDto>> createTenants(@PathVariable UUID apartmentId ,@AuthenticationPrincipal UserPrincipal currentUser, @Valid @RequestBody CreateUserRequest request) {
-        UserInfo newUser = authService.createUser(request);
+    public ResponseEntity<ApiResponse<CreateApartmentUserResponseDto>> createTenants(@PathVariable UUID apartmentId ,@AuthenticationPrincipal UserPrincipal currentUser,
+                                                                                     @Valid @RequestBody ApartmentUserCreateRequestDto request) {
+        CreateUserRequest user = userMapper.toCreateUserRequestFromApartmentUserRequest(request);
+        UserInfo newUser = authService.createUser(user);
         UUID newUserId = UUID.fromString(newUser.getId());
-        CreateApartmentUserResponseDto apartmentUser = apartmentUserService.addToApartment(apartmentId,newUserId,currentUser.getId());
+
+        CreateApartmentUserResponseDto apartmentUser = apartmentUserService.addToApartment(request,apartmentId,newUserId,currentUser.getId());
 
         return ResponseEntity.ok(ApiResponse.success("Create Tenant Successfully",apartmentUser));
     }
