@@ -41,7 +41,7 @@ public class MonthlyUtilityFloorController {
     private final ApartmentRepository apartmentRepository;
     private final BuildingRepository buildingRepository;
 
-    @GetMapping("/FloorUtility")
+    @GetMapping("/floorUtility")
     public ResponseEntity<ApiResponse<PaginatedResponse<MonthlyUtilityFloorDetailDto>>> getFloorUtilitiesSummary(
             @PathVariable UUID apartmentId,
             @RequestParam(required = false) UUID buildingId,
@@ -49,7 +49,7 @@ public class MonthlyUtilityFloorController {
             @RequestParam(defaultValue = "1") int size,
             @RequestParam(defaultValue = "floorName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) UUID floorId
     ) {
 
         int requestedPage = Math.max(page - 1, 0);
@@ -73,7 +73,7 @@ public class MonthlyUtilityFloorController {
         }
 
         Page<MonthlyUtilityFloorDetailDto> summaryPage =
-                monthlyUtilityFloorService.getApartmentUtilitySummaryByFloor(apartment,building, search, pageable);
+                monthlyUtilityFloorService.getApartmentUtilitySummaryByFloor(apartment,building, floorId, pageable);
 
         MonthlyUtilityFloorMetadata floorUtilityMetadata =
                 monthlyUtilityFloorService.getMonthlyUtilityFloorMetadata(apartment, summaryPage.getContent());

@@ -11,6 +11,7 @@ import com.rentora.api.model.entity.Floor;
 import com.rentora.api.model.entity.UnitUtilities;
 import com.rentora.api.repository.MonthlyUtilityBuildingRepository;
 import com.rentora.api.repository.FloorRepository;
+import com.rentora.api.repository.MonthlyUtilityFloorRepository;
 import com.rentora.api.specifications.MonthlyUtilityFloorSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ import static com.rentora.api.specifications.MonthlyUtilityFloorSpecification.*;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class MonthlyUtilityFloorService {
 
-    private final MonthlyUtilityBuildingRepository monthlyUtilityBuildingRepository;
+    private final MonthlyUtilityFloorRepository monthlyUtilityFloorRepository;
     private final FloorRepository floorRepository;
 
     public MonthlyUtilityFloorMetadata getMonthlyUtilityFloorMetadata (
@@ -53,12 +54,20 @@ public class MonthlyUtilityFloorService {
     public Page<MonthlyUtilityFloorDetailDto> getApartmentUtilitySummaryByFloor(
             Apartment apartment,
             Building building,
-            String search,
+            UUID floorId,
             Pageable pageable) {
 
         Page<Floor> Floors;
 
-        Specification<Floor> spec = MonthlyUtilityFloorSpecification.hasFloorName(search).and(hasBuilding(building).and(hasApartment(apartment)));
+        Specification<Floor> spec = MonthlyUtilityFloorSpecification.hasApartment(apartment);
+
+        if (building != null) {
+            spec = spec.and(MonthlyUtilityFloorSpecification.hasBuilding(building));
+        }
+
+        if (floorId != null) {
+            spec = spec.and(MonthlyUtilityFloorSpecification.hasFloorId(floorId));
+        }
 
        Floors = floorRepository.findAll(spec, pageable);
 
@@ -71,8 +80,8 @@ public class MonthlyUtilityFloorService {
             Floor floor,
             Apartment apartment) {
 
-        List<UnitUtilities> entities = monthlyUtilityBuildingRepository
-                .findAllByUnit_Floor_Building_Apartment(apartment);
+        List<UnitUtilities> entities = monthlyUtilityFloorRepository
+                .findAllByUnit_Floor(floor);
 
         if (entities.isEmpty()) {
             return createEmptyDTO(floor);
@@ -113,6 +122,7 @@ public class MonthlyUtilityFloorService {
 
         String buildingName = floor.getBuilding().getName();
         String FloorName = floor.getFloorName();
+        Integer FloorNumber = floor.getFloorNumber();
 
         Map<String, List<MonthlyUtilityFloorUsageSummary>> utilityGroupName = aggregatedData.entrySet().stream()
                 .collect(
@@ -129,6 +139,7 @@ public class MonthlyUtilityFloorService {
         MonthlyUtilityFloorDetailDto floorDetail = new MonthlyUtilityFloorDetailDto();
         floorDetail.setBuildingId(floor.getBuilding().getId());
         floorDetail.setFloorName(FloorName);
+        floorDetail.setFloorNumber(FloorNumber);
         floorDetail.setBuildingName(buildingName);
         floorDetail.setUtilityGroupName(utilityGroupName);
 

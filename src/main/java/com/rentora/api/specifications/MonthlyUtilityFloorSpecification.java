@@ -5,15 +5,18 @@ import com.rentora.api.model.entity.Building;
 import com.rentora.api.model.entity.Floor;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.UUID;
+
 public class MonthlyUtilityFloorSpecification {
 
-    public static Specification<Floor> hasFloorName(String floorName) {
-
-        return  ((root, query, criteriaBuilder) ->  {
-            if (floorName == null || floorName.isBlank()) return null;
-
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("floorName")), "%" + floorName.toLowerCase() + "%");
-        });
+    public static Specification<Floor> hasFloorId(UUID floorId) {
+        return (root, query, cb) -> {
+            if (floorId == null) {
+                return cb.isTrue(cb.literal(true));
+            }
+            // กรองตาม ID Primary Key ของ Floor Entity
+            return cb.equal(root.get("id"), floorId);
+        };
     }
 
     public static Specification<Floor> hasBuilding(Building building) {
