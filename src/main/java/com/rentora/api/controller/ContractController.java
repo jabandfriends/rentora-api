@@ -6,6 +6,7 @@ import com.rentora.api.model.dto.Contract.Request.TerminateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
 import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
+import com.rentora.api.model.dto.Contract.Response.ContractUpdateResponseDto;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.security.UserPrincipal;
@@ -91,13 +92,13 @@ public class ContractController {
     }
 
     @PutMapping("/{contractId}")
-    public ResponseEntity<ApiResponse<ContractDetailDto>> updateContract(
+    public ResponseEntity<ApiResponse< ContractUpdateResponseDto>> updateContract(
             @PathVariable UUID apartmentId,
             @PathVariable UUID contractId,
             @Valid @RequestBody UpdateContractRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ContractDetailDto contract = contractService.updateContract(contractId, request);
+        ContractUpdateResponseDto contract = contractService.updateContract(apartmentId,contractId, request);
         return ResponseEntity.ok(ApiResponse.success("Contract updated successfully", contract));
     }
 
