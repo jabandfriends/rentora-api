@@ -48,9 +48,9 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
 
     //get all payment
-    public Page<PaymentResponseDto> getAllPayments(UUID apartmentId, String buildingName , Payment.PaymentStatus paymentStatus, Pageable pageable) {
+    public Page<PaymentResponseDto> getAllPayments(LocalDate genMonth,UUID apartmentId, String buildingName , Payment.PaymentStatus paymentStatus, Pageable pageable) {
         Specification<Payment> specification = PaymentSpecification.hasPaymentStatus(paymentStatus).and(PaymentSpecification.hasApartment(apartmentId))
-                .and(PaymentSpecification.hasBuilding(buildingName));
+                .and(PaymentSpecification.hasBuilding(buildingName)).and(PaymentSpecification.matchGenerationDate(genMonth));
         Page<Payment> payments = paymentRepository.findAll(specification,pageable);
 
         return payments.map(paymentMapper::toPaymentResponseDto);

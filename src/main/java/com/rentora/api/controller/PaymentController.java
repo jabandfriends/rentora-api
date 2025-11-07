@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Slf4j
@@ -45,7 +46,8 @@ public class PaymentController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) Payment.PaymentStatus status,
-            @RequestParam(required = false) String buildingName
+            @RequestParam(required = false) String buildingName,
+            @RequestParam LocalDate genMonth
             ) {
         int requestedPage = Math.max(page - 1, 0);
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
@@ -53,7 +55,7 @@ public class PaymentController {
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
-        Page<PaymentResponseDto> payments = paymentService.getAllPayments(apartmentId,buildingName,status,pageable);
+        Page<PaymentResponseDto> payments = paymentService.getAllPayments(genMonth,apartmentId,buildingName,status,pageable);
         PaymentMetadata metadata = paymentService.getPaymentMetadata(apartmentId);
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(payments,page,metadata)));
