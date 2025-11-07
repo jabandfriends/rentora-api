@@ -63,13 +63,8 @@ public class MonthlyUtilityBuildingController {
         MonthlyUtilityBuildingMetadata buildingUtilityMetadata =
                 monthlyUtilityBuildingService.getMonthlyUtilityBuildingMetadata(apartment, summaryPage.getContent());
 
-        PaginatedResponseWithMetadata<MonthlyUtilityBuildingDetailDTO, MonthlyUtilityBuildingMetadata> Response =
-                PaginatedResponseWithMetadata.of(summaryPage, page, buildingUtilityMetadata);
 
-
-
-
-        return ResponseEntity.ok(ApiResponse.success(Response)
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(summaryPage, page, buildingUtilityMetadata))
         );
     }
 }

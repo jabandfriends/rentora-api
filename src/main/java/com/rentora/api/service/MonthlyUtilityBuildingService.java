@@ -42,11 +42,9 @@ public class MonthlyUtilityBuildingService {
 
         long totalBuildingCount = buildingRepository.countByApartment_Id(apartmentId);
 
-        MonthlyUtilityBuildingMetadata monthlyUtilityBuildingMetadata = new MonthlyUtilityBuildingMetadata();
 
-        monthlyUtilityBuildingMetadata.setTotalUtilityBuildings((int) totalBuildingCount);
 
-        return monthlyUtilityBuildingMetadata;
+        return MonthlyUtilityBuildingMetadata.builder().totalUtilityBuildings(totalBuildingCount).build();
     }
 
     public Page<MonthlyUtilityBuildingDetailDTO> getApartmentUtilitySummaryByBuilding(

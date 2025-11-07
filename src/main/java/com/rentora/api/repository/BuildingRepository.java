@@ -40,5 +40,4 @@ public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSp
 
     boolean existsByApartmentIdAndName(UUID apartmentId, String name);
 
-    Page<Building> findAll(Specification<Building> spec, java.awt.print.Pageable pageable);
 }
