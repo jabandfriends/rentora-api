@@ -18,7 +18,7 @@ public class MonthlyUtilityBuildingSpecification {
     public static Specification<Building> hasApartment(Apartment apartment) {
         return (root, query, cb) -> {
             if (apartment == null) {
-                return null; // ไม่กรองอะไรเลย
+                return null;
             }
             return cb.equal(root.get("apartment"), apartment);
         };

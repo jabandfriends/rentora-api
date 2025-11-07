@@ -40,7 +40,7 @@ public class MonthlyUtilityBuildingService {
 
         UUID apartmentId = apartment.getId();
 
-        long totalBuildingCount = buildingRepository.countByApartment_Id(apartmentId);
+        long totalBuildingCount = buildingRepository.countByApartmentId(apartmentId);
 
 
 
@@ -91,16 +91,7 @@ public class MonthlyUtilityBuildingService {
         return emptyDto;
     }
 
-    private MonthlyUtilityBuildingDetailDTO processBuildingUtilities(
-            List<UnitUtilities> buildingUtilities) {
 
-        Building building = buildingUtilities.getFirst().getUnit().getFloor().getBuilding();
-
-        Map<String, Map<LocalDate, BigDecimal>> aggregatedData =
-                aggregateUtilitiesByMonthAndType(buildingUtilities);
-
-        return toMonthlyUtilityDetailDTO(building, aggregatedData);
-    }
 
     private Map<String, Map<LocalDate, BigDecimal>> aggregateUtilitiesByMonthAndType(
             List<UnitUtilities> unitUtilities) {

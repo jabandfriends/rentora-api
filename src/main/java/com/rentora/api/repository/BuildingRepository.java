@@ -20,6 +20,7 @@ public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSp
     Page<Building> findByApartmentId(UUID apartmentId, Pageable pageable);
     List<Building> findByApartmentId(UUID apartmentId);
 
+
     @Query("SELECT b FROM Building b WHERE b.apartment.id = :apartmentId AND b.name LIKE %:name%")
     Page<Building> findByApartmentIdAndNameContaining(@Param("apartmentId") UUID apartmentId,
                                                       @Param("name") String name,
@@ -32,11 +33,6 @@ public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSp
                                          @Param("userId") UUID userId);
 
     long countByApartmentId(UUID apartmentId);
-
-    @Query("SELECT COUNT(b) FROM Building b WHERE b.apartment.id = :apartmentId")
-    long countByApartment_Id(
-            @Param("apartmentId") UUID apartmentId
-    );
 
     boolean existsByApartmentIdAndName(UUID apartmentId, String name);
 
