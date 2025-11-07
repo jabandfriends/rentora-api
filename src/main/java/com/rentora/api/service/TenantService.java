@@ -39,7 +39,6 @@ public class TenantService {
     private final ApartmentUserRepository apartmentUserRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ContractRepository contractRepository;
 
     public Page<TenantInfoDto> getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
 
@@ -65,11 +64,11 @@ public class TenantService {
                 .totalOccupiedTenants(totalOccupiedTenant).totalUnoccupiedTenants(totalUnoccupiedTenant).build();
     }
 
-    public TenantDetailInfoResponseDto getTenantDetail(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public TenantDetailInfoResponseDto getTenantDetail(UUID aptUserId) {
+        ApartmentUser aptUser = apartmentUserRepository.findById(aptUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Apartment user not found."));
 
-        return toTenantInfoDtoByUser(user);
+        return toTenantInfoDtoByUser(aptUser);
     }
 
     public void changePassword(UUID userId, FirstTimePasswordResetRequestDto request) throws BadRequestException {
@@ -84,9 +83,11 @@ public class TenantService {
 
     }
 
-    public TenantDetailInfoResponseDto toTenantInfoDtoByUser(User user){
+    public TenantDetailInfoResponseDto toTenantInfoDtoByUser(ApartmentUser aptUser){
         TenantDetailInfoResponseDto tenant = new TenantDetailInfoResponseDto();
+        User user = aptUser.getUser();
         tenant.setUserId(user.getId());
+        tenant.setApartmentUserId(aptUser.getId());
         tenant.setFirstName(user.getFirstName());
         tenant.setLastName(user.getLastName());
         tenant.setFullName(user.getFullName());
@@ -97,6 +98,8 @@ public class TenantService {
         tenant.setEmergencyContactName(user.getEmergencyContactName());
         tenant.setEmergencyContactPhone(user.getEmergencyContactPhone());
         tenant.setCreatedAt(user.getCreatedAt());
+        tenant.setRole(aptUser.getRole());
+        tenant.setIsActive(aptUser.getIsActive());
 
         return tenant;
     }
@@ -110,6 +113,7 @@ public class TenantService {
         tenant.setApartmentUserId(user.getId());
         tenant.setRole(user.getRole());
         tenant.setAccountStatus(user.getIsActive());
+        tenant.setIsActive(user.getIsActive());
 
 
 
