@@ -40,6 +40,7 @@ public class ContractDetailDto {
 
     private BigDecimal waterMeterStart;
     private BigDecimal electricMeterStart;
+    
 
 
     // Additional detail info

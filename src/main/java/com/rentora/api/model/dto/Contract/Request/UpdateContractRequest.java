@@ -33,7 +33,7 @@ public class UpdateContractRequest {
     @Max(value = 365, message = "Renewal notice days cannot exceed 365")
     private Integer renewalNoticeDays;
 
-    private String documentUrl;
+    private String documentFilename;
 
     private Contract.ContractStatus status;
 }
