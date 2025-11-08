@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.Payment.Response;
 
+import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Payment;
 import lombok.Builder;
 import lombok.Data;
@@ -12,8 +13,10 @@ import java.util.UUID;
 @Builder
 public class PaymentResponseDto {
     private UUID paymentId;
+    private String invoiceNumber;
     private String paymentNumber;
     private String  paymentMethod;
+    private Invoice.PaymentStatus invoiceStatus;
     private Payment.PaymentStatus paymentStatus;
     private Payment.VerificationStatus verificationStatus;
     private BigDecimal amount;

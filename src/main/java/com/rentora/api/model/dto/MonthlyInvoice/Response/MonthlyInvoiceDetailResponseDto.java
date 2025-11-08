@@ -37,6 +37,8 @@ public class MonthlyInvoiceDetailResponseDto {
     private LocalDate billEnd;
     private Contract.RentalType rentalType;
 
+    //payment
+    private UUID paymentId;
 
     //water usage
     private BigDecimal waterMeterStart;

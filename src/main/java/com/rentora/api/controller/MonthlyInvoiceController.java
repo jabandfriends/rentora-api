@@ -39,7 +39,7 @@ public class MonthlyInvoiceController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> createMonthlyInvoice(@AuthenticationPrincipal UserPrincipal currentUser , @RequestBody @Valid CreateMonthlyInvoiceDto request){
-        monthlyInvoiceService.createMonthlyInvoice(currentUser,request.getUnitId(),request.getReadingDate(),request.getPaymentDueDay());
+        monthlyInvoiceService.createMonthlyInvoice(currentUser,request.getUnitId(),request.getReadingDate());
 
         return ResponseEntity.ok(ApiResponse.success("success",null));
     }
