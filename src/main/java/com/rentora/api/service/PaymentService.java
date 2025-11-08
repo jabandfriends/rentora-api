@@ -8,9 +8,8 @@ import com.rentora.api.model.dto.Payment.Response.PaymentMetadata;
 import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
 import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
 import com.rentora.api.model.entity.*;
-import com.rentora.api.repository.AdhocInvoiceRepository;
-import com.rentora.api.repository.ContractRepository;
-import com.rentora.api.repository.PaymentRepository;
+import com.rentora.api.repository.*;
+import com.rentora.api.specifications.MonthlyInvoiceSpecification;
 import com.rentora.api.specifications.PaymentSpecification;
 
 import jakarta.transaction.Transactional;
@@ -21,17 +20,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-
 
 
 
@@ -43,8 +44,10 @@ public class PaymentService {
     private final S3FileService s3FileService;
 
     private final PaymentRepository paymentRepository;
-    private final ContractRepository contractRepository;
     private final AdhocInvoiceRepository  adhocInvoiceRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final UserRepository userRepository;
+
     private final PaymentMapper paymentMapper;
 
     //get all payment
@@ -72,11 +75,21 @@ public class PaymentService {
     }
 
     //update payment
-    public UpdatePaymentResponseDto updatePayment(UUID paymentId,UpdatePaymentRequestDto request) {
+    public UpdatePaymentResponseDto updatePayment(UUID currentUserId,UUID paymentId,UpdatePaymentRequestDto request) {
+        //payment
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
+        //monthly invoice
+        Invoice invoice = payment.getInvoice();
+
+        //current user
+        User user = userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        //apartment
         Apartment currentApartment = payment.getInvoice().getApartment();
+
+
         String logoImgKey = null;
         URL presignedUrl = null;
         if(request.getReceiptFilename() != null && !request.getReceiptFilename().isEmpty()) {
@@ -94,9 +107,12 @@ public class PaymentService {
 
         if(request.getVerificationStatus() != null){
             payment.setVerificationStatus(request.getVerificationStatus());
+            payment.setVerifiedByUser(user);
+            payment.setVerifiedAt(OffsetDateTime.now());
+            payment.setPaidAt(OffsetDateTime.now());
         }
 
-        Invoice invoice = payment.getInvoice();
+
         Unit unit = payment.getInvoice().getUnit();
         List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByUnit(unit)
                 .stream().filter(AdhocInvoice::getIncludeInMonthly)
@@ -117,7 +133,46 @@ public class PaymentService {
         Payment updatedPayment = paymentRepository.save(payment);
         return paymentMapper.toUpdatePaymentResponseDto(updatedPayment,presignedUrl);
 
+    }
 
+    //payment apply late fee
+    // Run at 2:00 AM every day
+    @Scheduled(cron = "0 0 2 * * *")
+    public void applyLateFee(){
+        //get unpaid
+        Specification<Invoice> specification = MonthlyInvoiceSpecification.hasPaymentStatus(Invoice.PaymentStatus.unpaid);
+        List<Invoice> invoices = invoiceRepository.findAll(specification);
+
+        //update status to late
+        for(Invoice invoice: invoices){
+            Apartment currentApartment = invoice.getApartment();
+            //check late bill
+            LocalDate graceEndDate = invoice.getDueDate().plusDays(currentApartment.getGracePeriodDays());
+            //payment
+            Payment payment = paymentRepository.findByInvoice(invoice).orElse(null);
+            if (payment == null) continue;
+
+            long overdueDays = ChronoUnit.DAYS.between(graceEndDate, LocalDate.now());
+            if(overdueDays > 0){
+                //update status to late both payment and invoice , payment
+                invoice.setPaymentStatus(Invoice.PaymentStatus.overdue);
+
+                BigDecimal currentAmount = payment.getAmount();
+                //check apartment setting type first
+                Apartment.LateFeeType lateFeeType = currentApartment.getLateFeeType();
+                if(lateFeeType.equals(Apartment.LateFeeType.fixed)){
+                    BigDecimal lateFee = currentApartment.getLateFee();
+                    currentAmount = currentAmount.add(lateFee);
+                    payment.setAmount(currentAmount);
+                }else{
+                    BigDecimal lateFeePercentage =  currentApartment.getLateFee();
+                    BigDecimal totalAdded =  currentAmount.multiply(lateFeePercentage).divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_UP);
+                    currentAmount = currentAmount.add(totalAdded);
+                    payment.setAmount(currentAmount);
+                }
+
+            }
+        }
     }
 
     public PaymentMonthlyAvenue getMonthlyData(UUID apartmentId) {

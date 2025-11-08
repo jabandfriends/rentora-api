@@ -2,6 +2,7 @@ package com.rentora.api.mapper;
 
 import com.rentora.api.model.dto.Payment.Response.UpdatePaymentResponseDto;
 import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
+import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Payment;
 import com.rentora.api.service.S3FileService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,11 @@ public class PaymentMapper {
         if(payment.getReceiptUrl() !=null && !payment.getReceiptUrl().isEmpty()){
             paymentReceipt = s3FileService.generatePresignedUrlForGet(payment.getReceiptUrl());
         }
+        Invoice invoice = payment.getInvoice();
         return PaymentResponseDto.builder()
                 .paymentId(payment.getId())
+                .invoiceStatus(invoice.getPaymentStatus())
+                .invoiceNumber(invoice.getInvoiceNumber())
                 .paymentNumber(payment.getPaymentNumber())
                 .paymentMethod(payment.getPaymentMethod())
                 .paymentStatus(payment.getPaymentStatus())

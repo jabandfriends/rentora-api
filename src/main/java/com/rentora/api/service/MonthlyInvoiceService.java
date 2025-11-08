@@ -92,7 +92,7 @@ public class MonthlyInvoiceService {
     }
 
     //monthly yearly monthly rental invoice
-    public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate, Integer paymentDueDays) {
+    public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate) {
         Invoice monthlyInvoice = new Invoice();
         // find current
         User currentAdmin = userRepository.findById(admin.getId()).orElseThrow(()-> new ResourceNotFoundException("User not found"));
@@ -110,7 +110,7 @@ public class MonthlyInvoiceService {
                 .withMonth(readingDate.getMonthValue())
                 .withDayOfMonth(1);
         LocalDate billEnd = billStart.withDayOfMonth(billStart.lengthOfMonth());
-        LocalDate dueDate = LocalDate.now().plusDays(paymentDueDays);
+        LocalDate dueDate = LocalDate.now().plusDays(contractApartment.getPaymentDueDay());
 
         // Get latest utility readings
         UnitUtilities latestWaterMeter = getLatestUnitUtilitySafe(activeContract.getUnit().getId(), "water", billStart);
@@ -233,6 +233,7 @@ public class MonthlyInvoiceService {
                 .findByApartmentAndIsActive(apartment, true)
                 .orElse(null);
 
+        Payment payment = paymentRepository.findByInvoice(invoice).orElse(null);
         //unit
         Unit currentUnit = invoice.getUnit();
 
@@ -278,6 +279,8 @@ public class MonthlyInvoiceService {
                 .accountHolderName(currentPayment != null ? currentPayment.getAccountHolderName() : null)
                 .promptpayNumber(currentPayment != null ? currentPayment.getPromptpayNumber():null)
 
+                //payment
+                .paymentId(payment != null ? payment.getId() : null)
                 //serviceList
                 .serviceList(unitServiceListResult)
                 //adhoc invoice

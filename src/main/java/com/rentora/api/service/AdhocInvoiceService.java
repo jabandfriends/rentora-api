@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.rentora.api.mapper.AdhocInvoiceMapper;
 import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Request.CreateAdhocInvoiceRequest;
@@ -43,6 +44,8 @@ public class AdhocInvoiceService {
     private final ApartmentRepository apartmentRepository;
     private final UserRepository userRepository;
 
+    private final AdhocInvoiceMapper adhocInvoiceMapper;
+
     public Page<AdhocInvoiceSummaryDTO> searchAdhocInvoiceByInvoiceNumber(String invoiceNumber,
                                           AdhocInvoice.PaymentStatus status,
                                           Pageable pageable , UUID apartmentId) {
@@ -54,7 +57,7 @@ public class AdhocInvoiceService {
 
         Page<AdhocInvoice> allAdhocInvoices = invoiceRepository.findAll(specification,pageable);
 
-        return allAdhocInvoices.map(AdhocInvoiceService::toAdhocInvoiceSummaryDTO);
+        return allAdhocInvoices.map(adhocInvoiceMapper::toAdhocInvoiceSummaryDTO);
     }
 
     public Page<AdhocInvoiceSummaryDTO> searchAdhocInvoiceOverdue(String invoiceNumber,
@@ -63,7 +66,7 @@ public class AdhocInvoiceService {
         Specification<AdhocInvoice> specification = Specification.allOf(AdhocInvoiceSpecification.hasInvoiceNumberForAdhoc(invoiceNumber), AdhocInvoiceSpecification.hasOverdueStatusForAdhoc()).and(AdhocInvoiceSpecification.hasApartmentIdForAdhoc(apartmentId));
         Page<AdhocInvoice> OverdueInvoice = invoiceRepository.findAll(specification, pageable);
 
-        return OverdueInvoice.map(AdhocInvoiceService::toAdhocInvoiceSummaryDTO);
+        return OverdueInvoice.map(adhocInvoiceMapper::toAdhocInvoiceSummaryDTO);
     }
 
     public AdhocInvoiceOverallDTO getAdhocInvoiceOverall(List<AdhocInvoiceSummaryDTO> listOverAll) {
@@ -85,9 +88,7 @@ public class AdhocInvoiceService {
         AdhocInvoice adhocInvoice = invoiceRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("AdhocInvoice not found or access denied"));
 
-        AdhocInvoiceDetailDTO dto = toAdhocInvoiceDetailDTO(adhocInvoice);
-
-        return dto;
+        return adhocInvoiceMapper.toAdhocInvoiceDetailDTO(adhocInvoice);
     }
 
 
@@ -137,99 +138,6 @@ public class AdhocInvoiceService {
         AdhocInvoice savedAdhocInvoice = invoiceRepository.save(adhocInvoice);
 
         return new ExecuteAdhocInvoiceResponse(savedAdhocInvoice.getId());
-    }
-
-    private static AdhocInvoiceSummaryDTO toAdhocInvoiceSummaryDTO(AdhocInvoice adhocInvoice) {
-        AdhocInvoiceSummaryDTO summary = new AdhocInvoiceSummaryDTO();
-        summary.setId(adhocInvoice.getId());
-        summary.setInvoiceNumber(adhocInvoice.getAdhocNumber());
-        summary.setTitle(adhocInvoice.getTitle());
-        summary.setDescription(adhocInvoice.getDescription());
-        if (adhocInvoice.getTenantUserId() != null) {
-            summary.setTenant(adhocInvoice.getTenantUserId().getFirstName() + " " + adhocInvoice.getTenantUserId().getLastName());
-        }
-        summary.setRoom(adhocInvoice.getUnit().getUnitName());
-        summary.setAmount(adhocInvoice.getFinalAmount());
-        summary.setIssueDate(adhocInvoice.getInvoiceDate());
-        summary.setDueDate(adhocInvoice.getDueDate());
-        summary.setStatus(adhocInvoice.getPaymentStatus());
-
-        return summary;
-    }
-
-    private static AdhocInvoiceDetailDTO toAdhocInvoiceDetailDTO(AdhocInvoice adhocInvoice) {
-        AdhocInvoiceDetailDTO detail = new AdhocInvoiceDetailDTO();
-        detail.setAdhocInvoiceId(adhocInvoice.getId());
-        detail.setCategory(adhocInvoice.getCategory());
-        detail.setAdhocNumber(adhocInvoice.getAdhocNumber());
-        detail.setTitle(adhocInvoice.getTitle());
-        detail.setDescription(adhocInvoice.getDescription());
-        detail.setPaymentStatus(adhocInvoice.getPaymentStatus());
-        detail.setStatus(adhocInvoice.getStatus());
-        detail.setPriority(adhocInvoice.getPriority());
-        detail.setFinalAmount(adhocInvoice.getFinalAmount());
-        detail.setPaidAmount(adhocInvoice.getPaidAmount());
-        detail.setInvoiceDate(adhocInvoice.getInvoiceDate());
-        detail.setDueDate(adhocInvoice.getDueDate());
-
-        if (adhocInvoice.getApartment() != null) {
-            detail.setApartment(adhocInvoice.getApartment().getName());
-        }
-
-        if (adhocInvoice.getUnit() != null) {
-            detail.setUnit(adhocInvoice.getUnit().getUnitName());
-        }
-
-        if (adhocInvoice.getTenantUserId() != null) {
-            detail.setTenantUser(adhocInvoice.getTenantUserId().getFirstName() + " " + adhocInvoice.getTenantUserId().getLastName());
-            detail.setEmail(adhocInvoice.getTenantUserId().getEmail());
-        }
-
-        detail.setReceiptUrls(adhocInvoice.getReceiptUrls());
-        detail.setImages(adhocInvoice.getImages());
-        detail.setNotes(adhocInvoice.getNotes());
-        if(adhocInvoice.getCreatedByUserId() != null) {
-            detail.setCreatedByUserId(adhocInvoice.getCreatedByUserId().getId());
-        }
-
-        detail.setCreatedAt(adhocInvoice.getCreatedAt());
-        detail.setUpdatedAt(adhocInvoice.getUpdatedAt());
-        return detail;
-    }
-
-    private static InvoiceDetailDTO toInvoicesDetailDTO(Invoice invoice) {
-        InvoiceDetailDTO detail = new InvoiceDetailDTO();
-        detail.setId(invoice.getId());
-        detail.setInvoiceNumber(invoice.getInvoiceNumber());
-        detail.setContract(invoice.getContract().getContractNumber());
-        detail.setStatus(invoice.getPaymentStatus());
-
-        detail.setRentalAmount(invoice.getRentAmount());
-        detail.setUtilAmount(invoice.getUtilAmount());
-        detail.setServiceAmount(invoice.getServiceAmount());
-        detail.setFeesAmount(invoice.getFeesAmount());
-        detail.setDiscountAmount(invoice.getDiscountAmount());
-        detail.setTaxAmount(invoice.getTaxAmount());
-        detail.setTotalAmount(invoice.getTotalAmount());
-        detail.setBillStart(invoice.getBillStart());
-        detail.setDueDate(invoice.getDueDate());
-
-        if (invoice.getApartment() != null) {
-            detail.setApartment(invoice.getApartment().getName());
-            detail.setUnit(invoice.getUnit().getFloor().getFloorName());
-            detail.setRoom(invoice.getUnit().getUnitName());
-        }
-
-        if (invoice.getTenant() != null) {
-            detail.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
-            detail.setEmail(invoice.getTenant().getEmail());
-        }
-        detail.setPdf(invoice.getPdf());
-        detail.setNotes(invoice.getNotes());
-        detail.setCreatedAt(invoice.getCreatedAt());
-        detail.setUpdatedAt(invoice.getUpdatedAt());
-
-        return detail;
     }
 
 }

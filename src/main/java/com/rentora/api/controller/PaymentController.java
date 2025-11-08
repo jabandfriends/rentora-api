@@ -10,6 +10,7 @@ import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
 import com.rentora.api.model.dto.Payment.Response.UpdatePaymentResponseDto;
 import com.rentora.api.model.entity.Payment;
 import com.rentora.api.repository.PaymentRepository;
+import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,9 +63,9 @@ public class PaymentController {
     }
 
     @PutMapping("/{paymentId}")
-    public ResponseEntity<ApiResponse<UpdatePaymentResponseDto>> updatePayment(@PathVariable UUID paymentId,
+    public ResponseEntity<ApiResponse<UpdatePaymentResponseDto>> updatePayment(@AuthenticationPrincipal UserPrincipal currentUser,@PathVariable UUID paymentId,
                                                                                @RequestBody UpdatePaymentRequestDto updatePaymentRequestDto) {
-        UpdatePaymentResponseDto updatePaymentResponseDto = paymentService.updatePayment(paymentId, updatePaymentRequestDto);
+        UpdatePaymentResponseDto updatePaymentResponseDto = paymentService.updatePayment(currentUser.getId(),paymentId, updatePaymentRequestDto);
         return ResponseEntity.ok(ApiResponse.success(updatePaymentResponseDto));
     }
 }
