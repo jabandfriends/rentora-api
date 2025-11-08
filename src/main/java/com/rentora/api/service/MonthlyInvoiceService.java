@@ -91,6 +91,7 @@ public class MonthlyInvoiceService {
                 .totalOverdueMonthlyInvoice(totalOverdueMonthlyInvoices).build();
     }
 
+    //monthly yearly monthly rental invoice
     public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate, Integer paymentDueDays) {
         Invoice monthlyInvoice = new Invoice();
         // find current
@@ -98,6 +99,7 @@ public class MonthlyInvoiceService {
         // Get active contract
         Contract activeContract = contractRepository.findActiveContractByUnitId(unitId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
+        //filter contract type filter out daily contract
         if(activeContract.getRentalType().equals(Contract.RentalType.daily)) throw new BadRequestException("Daily Rental not allowed" +
                 " to create monthly invoice");
         Apartment contractApartment = activeContract.getUnit().getFloor().getBuilding().getApartment();
@@ -117,13 +119,20 @@ public class MonthlyInvoiceService {
         // Calculate utility amounts
         BigDecimal utilityAmount = calculateUtilityAmountSafe(latestWaterMeter, latestElectricMeter);
 
-        // Calculate adhoc and unit service amounts
-        BigDecimal totalAdhocAmount = adhocInvoiceRepository.findByUnit(activeContract.getUnit()).stream()
-                .filter(AdhocInvoice::getIncludeInMonthly)
-                .filter(invoice -> invoice.getPaymentStatus() == AdhocInvoice.PaymentStatus.unpaid)
+        //adhoc invoice for this unit ( unpaid and monthly include )
+        List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByUnitAndIncludeInMonthlyAndPaymentStatusAndStatus(
+                activeContract.getUnit(),
+                true,
+                AdhocInvoice.PaymentStatus.unpaid,
+                AdhocInvoice.InvoiceStatus.active
+        );
+
+        // Calculate adhoc invoice and unit service amounts
+        BigDecimal totalAdhocAmount = adhocInvoices.stream()
                 .map(AdhocInvoice::getFinalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        //Calculate total unit service amount
         BigDecimal totalUnitServiceAmount = unitServiceRepository.findAllByUnitId(activeContract.getUnit().getId()).stream()
                 .map(UnitServiceEntity::getMonthlyPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -155,7 +164,7 @@ public class MonthlyInvoiceService {
         monthlyInvoice.setTotalAmount(totalAmount);
 
         // Save invoice
-        invoiceRepository.save(monthlyInvoice);
+        Invoice createdMonthlyInvoice = invoiceRepository.save(monthlyInvoice);
 
         //payment
         Payment payment = new Payment();
@@ -169,6 +178,12 @@ public class MonthlyInvoiceService {
         payment.setPaymentMethod(apartmentPayment.getMethodType().toString());
         payment.setPaymentMethodEntity(apartmentPayment);
         paymentRepository.save(payment);
+
+        //add foreign key to adhoc invoice
+        List<AdhocInvoice> linkAdhocInvoices = adhocInvoices.stream().peek(item->{
+            item.setMonthlyInvoiceId(createdMonthlyInvoice);
+        }).toList();
+        adhocInvoiceRepository.saveAll(linkAdhocInvoices);
 
         log.info("Monthly invoice created for unit {} for month {}-{}", unitId, readingDate, dueDate);
     }
@@ -226,8 +241,7 @@ public class MonthlyInvoiceService {
         List<UnitServiceList> unitServiceListResult = unitServices.stream().map(unitServiceMapper::toUnitServiceList).toList();
 
         //find adhoc invoice
-        List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByUnitAndIncludeInMonthlyAndPaymentStatus(currentUnit,
-                true, AdhocInvoice.PaymentStatus.unpaid);
+        List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByMonthlyInvoiceId(invoice);
         List<UnitAdhocInvoice> unitAdhocInvoices =  adhocInvoices.stream().map(adhocInvoiceMapper::toUnitAdhocInvoice).toList();
 
         // === find water utility ===

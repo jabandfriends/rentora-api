@@ -92,7 +92,7 @@ public class ContractController {
     }
 
     @PutMapping("/{contractId}")
-    public ResponseEntity<ApiResponse< ContractUpdateResponseDto>> updateContract(
+    public ResponseEntity<ApiResponse<ContractUpdateResponseDto>> updateContract(
             @PathVariable UUID apartmentId,
             @PathVariable UUID contractId,
             @Valid @RequestBody UpdateContractRequest request,
