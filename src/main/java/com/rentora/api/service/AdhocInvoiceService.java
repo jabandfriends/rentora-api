@@ -1,5 +1,9 @@
 package com.rentora.api.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +33,7 @@ import com.rentora.api.specifications.AdhocInvoiceSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.rentora.api.model.dto.Invoice.Response.InvoiceDetailDTO;
@@ -98,6 +103,42 @@ public class AdhocInvoiceService {
         overdue.setOverdueInvoice(listOverDue.size());
 
         return overdue;
+    }
+
+    @Scheduled(cron = "0 0 2 * * *")
+    public void applyLateFeeForNotIncludeMonthlyAdhocInvoice() {
+        Specification<AdhocInvoice> specification = AdhocInvoiceSpecification.hasStatusForAdhoc(AdhocInvoice.PaymentStatus.unpaid);
+        List<AdhocInvoice> adhocInvoices = invoiceRepository.findAll(specification);
+
+        for (AdhocInvoice adhocInvoice : adhocInvoices) {
+            Apartment apartment = adhocInvoice.getApartment();
+            //get setting
+            Integer gracePeriodDays = apartment.getGracePeriodDays();
+            Apartment.LateFeeType lateFeeType = apartment.getLateFeeType();
+            BigDecimal lateFeeAmount = apartment.getLateFee();
+            //check late
+            LocalDate overDueDay = adhocInvoice.getDueDate().plusDays(gracePeriodDays);
+            long overDueDays = ChronoUnit.DAYS.between(overDueDay, LocalDate.now());
+            if(overDueDays > 0){
+                adhocInvoice.setPaymentStatus(AdhocInvoice.PaymentStatus.overdue);
+                //let monthly do it
+                if(adhocInvoice.getIncludeInMonthly()) continue;
+                BigDecimal currentAmount = adhocInvoice.getFinalAmount();
+                if(lateFeeType.equals(Apartment.LateFeeType.fixed)){
+                    currentAmount = currentAmount.add(lateFeeAmount);
+                    adhocInvoice.setFinalAmount(currentAmount);
+
+                }else if(lateFeeType.equals(Apartment.LateFeeType.percentage)){
+                    BigDecimal addedFee = currentAmount
+                            .multiply(lateFeeAmount)
+                            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                    currentAmount = currentAmount.add(addedFee);
+                    adhocInvoice.setFinalAmount(currentAmount);
+
+                }
+            }
+            invoiceRepository.save(adhocInvoice);
+        }
     }
 
 
