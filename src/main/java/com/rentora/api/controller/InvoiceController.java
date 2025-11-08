@@ -153,7 +153,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/adhocInvoice/create")
-    public ResponseEntity<ApiResponse<ExecuteAdhocInvoiceResponse>> createInvoice(
+    public ResponseEntity<ApiResponse<ExecuteAdhocInvoiceResponse>> createAdhocInvoice(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID apartmentId,
             @Valid @RequestBody CreateAdhocInvoiceRequest request){

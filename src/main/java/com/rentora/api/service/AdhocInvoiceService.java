@@ -16,6 +16,7 @@ import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.AdhocInvoiceRepository;
 import com.rentora.api.repository.ApartmentRepository;
 import com.rentora.api.repository.UnitRepository;
+import com.rentora.api.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -40,40 +41,7 @@ public class AdhocInvoiceService {
     private final AdhocInvoiceRepository invoiceRepository;
     private final UnitRepository unitRepository;
     private final ApartmentRepository apartmentRepository;
-
-//method for monthly invoice
-
-    //for searching in invoice table
-//    public Page<InvoiceSummaryDTO> search(String invoiceNumber,
-//                                Invoice.PaymentStatus status,
-//                                Pageable pageable , UUID apartmentId) {
-//        Specification<Invoice> specification = Specification
-//                .anyOf(InvoiceSpecification.hasInvoiceNumber(invoiceNumber),InvoiceSpecification.hasStatus(status)).and(InvoiceSpecification.hasApartmentId(apartmentId));
-//        if (status != null) {
-//            specification = specification.and(InvoiceSpecification.hasStatus(status));
-//        }
-//
-//        Page<Invoice> allInvoice = invoiceRepository.findAll(specification,pageable);
-//
-//        return allInvoice.map(InvoiceService::toInvoicesSummaryDTO);
-//    }
-
-    //for get overall invoice
-//    public InvoiceOverallDTO getInvoiceOverall(List<InvoiceSummaryDTO> listOverAll) {
-//        InvoiceOverallDTO overall = new InvoiceOverallDTO();
-//        overall.setTotalInvoice(listOverAll.size());
-//
-//        Map<Invoice.PaymentStatus, Long> statusCount = listOverAll.stream().collect(Collectors.groupingBy(InvoiceSummaryDTO::getStatus, Collectors.counting()));
-//
-//        overall.setPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.paid, 0L));
-//        overall.setUnpaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.unpaid, 0L));
-//        overall.setPartiallyPaidInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.partially_paid, 0L));
-//        overall.setOverdueInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.overdue,0L));
-//        overall.setCancelledInvoice(statusCount.getOrDefault(Invoice.PaymentStatus.cancelled,0L));
-//
-//        return overall;
-//
-//    }
+    private final UserRepository userRepository;
 
     public Page<AdhocInvoiceSummaryDTO> searchAdhocInvoiceByInvoiceNumber(String invoiceNumber,
                                           AdhocInvoice.PaymentStatus status,
@@ -122,16 +90,6 @@ public class AdhocInvoiceService {
         return dto;
     }
 
-//    //for get invoice by using invoice id
-//    public InvoiceDetailDTO getInvoicesById(UUID invoiceId, UUID userId, UUID apartmentId) {
-//        Invoice invoice = invoiceRepository.findByInvoiceId(invoiceId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found or access denied"));
-//
-//        InvoiceDetailDTO dto = toInvoicesDetailDTO(invoice);
-//
-//        return dto;
-//    }
-
 
     //for get overall of overdue invoice
     public OverdueInvoiceOverallDTO getOverdueAdhocInvoiceOverall(List<AdhocInvoiceSummaryDTO> listOverDue) {
@@ -141,27 +99,11 @@ public class AdhocInvoiceService {
         return overdue;
     }
 
-//    private static InvoiceSummaryDTO toInvoicesSummaryDTO(Invoice invoice) {
-//        InvoiceSummaryDTO summary = new InvoiceSummaryDTO();
-//        summary.setId(invoice.getId());
-//        summary.setInvoiceNumber(invoice.getInvoiceNumber());
-//
-//
-//        if (invoice.getTenant() != null) {
-//            summary.setTenant(invoice.getTenant().getFirstName() + " " + invoice.getTenant().getLastName());
-//        }
-//
-//        summary.setRoom(invoice.getUnit().getUnitName());
-//        summary.setAmount(invoice.getTotalAmount());
-//        summary.setIssueDate(invoice.getBillStart());
-//        summary.setDueDate(invoice.getDueDate());
-//        summary.setStatus(invoice.getPaymentStatus());
-//
-//        return summary;
-//    }
 
     public ExecuteAdhocInvoiceResponse createAdhocInvoice(UUID createdByUserId, UUID apartmentId, CreateAdhocInvoiceRequest request) {
 
+        //create by
+        User user = userRepository.findById(createdByUserId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(()-> new ResourceNotFoundException("Unit not found with ID: " + request.getUnitId()));
 
@@ -190,6 +132,7 @@ public class AdhocInvoiceService {
         adhocInvoice.setIncludeInMonthly(request.getIncludeInMonthly());
         adhocInvoice.setPriority(request.getPriority());
         adhocInvoice.setStatus(request.getStatus());
+        adhocInvoice.setCreatedByUserId(user);
 
         AdhocInvoice savedAdhocInvoice = invoiceRepository.save(adhocInvoice);
 
