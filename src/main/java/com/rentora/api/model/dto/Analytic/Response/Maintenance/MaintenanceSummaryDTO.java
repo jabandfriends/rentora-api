@@ -1,4 +1,4 @@
-package com.rentora.api.model.dto.Analytic.Response;
+package com.rentora.api.model.dto.Analytic.Response.Maintenance;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
