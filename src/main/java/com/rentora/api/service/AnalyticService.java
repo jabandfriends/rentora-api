@@ -166,9 +166,9 @@ public class AnalyticService {
         List<PaymentDistributionSummaryDto> dtos = new ArrayList<>();
         for (Invoice.PaymentStatus status : Invoice.PaymentStatus.values()) {
             long count = counts.getOrDefault(status, 0L);
-            double percentage = (count * 100.0) / total;
 
-            PaymentDistributionSummaryDto dto =PaymentDistributionSummaryDto.builder().percentagePayment(percentage).paymentStatus(status).build();
+
+            PaymentDistributionSummaryDto dto =PaymentDistributionSummaryDto.builder().totalPayment(count).paymentStatus(status).build();
 
             dtos.add(dto);
         }

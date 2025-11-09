@@ -8,5 +8,5 @@ import lombok.Data;
 @Builder
 public class PaymentDistributionSummaryDto {
     private Invoice.PaymentStatus paymentStatus;
-    private Double percentagePayment;
+    private long totalPayment;
 }
