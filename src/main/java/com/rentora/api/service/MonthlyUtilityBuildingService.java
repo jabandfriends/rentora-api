@@ -157,4 +157,20 @@ public class MonthlyUtilityBuildingService {
 
         return monthlyUsage;
     }
+
+//    public List<MonthlyUtilityBuildingUsageSummary> fillMissingMonth(
+//            List<MonthlyUtilityBuildingUsageSummary> monthData
+//    ) {
+//        Map <String, MonthlyUtilityBuildingUsageSummary> existingData = monthData.stream().collect(
+//                Collectors.toMap(
+//                        MonthlyUtilityBuildingUsageSummary::getMonth,
+//                        data -> data
+//                ));
+//
+//        List<MonthlyUtilityBuildingUsageSummary> fullYear = new ArrayList<>();
+//
+//
+//
+//
+//    }
 }
