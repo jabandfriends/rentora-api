@@ -30,8 +30,8 @@ public class AnalyticController {
         return ResponseEntity.ok(ApiResponse.success(maintenanceCategorySummary));
     }
 
-    @GetMapping("/maintenance/yearly/table")
-    public ResponseEntity<ApiResponse<List<MaintenanceYearlyTableSummaryDto>>> maintenanceYearlyTableSummary(@PathVariable UUID apartmentId) {
+    @GetMapping("/maintenance/yearly/statistic")
+    public ResponseEntity<ApiResponse<List<MaintenanceYearlyTableSummaryDto>>> maintenanceYearlyStatisticSummary(@PathVariable UUID apartmentId) {
         List<MaintenanceYearlyTableSummaryDto> result = analyticService.maintenanceYearlyTableSummary(apartmentId);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
