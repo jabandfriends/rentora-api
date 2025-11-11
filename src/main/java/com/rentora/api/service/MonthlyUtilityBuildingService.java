@@ -72,7 +72,7 @@ public class MonthlyUtilityBuildingService {
             Building building,
             Apartment apartment) {
 
-        List<UnitUtilities> entities = monthlyUtilityBuildingRepository.findAllByUnit_Floor_Building_Apartment(apartment);
+        List<UnitUtilities> entities = monthlyUtilityBuildingRepository.findAllByUnit_Floor_Building(building);
 
         if (entities.isEmpty()) {
             return createEmptyDTO(building);

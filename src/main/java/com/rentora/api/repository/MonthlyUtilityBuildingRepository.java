@@ -11,5 +11,5 @@ import java.util.UUID;
 
 public interface MonthlyUtilityBuildingRepository extends JpaRepository<UnitUtilities, UUID>, JpaSpecificationExecutor<UnitUtilities> {
 
-    List<UnitUtilities> findAllByUnit_Floor_Building_Apartment(Apartment Apartment);
+    List<UnitUtilities> findAllByUnit_Floor_Building(Building building);
 }
