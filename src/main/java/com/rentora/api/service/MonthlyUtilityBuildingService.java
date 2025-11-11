@@ -50,16 +50,16 @@ public class MonthlyUtilityBuildingService {
 
     public Page<MonthlyUtilityBuildingDetailDTO> getApartmentUtilitySummaryByBuilding(
             Apartment apartment,
-            String search,
+            UUID buildingId,
             Pageable pageable) {
 
         Page<Building> Buildings;
 
-        Specification<Building> spec = MonthlyUtilityBuildingSpecification.hasName(search).and(hasApartment(apartment));
+        Specification<Building> spec = MonthlyUtilityBuildingSpecification.hasApartment(apartment);
 
 
-        if (search != null && !search.isBlank()) {
-            spec = spec.and(MonthlyUtilityBuildingSpecification.hasName(search));
+        if (buildingId != null) {
+            spec = spec.and(MonthlyUtilityBuildingSpecification.hasBuildingId(buildingId));
         }
 
         Buildings = buildingRepository.findAll(spec, pageable);
