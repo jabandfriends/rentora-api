@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -124,7 +125,7 @@ public class MonthlyUtilityFloorService {
         String FloorName = floor.getFloorName();
         Integer FloorNumber = floor.getFloorNumber();
 
-        Map<String, List<MonthlyUtilityFloorUsageSummary>> utilityGroupName = aggregatedData.entrySet().stream()
+        Map<String, List<MonthlyUtilityFloorUsageSummary>> monthlyBreakdown = aggregatedData.entrySet().stream()
                 .collect(
                         Collectors.toMap(
                                 Map.Entry::getKey,
@@ -136,12 +137,17 @@ public class MonthlyUtilityFloorService {
                         )
                 );
 
+        // ** INTEGRATE: Zero-fill logic using fillMissingMonths **
+        Map<String, List<MonthlyUtilityFloorUsageSummary>> finalBreakdown =
+                fillMissingMonths(monthlyBreakdown);
+
+
         MonthlyUtilityFloorDetailDto floorDetail = new MonthlyUtilityFloorDetailDto();
         floorDetail.setBuildingId(floor.getBuilding().getId());
         floorDetail.setFloorName(FloorName);
         floorDetail.setFloorNumber(FloorNumber);
         floorDetail.setBuildingName(buildingName);
-        floorDetail.setUtilityGroupName(utilityGroupName);
+        floorDetail.setUtilityGroupName(finalBreakdown);
 
         return floorDetail;
     }
@@ -159,5 +165,41 @@ public class MonthlyUtilityFloorService {
         monthlyUsage.setTotalFloorUsage(totalUsage);
 
         return monthlyUsage;
+    }
+
+    private Map<String, List<MonthlyUtilityFloorUsageSummary>> fillMissingMonths(
+            Map<String, List<MonthlyUtilityFloorUsageSummary>> currentBreakdown) {
+
+        return currentBreakdown.entrySet().stream()
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> fillSingleUtilityMonths(entry.getValue())
+                        ));
+    }
+
+    private List<MonthlyUtilityFloorUsageSummary> fillSingleUtilityMonths(List<MonthlyUtilityFloorUsageSummary> monthlyData) {
+
+        Map<String, MonthlyUtilityFloorUsageSummary> existingData = monthlyData.stream()
+                .collect(Collectors.toMap(
+                        MonthlyUtilityFloorUsageSummary::getMonth,
+                        data -> data
+                ));
+
+        List<MonthlyUtilityFloorUsageSummary> fullYearData = new ArrayList<>();
+
+        for (int i = 1; i < 13; i++) {
+            String monthName = Month.of(i).getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+            if (existingData.containsKey(monthName)) {
+                fullYearData.add(existingData.get(monthName));
+            } else {
+                MonthlyUtilityFloorUsageSummary emptyUsage = new MonthlyUtilityFloorUsageSummary();
+                emptyUsage.setMonth(monthName);
+                emptyUsage.setTotalFloorUsage(BigDecimal.ZERO);
+                fullYearData.add(emptyUsage);
+            }
+        }
+        return fullYearData;
     }
 }
