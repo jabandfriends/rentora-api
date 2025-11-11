@@ -4,14 +4,18 @@ import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Building;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.UUID;
+
 public class MonthlyUtilityBuildingSpecification {
 
-    public static Specification<Building> hasName(String name) {
+    public static Specification<Building> hasBuildingId(UUID BuildingId) {
 
-        return  ((root, query, criteriaBuilder) ->  {
-            if (name == null || name.isBlank()) return null;
+        return  ((root, query, cb) ->  {
+            if (BuildingId == null){
+                return cb.isNull(root.get("id"));
+            }
 
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+            return cb.equal(root.get("id"), BuildingId);
         });
     }
 

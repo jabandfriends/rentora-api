@@ -6,7 +6,9 @@ import com.rentora.api.model.dto.MonthlyUtilityBuilding.Response.MonthlyUtilityB
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.model.entity.Building;
 import com.rentora.api.repository.ApartmentRepository;
+import com.rentora.api.repository.BuildingRepository;
 import com.rentora.api.service.MonthlyUtilityBuildingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ public class MonthlyUtilityBuildingController {
 
     private final MonthlyUtilityBuildingService monthlyUtilityBuildingService;
     private final ApartmentRepository apartmentRepository;
+    private final BuildingRepository buildingRepository;
 
     @GetMapping("/buildingUtility")
     public ResponseEntity<ApiResponse<PaginatedResponse<MonthlyUtilityBuildingDetailDTO>>> getBuildingUtilitiesSummary(
@@ -42,7 +45,8 @@ public class MonthlyUtilityBuildingController {
             @RequestParam(defaultValue = "1") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID buildingId
             ) {
 
         int requestedPage = Math.max(page - 1, 0);
@@ -57,8 +61,9 @@ public class MonthlyUtilityBuildingController {
                         HttpStatus.NOT_FOUND,
                         "Apartment not found with ID: " + apartmentId));
 
+
         Page<MonthlyUtilityBuildingDetailDTO> summaryPage =
-                monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment, search, pageable);
+                monthlyUtilityBuildingService.getApartmentUtilitySummaryByBuilding(apartment, buildingId, pageable);
 
         MonthlyUtilityBuildingMetadata buildingUtilityMetadata =
                 monthlyUtilityBuildingService.getMonthlyUtilityBuildingMetadata(apartment, summaryPage.getContent());
