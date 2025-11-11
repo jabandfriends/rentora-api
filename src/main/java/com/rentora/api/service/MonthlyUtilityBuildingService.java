@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -114,7 +115,7 @@ public class MonthlyUtilityBuildingService {
 
         String buildingName = building.getName();
 
-        Map<String, List<MonthlyUtilityBuildingUsageSummary>> utilityGroupName = aggregatedData.entrySet().stream()
+        Map<String, List<MonthlyUtilityBuildingUsageSummary>> monthlyBreakdown = aggregatedData.entrySet().stream()
                 .collect(
                         Collectors.toMap(
                                 Map.Entry::getKey,
@@ -126,10 +127,14 @@ public class MonthlyUtilityBuildingService {
                         )
                 );
 
+        Map<String, List<MonthlyUtilityBuildingUsageSummary>> finalBreakdown =
+                fillMissingMonths(monthlyBreakdown);
+
+
         MonthlyUtilityBuildingDetailDTO buildingDetail = new MonthlyUtilityBuildingDetailDTO();
         buildingDetail.setBuildingID(building.getId());
         buildingDetail.setBuildingName(buildingName);
-        buildingDetail.setUtilityGroupName(utilityGroupName);
+        buildingDetail.setUtilityGroupName(finalBreakdown);
 
         return buildingDetail;
     }
@@ -147,5 +152,44 @@ public class MonthlyUtilityBuildingService {
         monthlyUsage.setTotalUsageAmount(totalUsage);
 
         return monthlyUsage;
+    }
+
+    private List<MonthlyUtilityBuildingUsageSummary> fillSingleUtilityMonths(
+            List<MonthlyUtilityBuildingUsageSummary> monthlyData) {
+
+        Map<String, MonthlyUtilityBuildingUsageSummary> existingData = monthlyData.stream()
+                .collect(Collectors.toMap(
+                        MonthlyUtilityBuildingUsageSummary::getMonth,
+                        data -> data
+                ));
+
+        List<MonthlyUtilityBuildingUsageSummary> fullYearData = new ArrayList<>();
+
+        for (int i = 1; i <= 12; i++) {
+            String monthName = Month.of(i).getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+            if (existingData.containsKey(monthName)) {
+                fullYearData.add(existingData.get(monthName));
+            } else {
+                MonthlyUtilityBuildingUsageSummary emptyUsage = new MonthlyUtilityBuildingUsageSummary();
+                emptyUsage.setMonth(monthName);
+                emptyUsage.setTotalUsageAmount(BigDecimal.ZERO);
+                fullYearData.add(emptyUsage);
+            }
+        }
+        return fullYearData;
+    }
+
+
+    private Map<String, List<MonthlyUtilityBuildingUsageSummary>> fillMissingMonths(
+            Map<String, List<MonthlyUtilityBuildingUsageSummary>> currentBreakdown) {
+
+        return currentBreakdown.entrySet().stream()
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> fillSingleUtilityMonths(entry.getValue())
+                        )
+                );
     }
 }
