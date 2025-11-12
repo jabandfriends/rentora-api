@@ -51,7 +51,7 @@ public class TenantController {
 
     @GetMapping("/es/{apartmentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<ApartmentUserDocument>>> getTenantsElasticSearch(@PathVariable UUID apartmentId, @RequestParam(defaultValue = "1") int page,
-                                                                                    @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir, @RequestParam(defaultValue="true") String isActive){
+                                                                                    @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir, @RequestParam(defaultValue="active") String isActive){
         int requestedPage = Math.max(page - 1, 0);
 
 
@@ -60,7 +60,7 @@ public class TenantController {
                 Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(requestedPage, size,sort);
 
-        Boolean isUserActive = isActive != null && isActive.equalsIgnoreCase("true");
+        Boolean isUserActive = isActive != null && isActive.equalsIgnoreCase("active");
         Page<ApartmentUserDocument> tenants = apartmentUserEsService.searchUsers(name,apartmentId.toString(),isUserActive,pageable);
         TenantsMetadataResponseDto tenantInfoDto = tenantService.getTenantsMetadata(apartmentId);
 
