@@ -32,8 +32,8 @@ public class MaintenanceSupplyService {
     private final SupplyTransactionService supplyTransactionService;
 
     //maintenance use supply
-    public BigDecimal maintenanceUseSupply(Maintenance maintenance, UUID supplyId, Integer quantity, UUID userId) {
-        if(quantity<=0) return BigDecimal.ZERO;
+    public MaintenanceSupply maintenanceUseSupply(Maintenance maintenance, UUID supplyId, Integer quantity, UUID userId) {
+        if(quantity<=0) return null;
 
         Supply supply = supplyRepository.findById(supplyId).orElseThrow(()-> new ResourceNotFoundException("Supply not found"));
         //check is supply delete
@@ -51,11 +51,11 @@ public class MaintenanceSupplyService {
         maintenanceSupply.setQuantityUsed(quantity);
 
         BigDecimal totalCost = supply.getCostPerUnit().multiply(BigDecimal.valueOf(quantity));
-        maintenanceSupplyRepository.save(maintenanceSupply);
+        maintenanceSupply.setCost(totalCost);
+
 
         //add supply transaction
-        supplyTransactionService.createMaintenanceUseSupplyTransaction(maintenanceSupply,userId);
-        return totalCost;
+        return maintenanceSupply;
     }
 
     public void maintenanceUpdateSupply(UUID apartmentId,UUID maintenanceSupplyId,UUID supplyId,Integer newUsageSupply, UUID userId) {
