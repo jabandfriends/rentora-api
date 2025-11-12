@@ -53,6 +53,7 @@ public class MaintenanceSupplyService {
         BigDecimal totalCost = supply.getCostPerUnit().multiply(BigDecimal.valueOf(quantity));
         maintenanceSupply.setCost(totalCost);
 
+
         //add supply transaction
         return maintenanceSupply;
     }

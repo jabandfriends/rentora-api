@@ -133,12 +133,11 @@ public class MaintenanceService {
 
         maintenance.setActualCost(totalPrice);
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
-//        List<MaintenanceSupply> savedMaintenanceSupply = maintenanceSupplyRepository.saveAll(maintenanceSupplyList);
-//        for(MaintenanceSupply supply : savedMaintenanceSupply) {
-//            log.info(supply.toString());
-//            supplyTransactionService.createMaintenanceUseSupplyTransaction(supply,userId);
-//
-//        }
+
+        for(MaintenanceSupply supply : maintenanceSupplyList) {
+           MaintenanceSupply maintenanceSupply = maintenanceSupplyRepository.save(supply);
+            supplyTransactionService.createMaintenanceUseSupplyTransaction(maintenanceSupply,userId);
+        }
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
