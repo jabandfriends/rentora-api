@@ -39,6 +39,7 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UnitRepository unitRepository;
     private final MaintenanceSupplyRepository  maintenanceSupplyRepository;
+    private final SupplyTransactionService supplyTransactionService;
 
     private final MaintenanceSupplyService maintenanceSupplyService;
 
@@ -109,14 +110,13 @@ public class MaintenanceService {
         }
 
 
-
-
-
         BigDecimal totalPrice = BigDecimal.ZERO;
+        List<MaintenanceSupply> maintenanceSupplyList = new ArrayList<>();
+
 
         // Save maintenance supply usage and calculate total price
         for (var supply : request.getSuppliesUsage()) {
-            BigDecimal cost = maintenanceSupplyService.maintenanceUseSupply(
+            MaintenanceSupply maintenanceSupply = maintenanceSupplyService.maintenanceUseSupply(
                     maintenance,
                     supply.getSupplyId(),
                     supply.getSupplyUsedQuantity(),
@@ -124,11 +124,21 @@ public class MaintenanceService {
             );
 
             // Add cost to total price
-            totalPrice = totalPrice.add(cost);
+            if(maintenanceSupply != null) {
+                totalPrice = totalPrice.add(maintenanceSupply.getCost());
+                maintenanceSupplyList.add(maintenanceSupply);
+            }
+
         }
 
         maintenance.setActualCost(totalPrice);
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
+//        List<MaintenanceSupply> savedMaintenanceSupply = maintenanceSupplyRepository.saveAll(maintenanceSupplyList);
+//        for(MaintenanceSupply supply : savedMaintenanceSupply) {
+//            log.info(supply.toString());
+//            supplyTransactionService.createMaintenanceUseSupplyTransaction(supply,userId);
+//
+//        }
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
