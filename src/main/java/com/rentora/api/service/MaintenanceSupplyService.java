@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -31,8 +32,8 @@ public class MaintenanceSupplyService {
     private final SupplyTransactionService supplyTransactionService;
 
     //maintenance use supply
-    public void maintenanceUseSupply(Maintenance maintenance, UUID supplyId,Integer quantity,UUID userId) {
-        if(quantity<=0) return;
+    public MaintenanceSupply maintenanceUseSupply(Maintenance maintenance, UUID supplyId, Integer quantity, UUID userId) {
+        if(quantity<=0) return null;
 
         Supply supply = supplyRepository.findById(supplyId).orElseThrow(()-> new ResourceNotFoundException("Supply not found"));
         //check is supply delete
@@ -48,10 +49,13 @@ public class MaintenanceSupplyService {
         maintenanceSupply.setMaintenance(maintenance);
         maintenanceSupply.setSupply(supply);
         maintenanceSupply.setQuantityUsed(quantity);
-        maintenanceSupplyRepository.save(maintenanceSupply);
+
+        BigDecimal totalCost = supply.getCostPerUnit().multiply(BigDecimal.valueOf(quantity));
+        maintenanceSupply.setCost(totalCost);
+
 
         //add supply transaction
-        supplyTransactionService.createMaintenanceUseSupplyTransaction(maintenanceSupply,userId);
+        return maintenanceSupply;
     }
 
     public void maintenanceUpdateSupply(UUID apartmentId,UUID maintenanceSupplyId,UUID supplyId,Integer newUsageSupply, UUID userId) {

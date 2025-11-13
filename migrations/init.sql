@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS apartment_users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     apartment_id UUID REFERENCES apartments(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL DEFAULT 'tenant' CHECK (role IN ('tenant', 'admin','maintenance_staff','accountant')),  --     admin  = manager
+    role VARCHAR(20) NOT NULL DEFAULT 'tenant' CHECK (role IN ('tenant', 'admin','maintenance','accountant')),  --     admin  = manager
     created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     joined_at TIMESTAMPTZ DEFAULT NOW(),
     left_at TIMESTAMPTZ,

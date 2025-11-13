@@ -1,10 +1,12 @@
 package com.rentora.api.service;
 
+import com.rentora.api.mapper.ContractMapper;
 import com.rentora.api.model.dto.Contract.Request.CreateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.TerminateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
 import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
+import com.rentora.api.model.dto.Contract.Response.ContractUpdateResponseDto;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
@@ -21,7 +23,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,16 +40,19 @@ import java.util.UUID;
 public class ContractService {
 
     private final ContractRepository contractRepository;
-
     private final UnitRepository unitRepository;
-
+    private final ApartmentRepository apartmentRepository;
     private final UserRepository userRepository;
+
+    private final S3FileService s3FileService;
+
+    private final ContractMapper contractMapper;
 
 
 
     public Page<ContractSummaryDto> getContractsByApartment(UUID apartmentId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByApartmentId(apartmentId, pageable);
-        return contracts.map(this::toContractSummaryDto);
+        return contracts.map(contractMapper::toContractSummaryDto);
     }
 
     public Page<ContractSummaryDto> getContractsByStatusByApartmentIdByUnit(UUID apartmentId, Contract.ContractStatus contractStatus,
@@ -53,7 +61,7 @@ public class ContractService {
                         .and(ContractSpecification.hasApartmentId(apartmentId)).and(ContractSpecification.hasUnitId(unitId));
         Page<Contract> contracts = contractRepository.findAll(contractSpecification,pageable);
 
-        return contracts.map(this::toContractSummaryDto);
+        return contracts.map(contractMapper::toContractSummaryDto);
 
     }
 
@@ -64,14 +72,14 @@ public class ContractService {
 
     public Page<ContractSummaryDto> getContractsByTenant(UUID tenantId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByTenantId(tenantId, pageable);
-        return contracts.map(this::toContractSummaryDto);
+        return contracts.map(contractMapper::toContractSummaryDto);
     }
 
     public ContractDetailDto getContractById(UUID contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-        return toContractDetailDto(contract);
+        return contractMapper.toContractDetailDto(contract);
     }
 
     public ContractDetailDto getContractByUnitId(UUID unitId) {
@@ -80,7 +88,7 @@ public class ContractService {
 
         Contract contract = unit.getContracts().stream().filter(a -> a.getStatus().equals(Contract.ContractStatus.active)).findFirst().orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-        return toContractDetailDto(contract);
+        return contractMapper.toContractDetailDto(contract);
     }
 
     public ContractDetailDto createContract(CreateContractRequest request, UUID createdByUserId) {
@@ -144,13 +152,14 @@ public class ContractService {
         log.info("Contract created: {} for unit: {} and tenant: {}",
                 savedContract.getContractNumber(), unit.getUnitName(), tenant.getEmail());
 
-        return toContractDetailDto(savedContract);
+        return contractMapper.toContractDetailDto(savedContract);
     }
 
-    public ContractDetailDto updateContract(UUID contractId, UpdateContractRequest request) {
+    public ContractUpdateResponseDto updateContract(UUID apartmentId,UUID contractId, UpdateContractRequest request) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
-
+        Apartment apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Apartment not found"));
 
         if (request.getEndDate() != null) contract.setEndDate(request.getEndDate());
         if (request.getRentalPrice() != null) contract.setRentalPrice(request.getRentalPrice());
@@ -160,14 +169,37 @@ public class ContractService {
         if (request.getSpecialConditions() != null) contract.setSpecialConditions(request.getSpecialConditions());
         if (request.getAutoRenewal() != null) contract.setAutoRenewal(request.getAutoRenewal());
         if (request.getRenewalNoticeDays() != null) contract.setRenewalNoticeDays(request.getRenewalNoticeDays());
-        if (request.getDocumentUrl() != null) contract.setDocumentUrl(request.getDocumentUrl());
         if (request.getStatus() != null) contract.setStatus(request.getStatus());
+
+
+        String fileKey = null;
+        String timestamp = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+
+        URL presignedURL = null;
+
+        if (request.getDocumentFilename() != null && !request.getDocumentFilename().isEmpty()) {
+            if(contract.getDocumentUrl() != null && !contract.getDocumentUrl().isEmpty()){
+                s3FileService.deleteFile(contract.getDocumentUrl());
+            }
+            //get file name
+            fileKey = "apartments/contract/"+apartment.getId()+"/"+ timestamp+"contract-signed"+ contract.getTenant().getFirstName()+request.getDocumentFilename();
+            try{
+                presignedURL = s3FileService.generatePresignedUrlForPut(fileKey);
+                contract.setDocumentUrl(fileKey);
+                contract.setSignedAt(LocalDateTime.now());
+            }catch(Exception e){
+                log.info("Failed to put signed contract to database");
+            }
+        }
+
 
         Contract savedContract = contractRepository.save(contract);
 
         log.info("Contract updated: {}", savedContract.getContractNumber());
 
-        return toContractDetailDto(savedContract);
+        return contractMapper.toContractUpdateResponseDto(presignedURL,savedContract);
     }
 
     public ContractDetailDto terminateContract(UUID roomNumber, TerminateContractRequest request, UUID terminatedByUserId) {
@@ -196,96 +228,10 @@ public class ContractService {
 
         log.info("Contract terminated: {} for unit: {}", savedContract.getContractNumber(), unit.getUnitName());
 
-        return toContractDetailDto(savedContract);
+        return contractMapper.toContractDetailDto(savedContract);
     }
 
-    private ContractSummaryDto toContractSummaryDto(Contract contract) {
-        ContractSummaryDto dto = new ContractSummaryDto();
-        dto.setId(contract.getId().toString());
-        dto.setContractNumber(contract.getContractNumber());
-        dto.setUnitName(contract.getUnit().getUnitName());
-        dto.setBuildingName(contract.getUnit().getFloor().getBuilding().getName());
-        dto.setApartmentName(contract.getUnit().getFloor().getBuilding().getApartment().getName());
 
-        if (contract.getTenant() != null) {
-            dto.setTenantName(contract.getTenant().getFirstName() + " " + contract.getTenant().getLastName());
-            dto.setTenantEmail(contract.getTenant().getEmail());
-        }
 
-        dto.setRentalType(contract.getRentalType());
-        dto.setStartDate(contract.getStartDate() != null ? contract.getStartDate().toString() : null);
-        dto.setEndDate(contract.getEndDate() != null ? contract.getEndDate().toString() : null);
-        dto.setRentalPrice(contract.getRentalPrice());
-        dto.setStatus(contract.getStatus());
-        dto.setCreatedAt(contract.getCreatedAt() != null ? contract.getCreatedAt().toString() : null);
 
-        return dto;
-    }
-
-    private ContractDetailDto toContractDetailDto(Contract contract) {
-        ContractDetailDto dto = new ContractDetailDto();
-
-        dto.setContractId(contract.getId());
-        dto.setContractNumber(contract.getContractNumber());
-        dto.setUnitName(contract.getUnit().getUnitName());
-        dto.setBuildingName(contract.getUnit().getFloor().getBuilding().getName());
-        dto.setApartmentName(contract.getUnit().getFloor().getBuilding().getApartment().getName());
-
-        if (contract.getTenant() != null) {
-            dto.setTenantName(contract.getTenant().getFirstName() + " " + contract.getTenant().getLastName());
-            dto.setTenantEmail(contract.getTenant().getEmail());
-            dto.setTenantPhone(contract.getTenant().getPhoneNumber());
-        }
-
-        dto.setRentalType(contract.getRentalType());
-        dto.setStartDate(contract.getStartDate() != null ? contract.getStartDate().toString() : null);
-        dto.setEndDate(contract.getEndDate() != null ? contract.getEndDate().toString() : null);
-        dto.setRentalPrice(contract.getRentalPrice());
-        dto.setDepositAmount(contract.getDepositAmount());
-        dto.setAdvancePaymentMonths(contract.getAdvancePaymentMonths());
-        dto.setLateFeeAmount(contract.getLateFeeAmount());
-        dto.setUtilitiesIncluded(contract.getUtilitiesIncluded());
-        dto.setTermsAndConditions(contract.getTermsAndConditions());
-        dto.setSpecialConditions(contract.getSpecialConditions());
-        dto.setStatus(contract.getStatus());
-        dto.setAutoRenewal(contract.getAutoRenewal());
-        dto.setRenewalNoticeDays(contract.getRenewalNoticeDays());
-        dto.setTerminationDate(contract.getTerminationDate() != null ? contract.getTerminationDate().toString() : null);
-        dto.setTerminationReason(contract.getTerminationReason());
-
-        if (contract.getTerminatedByUser() != null) {
-            dto.setTerminatedByUserName(contract.getTerminatedByUser().getFirstName() + " " + contract.getTerminatedByUser().getLastName());
-        }
-
-        dto.setDocumentUrl(contract.getDocumentUrl());
-        dto.setSignedAt(contract.getSignedAt() != null ? contract.getSignedAt().toString() : null);
-
-        //utility
-        dto.setWaterMeterStart(contract.getWaterMeterStartReading());
-        dto.setElectricMeterStart(contract.getElectricityMeterStartReading());
-        if (contract.getCreatedByUser() != null) {
-            dto.setCreatedByUserName(contract.getCreatedByUser().getFirstName() + " " + contract.getCreatedByUser().getLastName());
-        }
-
-        dto.setCreatedAt(contract.getCreatedAt() != null ? contract.getCreatedAt().toString() : null);
-        dto.setUpdatedAt(contract.getUpdatedAt() != null ? contract.getUpdatedAt().toString() : null);
-
-        if (contract.getStartDate() != null && contract.getEndDate() != null) {
-            LocalDate start = contract.getStartDate();
-            LocalDate end = contract.getEndDate();
-
-            // Contract duration in days
-            int durationDays = (int) ChronoUnit.DAYS.between(start, end);// +1 to include start day
-            dto.setContractDurationDays(durationDays);
-
-            // Days until expiry
-            long daysUntilExpiry = ChronoUnit.DAYS.between(LocalDate.now(), end);
-            dto.setDaysUntilExpiry(daysUntilExpiry >= 0 ? daysUntilExpiry : 0); // 0 if already expired
-        } else {
-            dto.setContractDurationDays(0);
-            dto.setDaysUntilExpiry(0L);
-        }
-
-        return dto;
-    }
 }

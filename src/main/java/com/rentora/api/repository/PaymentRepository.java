@@ -1,8 +1,13 @@
 package com.rentora.api.repository;
 
 import com.rentora.api.model.entity.Apartment;
+import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Maintenance;
 import com.rentora.api.model.entity.Payment;
+import com.rentora.api.model.projection.payment.PaymentMonthlySummary;
+import com.rentora.api.model.projection.payment.PaymentTransactionMonthlySummary;
+import com.rentora.api.model.projection.payment.PaymentTransactionYearlySummary;
+import com.rentora.api.model.projection.payment.PaymentYearlySummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +15,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpecificationExecutor<Payment> {
@@ -53,4 +60,38 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpec
     @Query("SELECT COUNT(p) FROM Payment p WHERE p.invoice.apartment.id = :apartmentId AND p.paymentStatus = :paymentStatus")
     long countPaymentByApartmentIdAndStatus(@Param("apartmentId") UUID apartmentId,
                                             @Param("paymentStatus") Payment.PaymentStatus paymentStatus);
+
+    Optional<Payment> findByInvoice(Invoice invoice);
+
+    //summary
+    @Query("SELECT MONTH(p.createdAt) AS month, COUNT(p) AS count, SUM(p.amount) AS totalCost " +
+            "FROM Payment p " +
+            "WHERE YEAR(p.createdAt) = :year and p.invoice.apartment.id = :apartmentId " +
+            "GROUP BY MONTH(p.createdAt)")
+    List<PaymentMonthlySummary> monthlySummaryByYear(@Param("year") Integer year ,@Param("apartmentId") UUID apartmentId);
+
+    @Query("SELECT YEAR(p.createdAt) AS year, COUNT(p) AS count, SUM(p.amount) AS totalCost " +
+            "FROM Payment p " +
+            "WHERE p.invoice.apartment.id = :apartmentId " +
+            "GROUP BY YEAR(p.createdAt) " +
+            "ORDER BY YEAR(p.createdAt) ASC")
+    List<PaymentYearlySummary> yearlySummary(@Param("apartmentId") UUID apartmentId);
+
+    //count transaction
+    @Query("SELECT MONTH(p.createdAt) AS month,COUNT(p) AS count " +
+            "FROM Payment p " +
+            "WHERE YEAR(p.createdAt) = :year AND p.invoice.apartment.id = :apartmentId " +
+            "GROUP BY MONTH(p.createdAt)")
+    List<PaymentTransactionMonthlySummary> monthlyTransactionSummaryByYear(@Param("year") Integer year,@Param("apartmentId") UUID apartmentId);
+
+    @Query("SELECT YEAR(p.createdAt) AS year, COUNT(p) AS count " +
+            "FROM Payment p " +
+            "WHERE p.invoice.apartment.id = :apartmentId " +
+            "GROUP BY YEAR(p.createdAt) " +
+            "ORDER BY YEAR(p.createdAt) ASC")
+    List<PaymentTransactionYearlySummary> yearlyTransactionSummaryByYear(@Param("apartmentId") UUID apartmentId);
+
+    @Query("SELECT DISTINCT YEAR(p.createdAt) FROM Payment p WHERE p.invoice.apartment.id = :apartmentId ORDER BY YEAR(p.createdAt) DESC")
+    List<Integer> getAvailableYears(@Param("apartmentId")  UUID apartmentId);
+
 }

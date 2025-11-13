@@ -21,9 +21,9 @@ public class UnitServiceEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn (name = "service_id", referencedColumnName = "id")
-    private ServiceEntity serviceEntity;
+    private ApartmentService apartmentService;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_id")

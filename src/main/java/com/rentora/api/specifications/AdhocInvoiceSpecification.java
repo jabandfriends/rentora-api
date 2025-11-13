@@ -57,4 +57,9 @@ public final class AdhocInvoiceSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("id"), id);
     }
 
+//    includeInMonthly
+    public static Specification<AdhocInvoice> isIncludeInMonthly(Boolean includeInMonthly) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("includeInMonthly"), includeInMonthly);
+    }
+
 }

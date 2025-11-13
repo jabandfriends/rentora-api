@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,6 +39,7 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UnitRepository unitRepository;
     private final MaintenanceSupplyRepository  maintenanceSupplyRepository;
+    private final SupplyTransactionService supplyTransactionService;
 
     private final MaintenanceSupplyService maintenanceSupplyService;
 
@@ -108,13 +110,34 @@ public class MaintenanceService {
         }
 
 
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        List<MaintenanceSupply> maintenanceSupplyList = new ArrayList<>();
 
+
+        // Save maintenance supply usage and calculate total price
+        for (var supply : request.getSuppliesUsage()) {
+            MaintenanceSupply maintenanceSupply = maintenanceSupplyService.maintenanceUseSupply(
+                    maintenance,
+                    supply.getSupplyId(),
+                    supply.getSupplyUsedQuantity(),
+                    userId
+            );
+
+            // Add cost to total price
+            if(maintenanceSupply != null) {
+                totalPrice = totalPrice.add(maintenanceSupply.getCost());
+                maintenanceSupplyList.add(maintenanceSupply);
+            }
+
+        }
+
+        maintenance.setActualCost(totalPrice);
         Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
 
-        //save maintenance supply usage
-        request.getSuppliesUsage().forEach(supply -> {
-            maintenanceSupplyService.maintenanceUseSupply(maintenance,supply.getSupplyId(),supply.getSupplyUsedQuantity(),userId);
-        });
+        for(MaintenanceSupply supply : maintenanceSupplyList) {
+           MaintenanceSupply maintenanceSupply = maintenanceSupplyRepository.save(supply);
+            supplyTransactionService.createMaintenanceUseSupplyTransaction(maintenanceSupply,userId);
+        }
 
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
 
@@ -327,6 +350,7 @@ public class MaintenanceService {
         dto.setId(maintenance.getId());
         dto.setTicketNumber(maintenance.getTicketNumber());
         dto.setTitle(maintenance.getTitle());
+        dto.setActualCost(maintenance.getActualCost());
 
         if (unitName != null) {
             dto.setUnitName(unitName);

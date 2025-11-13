@@ -4,6 +4,7 @@ import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ForbiddenRoleException;
 import com.rentora.api.exception.ResourceNotFoundException;
+import com.rentora.api.mapper.TenantMapper;
 import com.rentora.api.model.dto.Authentication.FirstTimePasswordResetRequestDto;
 import com.rentora.api.model.dto.Authentication.UserInfo;
 import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
@@ -39,7 +40,8 @@ public class TenantService {
     private final ApartmentUserRepository apartmentUserRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ContractRepository contractRepository;
+
+    private final TenantMapper tenantMapper;
 
     public Page<TenantInfoDto> getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
 
@@ -51,7 +53,7 @@ public class TenantService {
         Page<ApartmentUser>  apartmentUsers = apartmentUserRepository.findAll(spec, pageable);
 
 
-        return apartmentUsers.map(this::toTenantInfoDto);
+        return apartmentUsers.map(tenantMapper::toTenantInfoDto);
     }
 
     public TenantsMetadataResponseDto getTenantsMetadata(UUID apartmentId) {
@@ -65,11 +67,11 @@ public class TenantService {
                 .totalOccupiedTenants(totalOccupiedTenant).totalUnoccupiedTenants(totalUnoccupiedTenant).build();
     }
 
-    public TenantDetailInfoResponseDto getTenantDetail(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public TenantDetailInfoResponseDto getTenantDetail(UUID aptUserId) {
+        ApartmentUser aptUser = apartmentUserRepository.findById(aptUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Apartment user not found."));
 
-        return toTenantInfoDtoByUser(user);
+        return tenantMapper.toTenantInfoDtoByUser(aptUser);
     }
 
     public void changePassword(UUID userId, FirstTimePasswordResetRequestDto request) throws BadRequestException {
@@ -84,51 +86,7 @@ public class TenantService {
 
     }
 
-    public TenantDetailInfoResponseDto toTenantInfoDtoByUser(User user){
-        TenantDetailInfoResponseDto tenant = new TenantDetailInfoResponseDto();
-        tenant.setUserId(user.getId());
-        tenant.setFirstName(user.getFirstName());
-        tenant.setLastName(user.getLastName());
-        tenant.setFullName(user.getFullName());
-        tenant.setEmail(user.getEmail());
-        tenant.setPhoneNumber(user.getPhoneNumber());
-        tenant.setNationalId(user.getNationalId());
-        tenant.setDateOfBirth(user.getBirthDate());
-        tenant.setEmergencyContactName(user.getEmergencyContactName());
-        tenant.setEmergencyContactPhone(user.getEmergencyContactPhone());
-        tenant.setCreatedAt(user.getCreatedAt());
-
-        return tenant;
-    }
-
-    public TenantInfoDto toTenantInfoDto(ApartmentUser user){
-        TenantInfoDto tenant = new TenantInfoDto();
-        tenant.setFullName(user.getUser().getFullName());
-        tenant.setEmail(user.getUser().getEmail());
-        tenant.setPhoneNumber(user.getUser().getPhoneNumber());
-        tenant.setUserId(user.getUser().getId());
-        tenant.setApartmentUserId(user.getId());
-        tenant.setRole(user.getRole());
-        tenant.setAccountStatus(user.getIsActive());
 
 
 
-        List<Contract> contracts = user.getUser().getContracts();
-
-        // Check contracts
-        boolean occupied = contracts.stream()
-                .anyMatch(contract -> contract.getStatus() == Contract.ContractStatus.active);
-        tenant.setOccupiedStatus(occupied);
-
-        //check roomnum with active
-        contracts.stream()
-                .filter(contract -> contract.getStatus() == Contract.ContractStatus.active)
-                .findFirst()
-                .map(Contract::getUnit)                       // get the unit
-                .map(Unit::getUnitName)                       // get the unit name
-                .ifPresent(tenant::setUnitName);
-
-        tenant.setCreatedAt(user.getCreatedAt());
-        return tenant;
-    }
 }

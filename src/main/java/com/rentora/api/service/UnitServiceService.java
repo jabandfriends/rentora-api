@@ -5,8 +5,7 @@ import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.UnitService.Request.CreateUnitServiceRequest;
 import com.rentora.api.model.dto.UnitService.Response.ExecuteUnitServiceResponse;
 import com.rentora.api.model.dto.UnitService.Response.UnitServiceInfoDTO;
-import com.rentora.api.model.entity.Contract;
-import com.rentora.api.model.entity.ServiceEntity;
+import com.rentora.api.model.entity.ApartmentService;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitServiceEntity;
 import com.rentora.api.repository.ApartmentServiceRepository;
@@ -54,16 +53,16 @@ public class UnitServiceService {
         Unit unit  = unitRepository.findById(unitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + unitId));
 
-        ServiceEntity service = apartmentServiceRepository.findById(request.getServiceId()) // สมมติว่า Request มี getServiceId()
+        ApartmentService service = apartmentServiceRepository.findById(request.getServiceId()) // สมมติว่า Request มี getServiceId()
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: " + request.getServiceId()));
 
-        Optional<UnitServiceEntity> unitService = unitServiceRepository.findByUnitIdAndServiceEntityId(unitId,request.getServiceId());
+        Optional<UnitServiceEntity> unitService = unitServiceRepository.findByUnitIdAndApartmentServiceId(unitId,request.getServiceId());
         if(unitService.isPresent()) throw new BadRequestException("This service already exists in this units.");
 
         UnitServiceEntity unitServiceEntity = new  UnitServiceEntity();
 
         unitServiceEntity.setUnit(unit);
-        unitServiceEntity.setServiceEntity(service);
+        unitServiceEntity.setApartmentService(service);
 
         BigDecimal price = service.getPrice();
         unitServiceEntity.setMonthlyPrice(price);
@@ -80,13 +79,13 @@ public class UnitServiceService {
 
         unitServiceRepository.delete(unitService);
 
-        log.info("Unit Service with ID: " + unitServiceId + unitService.getServiceEntity().getServiceName() + " has been deleted");
+        log.info("Unit Service with ID: " + unitServiceId + unitService.getApartmentService().getServiceName() + " has been deleted");
     }
 
 
     private UnitServiceInfoDTO toUnitServiceInfoDTO(UnitServiceEntity unitServiceEntity) {
 
-        String serviceName = unitServiceEntity.getServiceEntity().getServiceName();
+        String serviceName = unitServiceEntity.getApartmentService().getServiceName();
         String unitName = unitServiceEntity.getUnit().getUnitName();
 
         UnitServiceInfoDTO unitServiceDTO = new UnitServiceInfoDTO();
