@@ -13,6 +13,16 @@ public class PaymentSpecification {
         return (root, query, criteriaBuilder) -> paymentStatus == null ? null : criteriaBuilder.equal(root.get("paymentStatus"),paymentStatus);
     }
 
+    public static Specification<Payment> hasVerificationStatus(Payment.VerificationStatus verificationStatus) {
+        return (root, query, criteriaBuilder) ->
+                verificationStatus == null ? null : criteriaBuilder.equal(root.get("verificationStatus"),verificationStatus);
+    }
+
+    public static Specification<Payment> hasUser(UUID userId) {
+        return (root, query, criteriaBuilder) ->  userId == null ? null :
+                criteriaBuilder.equal(root.get("invoice").get("contract").get("tenant").get("id"),userId);
+    }
+
     public static Specification<Payment> hasApartment(UUID apartmentId) {
         return (root, query, criteriaBuilder) ->  apartmentId == null ? null : criteriaBuilder.equal(root.get("invoice").get("apartment").get("id"),apartmentId);
     }

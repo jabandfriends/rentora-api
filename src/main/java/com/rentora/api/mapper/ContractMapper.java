@@ -1,21 +1,75 @@
 package com.rentora.api.mapper;
 
-import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
-import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
-import com.rentora.api.model.dto.Contract.Response.ContractUpdateResponseDto;
+import com.rentora.api.model.dto.Contract.Response.*;
 import com.rentora.api.model.entity.Contract;
+import com.rentora.api.model.entity.UnitServiceEntity;
+import com.rentora.api.model.entity.UnitUtilities;
 import com.rentora.api.service.S3FileService;
+import com.rentora.api.service.UnitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class ContractMapper {
     private final S3FileService s3FileService;
+
+
+    public List<ContractRoomServiceDto> toBulkContractRoomServiceDto(List<UnitServiceEntity> unitServices) {
+        List<ContractRoomServiceDto> contractRoomServiceDtoList = new ArrayList<>();
+
+        for(UnitServiceEntity unitService : unitServices){
+            ContractRoomServiceDto service = ContractRoomServiceDto.builder()
+                    .id(unitService.getId())
+                    .serviceName(unitService.getApartmentService().getServiceName())
+                    .isActive(unitService.getIsActive())
+                    .servicePrice(unitService.getApartmentService().getPrice())
+                    .build();
+            contractRoomServiceDtoList.add(service);
+        }
+
+        return contractRoomServiceDtoList;
+
+
+    }
+
+    public LatestUtilityUsageResponseDto toLatestUtilityUsageResponseDto(UnitUtilities unitUtilities) {
+        return LatestUtilityUsageResponseDto.builder()
+                .utilityType(unitUtilities.getUtility().getUtilityName())
+                .readingDate(unitUtilities.getReadingDate())
+                .beforeReading(unitUtilities.getMeterStart())
+                .afterReading(unitUtilities.getMeterEnd())
+                .totalCost(unitUtilities.getCalculatedCost())
+                .totalUsage(unitUtilities.getUsageAmount())
+                .build();
+    }
+
+    public ContractTenantDetail toContractTenantDetailDto(
+            Contract contract,
+            List<LatestUtilityUsageResponseDto> latestUtility,
+            List<ContractRoomServiceDto> roomServices) {
+        Long daysRemaining = ChronoUnit.DAYS.between(LocalDate.now(),contract.getEndDate());
+        return ContractTenantDetail.builder()
+                .roomNumber(contract.getUnit().getUnitName())
+                .floorNumber(contract.getUnit().getFloor().getFloorName())
+                .buildingName(contract.getUnit().getFloor().getBuilding().getName())
+                .startDate(contract.getStartDate())
+                .endDate(contract.getEndDate())
+                .daysRemaining(daysRemaining)
+                .rentalPrice(contract.getRentalPrice())
+                .depositAmount(contract.getDepositAmount())
+                .rentalType(contract.getRentalType())
+                .utilityUsage(latestUtility)
+                .roomServices(roomServices)
+                .build();
+
+    }
     public ContractUpdateResponseDto toContractUpdateResponseDto(URL presignedURL, Contract contract) {
         return ContractUpdateResponseDto.builder()
                 .presignedUrl(presignedURL)
@@ -115,3 +169,4 @@ public class ContractMapper {
         return dto;
     }
 }
+

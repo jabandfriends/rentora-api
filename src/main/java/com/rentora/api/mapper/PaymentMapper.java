@@ -1,5 +1,6 @@
 package com.rentora.api.mapper;
 
+import com.rentora.api.model.dto.Payment.Response.TenantPaymentsResponseDto;
 import com.rentora.api.model.dto.Payment.Response.UpdatePaymentResponseDto;
 import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
 import com.rentora.api.model.entity.Invoice;
@@ -14,6 +15,24 @@ import java.net.URL;
 @RequiredArgsConstructor
 public class PaymentMapper {
     private final S3FileService s3FileService;
+
+    public TenantPaymentsResponseDto toTenantPayments(Payment payment) {
+        URL paymentReceipt = null;
+        if(payment.getReceiptUrl() !=null && !payment.getReceiptUrl().isEmpty()){
+            paymentReceipt = s3FileService.generatePresignedUrlForGet(payment.getReceiptUrl());
+        }
+        return TenantPaymentsResponseDto.builder()
+                .paymentId(payment.getId())
+                .invoiceNumber(payment.getInvoice().getInvoiceNumber())
+                .verificationStatus(payment.getVerificationStatus())
+                .paymentDueDate(payment.getInvoice().getDueDate())
+                .paymentStatus(payment.getPaymentStatus())
+                .paymentReceiptUrl(paymentReceipt)
+                .paidDate(payment.getPaidAt())
+                .paymentAmount(payment.getAmount())
+                .build();
+    }
+
     public PaymentResponseDto toPaymentResponseDto(Payment payment) {
         URL paymentReceipt = null;
         if(payment.getReceiptUrl() !=null && !payment.getReceiptUrl().isEmpty()){
