@@ -18,10 +18,8 @@ import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
 import com.rentora.api.model.dto.Invoice.Response.ExecuteAdhocInvoiceResponse;
 import com.rentora.api.model.entity.*;
-import com.rentora.api.repository.AdhocInvoiceRepository;
-import com.rentora.api.repository.ApartmentRepository;
-import com.rentora.api.repository.UnitRepository;
-import com.rentora.api.repository.UserRepository;
+import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ContractSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +46,7 @@ public class AdhocInvoiceService {
     private final UnitRepository unitRepository;
     private final ApartmentRepository apartmentRepository;
     private final UserRepository userRepository;
+    private final ContractRepository contractRepository;
 
     private final AdhocInvoiceMapper adhocInvoiceMapper;
 
@@ -94,6 +93,32 @@ public class AdhocInvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException("AdhocInvoice not found or access denied"));
 
         return adhocInvoiceMapper.toAdhocInvoiceDetailDTO(adhocInvoice);
+    }
+
+    public Page<AdhocInvoiceSummaryDTO> getAdhocInvoicesByTenant(
+            UUID tenantUserId,
+            UUID apartmentId,
+            AdhocInvoice.PaymentStatus paymentStatus,
+            AdhocInvoice.AdhocInvoiceCategory category,
+            Pageable pageable) {
+
+        userRepository.findById(tenantUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + tenantUserId));
+
+        Specification<Contract> contractSpec = ContractSpecification.hasApartmentId(apartmentId)
+                .and(ContractSpecification.hasTenantId(tenantUserId))
+                .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+
+        Contract activeContract = contractRepository.findOne(contractSpec)
+                .orElseThrow(() -> new ResourceNotFoundException("Active Contract not found for tenant: " + tenantUserId + " in apartment: " + apartmentId));
+
+        UUID unitId = activeContract.getUnit().getId();
+
+        Specification<AdhocInvoice> invoiceSpec = AdhocInvoiceSpecification.hasUnitIdForAdhoc(unitId);
+
+        Page<AdhocInvoice> adhocInvoices = invoiceRepository.findAll(invoiceSpec, pageable);
+
+        return adhocInvoices.map(adhocInvoiceMapper::toAdhocInvoiceSummaryDTO);
     }
 
 

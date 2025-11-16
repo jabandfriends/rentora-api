@@ -79,6 +79,37 @@ public class MaintenanceController {
         return ResponseEntity.ok(ApiResponse.success(maintenance));
     }
 
+    @GetMapping("/tenant/{tenantUserId}")
+    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceInfoDTO>>> getTenantMaintenances(
+            @PathVariable UUID apartmentId, // Path Variable จาก Request Mapping เดิม
+            @PathVariable UUID tenantUserId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) Maintenance.Status status,
+            @RequestParam(required = false) Boolean isRecurring,
+            @RequestParam(required = false) Maintenance.Priority priority) {
+
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+
+        Page<MaintenanceInfoDTO> maintenancePage = maintenanceService.getMaintenanceByTenant(
+                tenantUserId,
+                apartmentId,
+                status,
+                isRecurring,
+                priority,
+                pageable
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenancePage, page)));
+    }
+
 
 
 

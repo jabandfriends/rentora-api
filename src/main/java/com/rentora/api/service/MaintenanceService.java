@@ -11,6 +11,7 @@ import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceSupplyResponseDto;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ContractSpecification;
 import com.rentora.api.specifications.MaintenanceSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,8 @@ public class MaintenanceService {
     private final UnitRepository unitRepository;
     private final MaintenanceSupplyRepository  maintenanceSupplyRepository;
     private final SupplyTransactionService supplyTransactionService;
+    private final ContractRepository contractRepository; //
+    private final UserRepository userRepository;
 
     private final MaintenanceSupplyService maintenanceSupplyService;
 
@@ -69,6 +72,33 @@ public class MaintenanceService {
         return MaintenanceMetadataResponseDto.builder().totalMaintenance(totalMaintenance).completedCount(totalCompleteMaintenances)
                 .pendingCount(totalPendingMaintenances).urgentCount(totalUrgentMaintenance).inProgressCount(totalInprogressMaintenances).build();
 
+    }
+
+    public Page<MaintenanceInfoDTO> getMaintenanceByTenant(UUID tenantUserId, UUID apartmentId,
+                                                           Maintenance.Status status, Boolean isRecurring,
+                                                           Maintenance.Priority priority, Pageable pageable) {
+
+        userRepository.findById(tenantUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + tenantUserId));
+
+        Specification<Contract> spec = ContractSpecification.hasApartmentId(apartmentId)
+                .and(ContractSpecification.hasTenantId(tenantUserId))
+                .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+
+        Contract activeContract = contractRepository.findOne(spec)
+                .orElseThrow(() -> new ResourceNotFoundException("Active Contract not found for tenant: " + tenantUserId + " in apartment: " + apartmentId));
+
+        UUID unitId = activeContract.getUnit().getId();
+
+        return this.getMaintenance(
+                apartmentId,
+                null,
+                status,
+                isRecurring,
+                unitId,
+                priority,
+                pageable
+        );
     }
 
     public ExecuteMaintenanceResponse createMaintenance(UUID userId, CreateMaintenanceRequest request) {
