@@ -122,6 +122,7 @@ public class ContractService {
         contract.setDepositAmount(request.getDepositAmount());
         contract.setAdvancePaymentMonths(request.getAdvancePaymentMonths());
         contract.setLateFeeAmount(unit.getFloor().getBuilding().getApartment().getLateFee());
+
         if(request.getRentalType().equals(Contract.RentalType.daily)){
             contract.setUtilitiesIncluded(false);
         }else{

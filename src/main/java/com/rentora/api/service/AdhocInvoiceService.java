@@ -181,4 +181,8 @@ public class AdhocInvoiceService {
         return new ExecuteAdhocInvoiceResponse(savedAdhocInvoice.getId());
     }
 
+
+    // tenant
+
+
 }
