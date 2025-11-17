@@ -64,6 +64,7 @@ public class AdhocInvoiceService {
         return allAdhocInvoices.map(adhocInvoiceMapper::toAdhocInvoiceSummaryDTO);
     }
 
+
     public Page<AdhocInvoiceSummaryDTO> searchAdhocInvoiceOverdue(String invoiceNumber,
                                                       Pageable pageable, UUID apartmentId) {
 
@@ -207,7 +208,6 @@ public class AdhocInvoiceService {
     }
 
 
-    // tenant
 
 
 }

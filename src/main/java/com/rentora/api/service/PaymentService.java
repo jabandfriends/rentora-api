@@ -3,10 +3,7 @@ package com.rentora.api.service;
 
 import com.rentora.api.mapper.PaymentMapper;
 import com.rentora.api.model.dto.Payment.Request.UpdatePaymentRequestDto;
-import com.rentora.api.model.dto.Payment.Response.UpdatePaymentResponseDto;
-import com.rentora.api.model.dto.Payment.Response.PaymentMetadata;
-import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
-import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
+import com.rentora.api.model.dto.Payment.Response.*;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.*;
 import com.rentora.api.specifications.MonthlyInvoiceSpecification;
@@ -134,6 +131,19 @@ public class PaymentService {
         return paymentMapper.toUpdatePaymentResponseDto(updatedPayment,presignedUrl);
 
     }
+
+    //find by apartmentId , user ID
+    public Page<TenantPaymentsResponseDto> getTenantPayments(UUID apartmentId, UUID userId, Payment.PaymentStatus paymentStatus,
+            Payment.VerificationStatus verificationStatus, Pageable pageable){
+        Specification<Payment> spec = PaymentSpecification.hasApartment(apartmentId)
+                .and(PaymentSpecification.hasUser(userId))
+                .and(PaymentSpecification.hasPaymentStatus(paymentStatus))
+                .and(PaymentSpecification.hasVerificationStatus(verificationStatus));
+        Page<Payment> payments = paymentRepository.findAll(spec,pageable);
+
+        return payments.map(paymentMapper::toTenantPayments);
+    }
+
 
     //payment apply late fee
     // Run at 2:00 AM every day
