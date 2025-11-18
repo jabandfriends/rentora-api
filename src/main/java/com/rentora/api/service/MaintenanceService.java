@@ -247,8 +247,37 @@ public class MaintenanceService {
     public MaintenanceDetailDTO getMaintenanceById(UUID maintenanceId) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
-        return toMaintenanceDetailDto(maintenance);
+
+        OffsetDateTime nextMaintenanceDate = null;
+
+        if (Boolean.TRUE.equals(maintenance.getIsRecurring())
+                && maintenance.getRecurringSchedule() != null
+                && maintenance.getAppointmentDate() != null) {
+
+            OffsetDateTime lastMaintenance = maintenance.getAppointmentDate();
+            Maintenance.RecurringSchedule schedule = maintenance.getRecurringSchedule();
+
+            nextMaintenanceDate = switch (schedule) {
+                case weekly    -> lastMaintenance.plusWeeks(1);
+                case monthly   -> lastMaintenance.plusMonths(1);
+                case quarterly -> lastMaintenance.plusMonths(3);
+                case yearly    -> lastMaintenance.plusYears(1);
+            };
+
+            OffsetDateTime now = OffsetDateTime.now();
+            while (!nextMaintenanceDate.isAfter(now)) {
+                nextMaintenanceDate = switch (schedule) {
+                    case weekly    -> nextMaintenanceDate.plusWeeks(1);
+                    case monthly   -> nextMaintenanceDate.plusMonths(1);
+                    case quarterly -> nextMaintenanceDate.plusMonths(3);
+                    case yearly    -> nextMaintenanceDate.plusYears(1);
+                };
+            }
+        }
+
+        return toMaintenanceDetailDto(maintenance, nextMaintenanceDate);
     }
+
 
     public MaintenanceSupplyResponseDto toMaintenanceSupply(MaintenanceSupply maintenanceSupply) {
         return MaintenanceSupplyResponseDto.builder()
@@ -264,7 +293,7 @@ public class MaintenanceService {
                 .supplyUnit(maintenanceSupply.getSupply().getUnit())
                 .build();
     }
-    public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
+    public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance, OffsetDateTime predictedSchedule) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
 
         if (maintenance == null) {
@@ -336,6 +365,7 @@ public class MaintenanceService {
             dto.setTenantPhoneNumber(maintenance.getTenantUser().getPhoneNumber());
         }
 
+        dto.setPredictedSchedule(predictedSchedule);
 
         return dto;
     }

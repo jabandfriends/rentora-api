@@ -58,4 +58,6 @@ public class MaintenanceDetailDTO {
 
     //supply usage
     private List<MaintenanceSupplyResponseDto> suppliesUsage;
+
+    private OffsetDateTime predictedSchedule;
 }
