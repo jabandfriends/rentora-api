@@ -23,10 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.net.URL;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -248,36 +245,92 @@ public class MaintenanceService {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
 
-        OffsetDateTime nextMaintenanceDate = null;
+        LocalDate nextMaintenanceRecurringDate = null;
 
         if (Boolean.TRUE.equals(maintenance.getIsRecurring())
                 && maintenance.getRecurringSchedule() != null
                 && maintenance.getAppointmentDate() != null) {
 
-            OffsetDateTime lastMaintenance = maintenance.getAppointmentDate();
+            LocalDate lastMaintenance = maintenance.getAppointmentDate().toLocalDate();
             Maintenance.RecurringSchedule schedule = maintenance.getRecurringSchedule();
 
-            nextMaintenanceDate = switch (schedule) {
+            nextMaintenanceRecurringDate = switch (schedule) {
                 case weekly    -> lastMaintenance.plusWeeks(1);
                 case monthly   -> lastMaintenance.plusMonths(1);
                 case quarterly -> lastMaintenance.plusMonths(3);
                 case yearly    -> lastMaintenance.plusYears(1);
             };
 
-            OffsetDateTime now = OffsetDateTime.now();
-            while (!nextMaintenanceDate.isAfter(now)) {
-                nextMaintenanceDate = switch (schedule) {
-                    case weekly    -> nextMaintenanceDate.plusWeeks(1);
-                    case monthly   -> nextMaintenanceDate.plusMonths(1);
-                    case quarterly -> nextMaintenanceDate.plusMonths(3);
-                    case yearly    -> nextMaintenanceDate.plusYears(1);
+            LocalDate now = LocalDate.now();
+            while (!nextMaintenanceRecurringDate.isAfter(now)) {
+                nextMaintenanceRecurringDate = switch (schedule) {
+                    case weekly    -> nextMaintenanceRecurringDate.plusWeeks(1);
+                    case monthly   -> nextMaintenanceRecurringDate.plusMonths(1);
+                    case quarterly -> nextMaintenanceRecurringDate.plusMonths(3);
+                    case yearly    -> nextMaintenanceRecurringDate.plusYears(1);
                 };
             }
         }
 
-        return toMaintenanceDetailDto(maintenance, nextMaintenanceDate);
+        LocalDate predictedMaitenance = predictNextMaintenanceDate(maintenance.getUnit().getId(),maintenance.getCategory());
+
+        return toMaintenanceDetailDto(maintenance, nextMaintenanceRecurringDate, predictedMaitenance);
     }
 
+    public LocalDate predictNextMaintenanceDate(UUID unitId, Maintenance.Category category) {
+
+        List<Maintenance> history =
+                maintenanceRepository.findByUnitIdAndCategoryAndStatusOrderByCompletedAtAsc(
+                        unitId,
+                        category,
+                        Maintenance.Status.completed
+                );
+
+        if (history.size() < 2) {
+            return null;
+        }
+
+        List<Long> gapsInDays = new ArrayList<>();
+
+        for (int i = 0; i < history.size() - 1; i++) {
+            OffsetDateTime current = history.get(i).getCompletedAt();
+            OffsetDateTime next    = history.get(i + 1).getCompletedAt();
+
+            if (current == null || next == null) {
+                continue;
+            }
+
+            long days = Duration.between(current, next).toDays();
+
+            if (days > 0 && days < 365L * 3) {
+                gapsInDays.add(days);
+            }
+        }
+
+        if (gapsInDays.isEmpty()) {
+            return null;
+        }
+
+        Collections.sort(gapsInDays);
+        int n = gapsInDays.size();
+        long medianDays;
+
+        if (n % 2 == 1) {
+            medianDays = gapsInDays.get(n / 2);
+        } else {
+            long a = gapsInDays.get(n / 2 - 1);
+            long b = gapsInDays.get(n / 2);
+            medianDays = Math.round((a + b) / 2.0);
+        }
+
+        OffsetDateTime lastCompletedAt = history.get(history.size() - 1).getCompletedAt();
+        if (lastCompletedAt == null) {
+            return null;
+        }
+
+        OffsetDateTime predictedDateTime = lastCompletedAt.plusDays(medianDays);
+        return predictedDateTime.toLocalDate();
+    }
 
     public MaintenanceSupplyResponseDto toMaintenanceSupply(MaintenanceSupply maintenanceSupply) {
         return MaintenanceSupplyResponseDto.builder()
@@ -293,7 +346,7 @@ public class MaintenanceService {
                 .supplyUnit(maintenanceSupply.getSupply().getUnit())
                 .build();
     }
-    public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance, OffsetDateTime predictedSchedule) {
+    public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance, LocalDate predictedSchedule, LocalDate predictedRecurringDate) {
         MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
 
         if (maintenance == null) {
@@ -365,6 +418,7 @@ public class MaintenanceService {
             dto.setTenantPhoneNumber(maintenance.getTenantUser().getPhoneNumber());
         }
 
+        dto.setPredictedRecurringDate(predictedRecurringDate);
         dto.setPredictedSchedule(predictedSchedule);
 
         return dto;
