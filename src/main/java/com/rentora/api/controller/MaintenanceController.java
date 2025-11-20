@@ -53,7 +53,6 @@ public class MaintenanceController {
             @RequestParam(required = false) Boolean isRecurring,
             @RequestParam(required = false) UUID unitId,
             @RequestParam(required = false) Maintenance.Priority priority
-
             ) {
 
         int requestedPage = Math.max(page - 1, 0);

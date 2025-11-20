@@ -73,5 +73,10 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID>,
             "ORDER BY YEAR(m.requestedDate) ASC")
     List<MaintenanceYearlySummaryProjection> getYearlySummaryTable(@Param("apartmentId") UUID apartmentId);
 
+    List<Maintenance> findByUnitIdAndCategoryAndStatusOrderByCompletedAtAsc(
+            UUID unitId,
+            Maintenance.Category category,
+            Maintenance.Status status
+    );
 
 }
