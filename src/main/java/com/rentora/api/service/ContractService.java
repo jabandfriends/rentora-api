@@ -96,6 +96,7 @@ public class ContractService {
         Unit unit = unitRepository.findById(request.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found"));
 
+        Apartment apartment = unit.getFloor().getBuilding().getApartment();
         if (unit.getStatus() != Unit.UnitStatus.available) {
             throw new BadRequestException("Unit is not available for rent");
         }
@@ -108,6 +109,15 @@ public class ContractService {
         // Verify tenant exists
         User tenant = userRepository.findById(request.getTenantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+        //check if tenant have contract
+        Specification<Contract> activeContactSpec =  ContractSpecification.hasStatus(Contract.ContractStatus.active)
+                .and(ContractSpecification.hasTenantId(tenant.getId())).and(ContractSpecification.hasApartmentId(apartment.getId()));
+
+        Optional<Contract> activeContact = contractRepository.findOne(activeContactSpec);
+        if(activeContact.isPresent()) {
+            throw new BadRequestException("Tenant already has an active contract");
+        }
+
 
         User createdByUser = userRepository.findById(createdByUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
