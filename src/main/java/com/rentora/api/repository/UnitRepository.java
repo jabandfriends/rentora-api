@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -70,4 +71,7 @@ public interface UnitRepository extends JpaRepository<Unit, UUID>, JpaSpecificat
     boolean existsByFloorIdAndUnitName(UUID floorId, String unitName);
 
     long countByFloor(Floor floor);
+
+    long countByFloorAndStatus(Floor floor, Unit.UnitStatus status);
+
 }

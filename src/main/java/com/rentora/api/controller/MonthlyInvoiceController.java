@@ -26,6 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -37,7 +39,7 @@ public class MonthlyInvoiceController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> createMonthlyInvoice(@AuthenticationPrincipal UserPrincipal currentUser , @RequestBody @Valid CreateMonthlyInvoiceDto request){
-        monthlyInvoiceService.createMonthlyInvoice(currentUser,request.getUnitId(),request.getReadingDate(),request.getPaymentDueDay());
+        monthlyInvoiceService.createMonthlyInvoice(currentUser,request.getUnitId(),request.getReadingDate());
 
         return ResponseEntity.ok(ApiResponse.success("success",null));
     }
@@ -56,6 +58,7 @@ public class MonthlyInvoiceController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "invoiceNumber") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam LocalDate genMonth,
             @RequestParam(required = false) String unitName,
             @RequestParam(required = false) String buildingName,
             @RequestParam(required = false) Invoice.PaymentStatus paymentStatus
@@ -66,9 +69,17 @@ public class MonthlyInvoiceController {
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
-        Page<MonthlyInvoiceResponseDto> monthlyInvoices = monthlyInvoiceService.getAllMonthlyInvoice(paymentStatus,unitName,buildingName,apartmentId,pageable);
+        Page<MonthlyInvoiceResponseDto> monthlyInvoices = monthlyInvoiceService.getAllMonthlyInvoice(genMonth,paymentStatus,unitName,buildingName,apartmentId,pageable);
 
         MonthlyInvoiceMetadataDto monthlyInvoiceMetadata = monthlyInvoiceService.getMonthlyInvoiceMetadata(apartmentId);
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(monthlyInvoices,page,monthlyInvoiceMetadata)));
+    }
+
+    @GetMapping("/all/details/{apartmentId}")
+    public ResponseEntity<ApiResponse<Object>> getMonthlyInvoiceDetails(     @PathVariable UUID apartmentId,
+                                                                             @RequestParam LocalDate genMonth){
+        List<MonthlyInvoiceDetailResponseDto> result = monthlyInvoiceService.getAllMonthlyInvoiceDetail(apartmentId,genMonth);
+
+        return ResponseEntity.ok(ApiResponse.success("Success",result));
     }
 }

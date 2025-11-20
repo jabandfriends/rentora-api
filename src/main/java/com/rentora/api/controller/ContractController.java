@@ -6,6 +6,8 @@ import com.rentora.api.model.dto.Contract.Request.TerminateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
 import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
+import com.rentora.api.model.dto.Contract.Response.ContractTenantDetail;
+import com.rentora.api.model.dto.Contract.Response.ContractUpdateResponseDto;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.security.UserPrincipal;
@@ -39,7 +41,7 @@ public class ContractController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) Contract.ContractStatus contractStatus,
             @RequestParam(required = false) UUID unitId) {
@@ -91,13 +93,13 @@ public class ContractController {
     }
 
     @PutMapping("/{contractId}")
-    public ResponseEntity<ApiResponse<ContractDetailDto>> updateContract(
+    public ResponseEntity<ApiResponse<ContractUpdateResponseDto>> updateContract(
             @PathVariable UUID apartmentId,
             @PathVariable UUID contractId,
             @Valid @RequestBody UpdateContractRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
-        ContractDetailDto contract = contractService.updateContract(contractId, request);
+        ContractUpdateResponseDto contract = contractService.updateContract(apartmentId,contractId, request);
         return ResponseEntity.ok(ApiResponse.success("Contract updated successfully", contract));
     }
 
@@ -110,5 +112,15 @@ public class ContractController {
 
         ContractDetailDto contract = contractService.terminateContract(unitId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Contract terminated successfully", contract));
+    }
+
+
+    @GetMapping("/tenant")
+    public ResponseEntity<ApiResponse<ContractTenantDetail>> getActiveContractByTenantId(
+            @PathVariable UUID apartmentId,
+            @AuthenticationPrincipal UserPrincipal currentUser
+    ){
+        ContractTenantDetail result = contractService.findActiveContractByTenantIdAndApartmentId(currentUser.getId(), apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

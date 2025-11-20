@@ -3,6 +3,7 @@ package com.rentora.api.model.dto.Maintenance.Response;
 import com.rentora.api.model.entity.Maintenance;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -18,6 +19,7 @@ public class MaintenanceInfoDTO {
     private OffsetDateTime dueDate;
     private Maintenance.Status status;
     private Maintenance.Priority priority;
+    private BigDecimal actualCost;
 
     private Boolean isRecurring;
     private Maintenance.RecurringSchedule recurringSchedule;

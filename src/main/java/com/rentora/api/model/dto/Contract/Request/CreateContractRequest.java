@@ -16,15 +16,6 @@ public class CreateContractRequest {
     @NotNull(message = "Tenant ID is required")
     private UUID tenantId;
 
-    @Size(max = 100, message = "Guarantor name cannot exceed 100 characters")
-    private String guarantorName;
-
-    @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Invalid phone number format")
-    @Size(max = 15, message = "Guarantor phone cannot exceed 15 characters")
-    private String guarantorPhone;
-
-    @Size(max = 20, message = "Guarantor ID number cannot exceed 20 characters")
-    private String guarantorIdNumber;
 
     @NotNull(message = "Rental type is required")
     private Contract.RentalType rentalType;
@@ -52,10 +43,8 @@ public class CreateContractRequest {
     @Min(value = 0, message = "Advance payment months cannot be negative")
     private Integer advancePaymentMonths = 0;
 
-    @DecimalMin(value = "0.0", message = "Late fee amount cannot be negative")
-    private BigDecimal lateFeeAmount;
 
-    private Boolean utilitiesIncluded = false;
+
 
     @Size(max = 5000, message = "Terms and conditions cannot exceed 5000 characters")
     private String termsAndConditions;
@@ -65,9 +54,8 @@ public class CreateContractRequest {
 
     private Boolean autoRenewal = false;
 
-    @Min(value = 1, message = "Renewal notice days must be at least 1")
     @Max(value = 365, message = "Renewal notice days cannot exceed 365")
-    private Integer renewalNoticeDays = 30;
+    private Integer renewalNoticeDays;
 
     private String documentUrl;
 }

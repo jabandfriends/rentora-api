@@ -1,6 +1,6 @@
 package com.rentora.api.UnitServiceTest;
 
-import com.rentora.api.model.entity.ServiceEntity;
+import com.rentora.api.model.entity.ApartmentService;
 import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitServiceEntity;
 import com.rentora.api.repository.ApartmentServiceRepository;
@@ -39,7 +39,7 @@ public abstract class UnitServiceBaseTest {
 
     // 4. Entity Objects
     protected Unit mockUnit;
-    protected ServiceEntity mockService;
+    protected ApartmentService mockService;
     protected UnitServiceEntity mockUnitServiceEntity;
 
     @BeforeEach
@@ -50,7 +50,7 @@ public abstract class UnitServiceBaseTest {
         mockUnit.setUnitName("A-101");
 
         // Mock Service Entity
-        mockService = new ServiceEntity();
+        mockService = new ApartmentService();
         mockService.setId(SERVICE_ID);
         mockService.setServiceName("Internet Wi-Fi");
         mockService.setPrice(new BigDecimal("350.00"));
@@ -59,7 +59,7 @@ public abstract class UnitServiceBaseTest {
         mockUnitServiceEntity = new UnitServiceEntity();
         mockUnitServiceEntity.setId(UNIT_SERVICE_ID);
         mockUnitServiceEntity.setUnit(mockUnit);
-        mockUnitServiceEntity.setServiceEntity(mockService);
+        mockUnitServiceEntity.setApartmentService(mockService);
         mockUnitServiceEntity.setMonthlyPrice(new BigDecimal("350.00"));
     }
 }
