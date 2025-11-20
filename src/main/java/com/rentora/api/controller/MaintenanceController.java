@@ -7,6 +7,7 @@ import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
+import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequestByTenant;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
@@ -114,7 +115,7 @@ public class MaintenanceController {
     public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenanceByTenant(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID apartmentId,
-            @Valid @RequestBody CreateMaintenanceRequest request) {
+            @Valid @RequestBody CreateMaintenanceRequestByTenant request) {
 
         ExecuteMaintenanceResponse response = maintenanceService.createMaintenanceByTenant(
                 currentUser.getId(),

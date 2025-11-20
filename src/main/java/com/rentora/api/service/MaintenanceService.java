@@ -3,6 +3,7 @@ package com.rentora.api.service;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
+import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequestByTenant;
 import com.rentora.api.model.dto.Maintenance.Request.MaintenanceSupplyUsageRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
@@ -101,7 +102,7 @@ public class MaintenanceService {
         );
     }
 
-    public ExecuteMaintenanceResponse createMaintenanceByTenant(UUID tenantUserId, UUID apartmentId, CreateMaintenanceRequest request) {
+    public ExecuteMaintenanceResponse createMaintenanceByTenant(UUID tenantUserId, UUID apartmentId, CreateMaintenanceRequestByTenant request) {
         Specification<Contract> spec = ContractSpecification.hasApartmentId(apartmentId)
                 .and(ContractSpecification.hasTenantId(tenantUserId))
                 .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
@@ -168,7 +169,7 @@ public class MaintenanceService {
         return new ExecuteMaintenanceResponse(savedMaintenance.getId());
     }
 
-    
+
     public ExecuteMaintenanceResponse createMaintenance(UUID userId, CreateMaintenanceRequest request) {
 
         Unit unit = unitRepository.findById(request.getUnitId())
