@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import com.rentora.api.model.dto.Invoice.Metadata.AdhocInvoiceOverallDTO;
 import com.rentora.api.model.dto.Invoice.Metadata.OverdueInvoiceOverallDTO;
+import com.rentora.api.model.dto.Invoice.Request.AdhocInvoiceUpdateRequestDto;
+import com.rentora.api.model.dto.Invoice.Request.AdhocUpdateRequestResponseDto;
 import com.rentora.api.model.dto.Invoice.Request.CreateAdhocInvoiceRequest;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
@@ -125,6 +127,12 @@ public class InvoiceController {
 
         ExecuteAdhocInvoiceResponse response = adhocInvoiceService.createAdhocInvoice(currentUser.getId(), apartmentId, request);
         return new ResponseEntity<>(ApiResponse.success("Adhoc invoice created successfully",response), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/adhocInvoice/update")
+    public ResponseEntity<ApiResponse<AdhocUpdateRequestResponseDto>> updateAdhocInvoice(@RequestBody AdhocInvoiceUpdateRequestDto requestDto){
+        AdhocUpdateRequestResponseDto response = adhocInvoiceService.updateAdhocInvoice(requestDto);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
 }
