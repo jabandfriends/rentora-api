@@ -1,13 +1,29 @@
 package com.rentora.api.mapper;
 
+import com.rentora.api.model.dto.Invoice.Request.AdhocUpdateRequestResponseDto;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceDetailDTO;
 import com.rentora.api.model.dto.Invoice.Response.AdhocInvoiceSummaryDTO;
 import com.rentora.api.model.dto.MonthlyInvoice.Response.UnitAdhocInvoice;
 import com.rentora.api.model.entity.AdhocInvoice;
+import com.rentora.api.model.entity.Invoice;
+import com.rentora.api.service.S3FileService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.net.URL;
+
 @Component
+@RequiredArgsConstructor
 public class AdhocInvoiceMapper {
+    private final S3FileService s3FileService;
+
+    public AdhocUpdateRequestResponseDto toAdhocUpdateRequestResponseDto(AdhocInvoice adhocInvoice, URL presignedUrl) {
+        return AdhocUpdateRequestResponseDto.builder()
+                .invoiceId(adhocInvoice.getId())
+                .presignedUrl(presignedUrl)
+                .build();
+
+    }
     public UnitAdhocInvoice toUnitAdhocInvoice(AdhocInvoice adhocInvoice) {
         return UnitAdhocInvoice.builder()
                 .adhocId(adhocInvoice.getId())
@@ -61,7 +77,10 @@ public class AdhocInvoiceMapper {
             detail.setEmail(adhocInvoice.getTenantUserId().getEmail());
         }
 
-        detail.setReceiptUrls(adhocInvoice.getReceiptUrls());
+        if(adhocInvoice.getReceiptUrls() != null && !adhocInvoice.getReceiptUrls().isEmpty()) {
+            URL receiptImg = s3FileService.generatePresignedUrlForGet(adhocInvoice.getReceiptUrls());
+            detail.setReceiptUrls(receiptImg);
+        }
         detail.setImages(adhocInvoice.getImages());
         detail.setNotes(adhocInvoice.getNotes());
         if(adhocInvoice.getCreatedByUserId() != null) {
