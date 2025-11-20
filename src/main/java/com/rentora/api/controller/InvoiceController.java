@@ -94,6 +94,29 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.success(invoice));
     }
 
+    @GetMapping("/tenant/{tenantUserId}")
+    public ResponseEntity<ApiResponse<PaginatedResponse<AdhocInvoiceSummaryDTO>>> getTenantAdhocInvoices(
+            @PathVariable UUID apartmentId,
+            @PathVariable UUID tenantUserId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) AdhocInvoice.PaymentStatus status,
+            @RequestParam(required = false) AdhocInvoice.AdhocInvoiceCategory category) {
+
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+
+        Page<AdhocInvoiceSummaryDTO> summary = adhocInvoiceService.getAdhocInvoicesByTenant(tenantUserId, apartmentId, status, category, pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(summary, page)));
+    }
+
     @PostMapping("/adhocInvoice/create")
     public ResponseEntity<ApiResponse<ExecuteAdhocInvoiceResponse>> createAdhocInvoice(
             @AuthenticationPrincipal UserPrincipal currentUser,
