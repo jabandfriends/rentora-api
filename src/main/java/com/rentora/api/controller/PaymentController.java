@@ -4,10 +4,7 @@ import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
 import com.rentora.api.model.dto.Payment.Request.UpdatePaymentRequestDto;
-import com.rentora.api.model.dto.Payment.Response.PaymentMetadata;
-import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
-import com.rentora.api.model.dto.Payment.Response.PaymentResponseDto;
-import com.rentora.api.model.dto.Payment.Response.UpdatePaymentResponseDto;
+import com.rentora.api.model.dto.Payment.Response.*;
 import com.rentora.api.model.entity.Payment;
 import com.rentora.api.repository.PaymentRepository;
 import com.rentora.api.security.UserPrincipal;
@@ -37,6 +34,26 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PaymentMonthlyAvenue>> getMonthlyRevenue(@PathVariable UUID apartmentId) {
         PaymentMonthlyAvenue summary = paymentService.getMonthlyData(apartmentId);
         return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    //tenant getTenantPayments
+    @GetMapping("/tenant/{apartmentId}")
+    public ResponseEntity<ApiResponse<PaginatedResponse<TenantPaymentsResponseDto>>> getTenantPayments(
+            @PathVariable UUID apartmentId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Payment.VerificationStatus verificationStatus,
+            @RequestParam(required = false) Payment.PaymentStatus paymentStatus,
+            @AuthenticationPrincipal UserPrincipal currentUser
+
+    ) {
+        int requestedPage = Math.max(page - 1, 0);
+
+
+        Pageable pageable = PageRequest.of(requestedPage, size);
+        Page<TenantPaymentsResponseDto> payments = paymentService.getTenantPayments(apartmentId,currentUser.getId(),paymentStatus,verificationStatus,pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(payments,page)));
     }
 
     @GetMapping("/{apartmentId}")

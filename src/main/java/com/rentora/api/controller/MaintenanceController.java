@@ -7,6 +7,7 @@ import com.rentora.api.model.dto.Apartment.Response.ExecuteApartmentResponse;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
+import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequestByTenant;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceDetailDTO;
@@ -52,7 +53,6 @@ public class MaintenanceController {
             @RequestParam(required = false) Boolean isRecurring,
             @RequestParam(required = false) UUID unitId,
             @RequestParam(required = false) Maintenance.Priority priority
-
             ) {
 
         int requestedPage = Math.max(page - 1, 0);
@@ -77,6 +77,52 @@ public class MaintenanceController {
             @AuthenticationPrincipal UserPrincipal currentUser) {
         MaintenanceDetailDTO maintenance = maintenanceService.getMaintenanceById(maintenanceId);
         return ResponseEntity.ok(ApiResponse.success(maintenance));
+    }
+
+    @GetMapping("/tenant")
+    public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceInfoDTO>>> getTenantMaintenances(
+            @PathVariable UUID apartmentId, // Path Variable จาก Request Mapping เดิม
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) Maintenance.Status status,
+            @RequestParam(required = false) Boolean isRecurring,
+            @RequestParam(required = false) Maintenance.Priority priority) {
+
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+
+        Page<MaintenanceInfoDTO> maintenancePage = maintenanceService.getMaintenanceByTenant(
+                currentUser.getId(),
+                apartmentId,
+                status,
+                isRecurring,
+                priority,
+                pageable
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenancePage, page)));
+    }
+
+    @PostMapping("/tenant/create")
+    public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenanceByTenant(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID apartmentId,
+            @Valid @RequestBody CreateMaintenanceRequestByTenant request) {
+
+        ExecuteMaintenanceResponse response = maintenanceService.createMaintenanceByTenant(
+                currentUser.getId(),
+                apartmentId,
+                request
+        );
+
+        return new ResponseEntity<>(ApiResponse.success("Tenant maintenance request created successfully", response), HttpStatus.CREATED);
     }
 
 
