@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -76,5 +75,41 @@ public interface UnitUtilityRepository extends JpaRepository<UnitUtilities, UUID
     );
 
     List<UnitUtilities> findByUnitAndUsageMonth(Unit unit, LocalDate usageMonth);
+
+    @Query("""
+        SELECT u
+        FROM UnitUtilities u
+        JOIN u.unit unit
+        JOIN unit.floor floor
+        JOIN floor.building building
+        JOIN building.apartment apartment
+        WHERE apartment.id = :apartmentId
+          AND FUNCTION('date_part', 'year', u.usageMonth) = :year
+    """)
+    List<UnitUtilities> findAllByApartmentIdAndYear(
+            @Param("apartmentId") UUID apartmentId,
+            @Param("year") int year
+    );
+
+    @Query("""
+    SELECT
+        FUNCTION('date_part', 'year', u.usageMonth),
+        u.utility.utilityName,
+        SUM(u.usageAmount)
+    FROM UnitUtilities u
+    JOIN u.unit unit
+    JOIN unit.floor floor
+    JOIN floor.building building
+    JOIN building.apartment apartment
+    WHERE apartment.id = :apartmentId
+    GROUP BY FUNCTION('date_part', 'year', u.usageMonth), u.utility.utilityName
+    ORDER BY FUNCTION('date_part', 'year', u.usageMonth)
+""")
+    List<Object[]> findYearlyUsageSummary(@Param("apartmentId") UUID apartmentId);
+
+
+
+
+
 
 }
