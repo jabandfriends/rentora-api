@@ -40,8 +40,16 @@ public class ContractMapper {
     }
 
     public LatestUtilityUsageResponseDto toLatestUtilityUsageResponseDto(UnitUtilities unitUtilities) {
+        if (unitUtilities == null) {
+            return null;
+        }
+
+        String utilityName = (unitUtilities.getUtility() != null) ?
+                unitUtilities.getUtility().getUtilityName() :
+                "N/A";
+
         return LatestUtilityUsageResponseDto.builder()
-                .utilityType(unitUtilities.getUtility().getUtilityName())
+                .utilityType(utilityName)
                 .readingDate(unitUtilities.getReadingDate())
                 .beforeReading(unitUtilities.getMeterStart())
                 .afterReading(unitUtilities.getMeterEnd())

@@ -101,6 +101,74 @@ public class MaintenanceService {
         );
     }
 
+    public ExecuteMaintenanceResponse createMaintenanceByTenant(UUID tenantUserId, UUID apartmentId, CreateMaintenanceRequest request) {
+        Specification<Contract> spec = ContractSpecification.hasApartmentId(apartmentId)
+                .and(ContractSpecification.hasTenantId(tenantUserId))
+                .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+
+        Contract activeContract = contractRepository.findOne(spec)
+                .orElseThrow(() -> new ResourceNotFoundException("Active Contract not found for tenant: " + tenantUserId + " in apartment: " + apartmentId));
+
+        Unit unit = activeContract.getUnit();
+        User tenant = activeContract.getTenant();
+
+        Maintenance maintenance = new Maintenance();
+
+        maintenance.setUnit(unit);
+        maintenance.setTenantUser(tenant);
+
+        maintenance.setCategory(request.getCategory());
+        maintenance.setTitle(request.getTitle());
+        maintenance.setDescription(request.getDescription());
+        maintenance.setPriority(request.getPriority());
+        maintenance.setAppointmentDate(request.getAppointmentDate());
+        maintenance.setDueDate(request.getDueDate());
+        maintenance.setEstimatedHours(request.getEstimatedHours());
+        maintenance.setEstimatedCost(request.getEstimatedCost());
+        maintenance.setRequestedDate(LocalDate.now());
+        maintenance.setIsEmergency(request.getIsEmergency());
+        maintenance.setIsRecurring(request.getIsRecurring());
+        maintenance.setStatus(Maintenance.Status.pending);
+
+        if(request.getRecurringSchedule() != null ) {
+            maintenance.setRecurringSchedule(request.getRecurringSchedule());
+        }
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        List<MaintenanceSupply> maintenanceSupplyList = new ArrayList<>();
+
+        List<MaintenanceSupplyUsageRequest> suppliesUsage = request.getSuppliesUsage();
+
+        if (suppliesUsage != null) {
+            for (var supply : suppliesUsage) {
+                MaintenanceSupply maintenanceSupply = maintenanceSupplyService.maintenanceUseSupply(
+                        maintenance,
+                        supply.getSupplyId(),
+                        supply.getSupplyUsedQuantity(),
+                        tenantUserId
+                );
+
+                if(maintenanceSupply != null) {
+                    totalPrice = totalPrice.add(maintenanceSupply.getCost());
+                    maintenanceSupplyList.add(maintenanceSupply);
+                }
+            }
+        }
+
+        maintenance.setActualCost(totalPrice);
+        Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
+
+        if (!maintenanceSupplyList.isEmpty()) {
+            for(MaintenanceSupply supply : maintenanceSupplyList) {
+                MaintenanceSupply maintenanceSupply = maintenanceSupplyRepository.save(supply);
+                supplyTransactionService.createMaintenanceUseSupplyTransaction(maintenanceSupply, tenantUserId);
+            }
+        }
+
+        return new ExecuteMaintenanceResponse(savedMaintenance.getId());
+    }
+
+    
     public ExecuteMaintenanceResponse createMaintenance(UUID userId, CreateMaintenanceRequest request) {
 
         Unit unit = unitRepository.findById(request.getUnitId())

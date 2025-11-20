@@ -79,10 +79,10 @@ public class MaintenanceController {
         return ResponseEntity.ok(ApiResponse.success(maintenance));
     }
 
-    @GetMapping("/tenant/{tenantUserId}")
+    @GetMapping("/tenant")
     public ResponseEntity<ApiResponse<PaginatedResponse<MaintenanceInfoDTO>>> getTenantMaintenances(
             @PathVariable UUID apartmentId, // Path Variable จาก Request Mapping เดิม
-            @PathVariable UUID tenantUserId,
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "title") String sortBy,
@@ -99,7 +99,7 @@ public class MaintenanceController {
         Pageable pageable = PageRequest.of(requestedPage, size, sort);
 
         Page<MaintenanceInfoDTO> maintenancePage = maintenanceService.getMaintenanceByTenant(
-                tenantUserId,
+                currentUser.getId(),
                 apartmentId,
                 status,
                 isRecurring,
@@ -108,6 +108,21 @@ public class MaintenanceController {
         );
 
         return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(maintenancePage, page)));
+    }
+
+    @PostMapping("/tenant/create")
+    public ResponseEntity<ApiResponse<ExecuteMaintenanceResponse>> createMaintenanceByTenant(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID apartmentId,
+            @Valid @RequestBody CreateMaintenanceRequest request) {
+
+        ExecuteMaintenanceResponse response = maintenanceService.createMaintenanceByTenant(
+                currentUser.getId(),
+                apartmentId,
+                request
+        );
+
+        return new ResponseEntity<>(ApiResponse.success("Tenant maintenance request created successfully", response), HttpStatus.CREATED);
     }
 
 
