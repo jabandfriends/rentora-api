@@ -4,9 +4,7 @@ import com.rentora.api.mapper.ContractMapper;
 import com.rentora.api.model.dto.Contract.Request.CreateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.TerminateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
-import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
-import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
-import com.rentora.api.model.dto.Contract.Response.ContractUpdateResponseDto;
+import com.rentora.api.model.dto.Contract.Response.*;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
@@ -43,6 +41,8 @@ public class ContractService {
     private final UnitRepository unitRepository;
     private final ApartmentRepository apartmentRepository;
     private final UserRepository userRepository;
+    private final UnitServiceRepository unitServiceRepository;
+    private final UnitUtilityService unitUtilityService;
 
     private final S3FileService s3FileService;
 
@@ -230,6 +230,32 @@ public class ContractService {
         log.info("Contract terminated: {} for unit: {}", savedContract.getContractNumber(), unit.getUnitName());
 
         return contractMapper.toContractDetailDto(savedContract);
+    }
+
+    public ContractTenantDetail findActiveContractByTenantIdAndApartmentId(UUID tenantId, UUID apartmentId) {
+        Specification<Contract> spec = ContractSpecification.hasApartmentId(apartmentId).and(ContractSpecification.hasTenantId(tenantId))
+                .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+        Contract activeContract = contractRepository.findOne(spec)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+
+        Unit currentUnit = activeContract.getUnit();
+
+        //utility
+        UnitUtilities waterUtility = unitUtilityService.findLastReading(currentUnit,"water");
+        UnitUtilities electricUtility = unitUtilityService.findLastReading(currentUnit,"electric");
+        LatestUtilityUsageResponseDto waterLatest = contractMapper.toLatestUtilityUsageResponseDto(waterUtility);
+        LatestUtilityUsageResponseDto electricLatest = contractMapper.toLatestUtilityUsageResponseDto(electricUtility);
+        List<LatestUtilityUsageResponseDto> utilityList = new ArrayList<>();
+        utilityList.add(waterLatest);
+        utilityList.add(electricLatest);
+
+        //services
+        List<UnitServiceEntity> serviceList = unitServiceRepository.findAllByUnitId(currentUnit.getId());
+        log.info("servicelength " + serviceList.size());
+        List<ContractRoomServiceDto> unitServices = contractMapper.toBulkContractRoomServiceDto(serviceList);
+
+        return contractMapper.toContractTenantDetailDto(activeContract,utilityList,unitServices);
+
     }
 
 
