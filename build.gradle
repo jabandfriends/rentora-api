@@ -54,6 +54,9 @@ dependencies {
     // Spring AOP for custom annotations
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
+    // tess4j for read image to text
+    implementation("net.sourceforge.tess4j:tess4j:5.16.0")
+
 
 
 
