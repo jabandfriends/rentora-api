@@ -10,6 +10,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -22,8 +23,6 @@ public class MonthlyInvoiceDetailResponseDto {
     private String tenantName;
     private BigDecimal totalAmount; //rent + utility + service + else
     private Invoice.PaymentStatus paymentStatus;
-
-    //new
 
     private String tenantPhone;
     private String tenantEmail;
@@ -38,6 +37,8 @@ public class MonthlyInvoiceDetailResponseDto {
     private LocalDate billEnd;
     private Contract.RentalType rentalType;
 
+    //payment
+    private UUID paymentId;
 
     //water usage
     private BigDecimal waterMeterStart;
@@ -65,5 +66,10 @@ public class MonthlyInvoiceDetailResponseDto {
     private String bankAccountNumber;
     private final String accountHolderName;
     private final String promptpayNumber;
+
+    //serviceList
+    private List<UnitServiceList> serviceList;
+    //adhoc
+    private List<UnitAdhocInvoice> unitAdhocInvoices;
 
 }

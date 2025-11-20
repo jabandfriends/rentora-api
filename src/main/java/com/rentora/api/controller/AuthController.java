@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
@@ -81,5 +83,12 @@ public class AuthController {
         ));
     }
 
+    @PutMapping("/me/update") public ResponseEntity<ApiResponse<Object>> updateUser(@AuthenticationPrincipal UserPrincipal userPrincipal, @Valid @RequestBody UpdateUserRequestDto requestDto)throws BadRequestException{
 
+        authService.updateUser(userPrincipal.getId(), requestDto);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                "User information updated successfully", null
+        ));
+    }
 }

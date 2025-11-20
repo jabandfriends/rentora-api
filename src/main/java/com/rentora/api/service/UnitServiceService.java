@@ -1,7 +1,15 @@
 package com.rentora.api.service;
 
+import com.rentora.api.exception.BadRequestException;
+import com.rentora.api.exception.ResourceNotFoundException;
+import com.rentora.api.model.dto.UnitService.Request.CreateUnitServiceRequest;
+import com.rentora.api.model.dto.UnitService.Response.ExecuteUnitServiceResponse;
 import com.rentora.api.model.dto.UnitService.Response.UnitServiceInfoDTO;
+import com.rentora.api.model.entity.ApartmentService;
+import com.rentora.api.model.entity.Unit;
 import com.rentora.api.model.entity.UnitServiceEntity;
+import com.rentora.api.repository.ApartmentServiceRepository;
+import com.rentora.api.repository.UnitRepository;
 import com.rentora.api.repository.UnitServiceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,6 +31,8 @@ import java.util.stream.Collectors;
 public class UnitServiceService {
 
     private final UnitServiceRepository unitServiceRepository;
+    private final UnitRepository unitRepository;
+    private final ApartmentServiceRepository apartmentServiceRepository;
 
     public List<UnitServiceInfoDTO> getUnitServicesByUnit(UUID unitId) {
 
@@ -36,10 +48,44 @@ public class UnitServiceService {
                 .collect(Collectors.toList());
     }
 
+    public ExecuteUnitServiceResponse createUnitService(UUID unitId, CreateUnitServiceRequest request) {
+
+        Unit unit  = unitRepository.findById(unitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + unitId));
+
+        ApartmentService service = apartmentServiceRepository.findById(request.getServiceId()) // สมมติว่า Request มี getServiceId()
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: " + request.getServiceId()));
+
+        Optional<UnitServiceEntity> unitService = unitServiceRepository.findByUnitIdAndApartmentServiceId(unitId,request.getServiceId());
+        if(unitService.isPresent()) throw new BadRequestException("This service already exists in this units.");
+
+        UnitServiceEntity unitServiceEntity = new  UnitServiceEntity();
+
+        unitServiceEntity.setUnit(unit);
+        unitServiceEntity.setApartmentService(service);
+
+        BigDecimal price = service.getPrice();
+        unitServiceEntity.setMonthlyPrice(price);
+
+
+        UnitServiceEntity savedUnitService = unitServiceRepository.save(unitServiceEntity);
+
+        return new ExecuteUnitServiceResponse(savedUnitService.getId());
+
+    }
+
+    public void deleteUnitService(UUID unitServiceId) {
+        UnitServiceEntity unitService = unitServiceRepository.findById(unitServiceId).orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: "));
+
+        unitServiceRepository.delete(unitService);
+
+        log.info("Unit Service with ID: " + unitServiceId + unitService.getApartmentService().getServiceName() + " has been deleted");
+    }
+
 
     private UnitServiceInfoDTO toUnitServiceInfoDTO(UnitServiceEntity unitServiceEntity) {
 
-        String serviceName = unitServiceEntity.getServiceEntity().getServiceName();
+        String serviceName = unitServiceEntity.getApartmentService().getServiceName();
         String unitName = unitServiceEntity.getUnit().getUnitName();
 
         UnitServiceInfoDTO unitServiceDTO = new UnitServiceInfoDTO();

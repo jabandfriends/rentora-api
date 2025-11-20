@@ -36,8 +36,6 @@ public class ApartmentUser {
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.tenant;
 
-
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;

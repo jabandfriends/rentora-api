@@ -14,6 +14,13 @@ public class ContractSpecification {
         };
     }
 
+    public static Specification<Contract> hasTenantId(UUID tenantId) {
+        return (root, query, criteriaBuilder) -> {
+            if (tenantId == null ) return null;
+            return criteriaBuilder.equal(root.get("tenant").get("id"), tenantId);
+        };
+    }
+
     public static Specification<Contract> hasApartmentId(UUID id) {
         return (root, query, criteriaBuilder) -> {
             if (id == null ) return null;

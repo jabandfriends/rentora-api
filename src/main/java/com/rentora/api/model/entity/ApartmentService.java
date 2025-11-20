@@ -14,7 +14,7 @@ import java.util.UUID;
 @Table(name = "extra_services")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
-public class ServiceEntity {
+public class ApartmentService {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

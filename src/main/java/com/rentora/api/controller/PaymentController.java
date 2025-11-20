@@ -1,30 +1,88 @@
 package com.rentora.api.controller;
 
 import com.rentora.api.model.dto.ApiResponse;
-import com.rentora.api.model.dto.Payment.Response.PaymentMonthlyAvenue;
+import com.rentora.api.model.dto.PaginatedResponse;
+import com.rentora.api.model.dto.PaginatedResponseWithMetadata;
+import com.rentora.api.model.dto.Payment.Request.UpdatePaymentRequestDto;
+import com.rentora.api.model.dto.Payment.Response.*;
+import com.rentora.api.model.entity.Payment;
 import com.rentora.api.repository.PaymentRepository;
+import com.rentora.api.security.UserPrincipal;
 import com.rentora.api.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/payments/{apartmentId}")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @GetMapping("/monthly")
+    @GetMapping("/{apartmentId}/monthly")
     public ResponseEntity<ApiResponse<PaymentMonthlyAvenue>> getMonthlyRevenue(@PathVariable UUID apartmentId) {
         PaymentMonthlyAvenue summary = paymentService.getMonthlyData(apartmentId);
         return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    //tenant getTenantPayments
+    @GetMapping("/tenant/{apartmentId}")
+    public ResponseEntity<ApiResponse<PaginatedResponse<TenantPaymentsResponseDto>>> getTenantPayments(
+            @PathVariable UUID apartmentId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Payment.VerificationStatus verificationStatus,
+            @RequestParam(required = false) Payment.PaymentStatus paymentStatus,
+            @AuthenticationPrincipal UserPrincipal currentUser
+
+    ) {
+        int requestedPage = Math.max(page - 1, 0);
+
+
+        Pageable pageable = PageRequest.of(requestedPage, size);
+        Page<TenantPaymentsResponseDto> payments = paymentService.getTenantPayments(apartmentId,currentUser.getId(),paymentStatus,verificationStatus,pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(payments,page)));
+    }
+
+    @GetMapping("/{apartmentId}")
+    public ResponseEntity<ApiResponse<PaginatedResponse<PaymentResponseDto>>> getAllPayments(
+            @PathVariable UUID apartmentId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) Payment.PaymentStatus status,
+            @RequestParam(required = false) String buildingName,
+            @RequestParam LocalDate genMonth
+            ) {
+        int requestedPage = Math.max(page - 1, 0);
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(requestedPage, size, sort);
+        Page<PaymentResponseDto> payments = paymentService.getAllPayments(genMonth,apartmentId,buildingName,status,pageable);
+        PaymentMetadata metadata = paymentService.getPaymentMetadata(apartmentId);
+
+        return ResponseEntity.ok(ApiResponse.success(PaginatedResponseWithMetadata.of(payments,page,metadata)));
+    }
+
+    @PutMapping("/{paymentId}")
+    public ResponseEntity<ApiResponse<UpdatePaymentResponseDto>> updatePayment(@AuthenticationPrincipal UserPrincipal currentUser,@PathVariable UUID paymentId,
+                                                                               @RequestBody UpdatePaymentRequestDto updatePaymentRequestDto) {
+        UpdatePaymentResponseDto updatePaymentResponseDto = paymentService.updatePayment(currentUser.getId(),paymentId, updatePaymentRequestDto);
+        return ResponseEntity.ok(ApiResponse.success(updatePaymentResponseDto));
     }
 }

@@ -10,6 +10,7 @@ import java.util.UUID;
 @Data
 public class TenantDetailInfoResponseDto {
     private UUID userId;
+    private UUID apartmentUserId;
     private String firstName;
     private String lastName;
     private String fullName;
@@ -20,6 +21,8 @@ public class TenantDetailInfoResponseDto {
     private String emergencyContactName;
     private String emergencyContactPhone;
     private LocalDateTime createdAt;
+    private Boolean isActive;
+    private UserRole role;
 
 
 }

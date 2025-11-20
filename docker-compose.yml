@@ -10,6 +10,17 @@ services:
       - ./db:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
 
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.1
+    container_name: es01
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+
+
   app:
     build:
       context: .          # build Dockerfile อยู่ใน project folder

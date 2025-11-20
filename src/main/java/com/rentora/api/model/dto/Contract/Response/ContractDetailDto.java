@@ -16,9 +16,6 @@ public class ContractDetailDto {
     private String tenantName;
     private String tenantEmail;
     private String tenantPhone;
-    private String guarantorName;
-    private String guarantorPhone;
-    private String guarantorIdNumber;
     private Contract.RentalType rentalType;
     private String startDate;
     private String endDate;
@@ -43,6 +40,7 @@ public class ContractDetailDto {
 
     private BigDecimal waterMeterStart;
     private BigDecimal electricMeterStart;
+    
 
 
     // Additional detail info

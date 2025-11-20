@@ -1,5 +1,6 @@
 package com.rentora.api.specifications;
 
+import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.UnitUtilities;
 import org.springframework.data.jpa.domain.Specification;
@@ -8,6 +9,10 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public class MonthlyInvoiceSpecification {
+    public static Specification<Invoice> hasContractNotDaily() {
+        return (root,query,criteriaBuilder)->
+                criteriaBuilder.notEqual(root.get("contract").get("rentalType"), Contract.RentalType.daily);
+    }
     public static Specification<Invoice> hasApartmentId(UUID apartmentId) {
         return (root,query,criteriaBuilder)->
                 apartmentId == null ? null : criteriaBuilder.equal(root.get("apartment").get("id"), apartmentId);

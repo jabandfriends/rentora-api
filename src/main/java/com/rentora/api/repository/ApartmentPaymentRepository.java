@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ApartmentPaymentRepository extends JpaRepository<ApartmentPayment, UUID> {
-    List<ApartmentPayment> findByApartment(Apartment apartment);
+    ApartmentPayment findByApartment(Apartment apartment);
 
     Optional<ApartmentPayment> findByApartmentAndIsActive(Apartment apartment, Boolean isActive);
 

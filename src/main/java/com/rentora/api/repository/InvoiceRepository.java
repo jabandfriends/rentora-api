@@ -35,4 +35,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpec
     Optional<Invoice> findByUnitAndGenMonth(Unit unit, LocalDate genMonth);
 
     Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
+
+    List<Invoice> findByUnit(Unit unit);
 }

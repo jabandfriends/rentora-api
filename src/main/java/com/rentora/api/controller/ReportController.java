@@ -43,7 +43,6 @@ public class ReportController {
     private final UnitService unitService;
     private final ReportService reportService;
     private final ReceiptReportService receiptReportService;
-    private final UnitRepository unitRepository;
 
 
 

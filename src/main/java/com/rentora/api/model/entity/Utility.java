@@ -58,7 +58,7 @@ public class Utility {
     private LocalDateTime updatedAt;
 
     public enum UtilityType {
-        fixed,meter,tiered
+        fixed,meter
     };
     public enum Category {
         utility,service,fee
