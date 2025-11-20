@@ -5,6 +5,7 @@ import com.rentora.api.model.entity.Contract;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.File;
 import java.math.BigDecimal;
@@ -18,11 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class ReadingContactService {
 
+    @Value("${tessdata.path:/usr/share/tesseract-ocr/5/tessdata}")
+    private String tessDataPath;
+
     public ContactReadDetailDTO extractContractDetails(File imageFile) throws TesseractException {
 
         ITesseract tesseract = new Tesseract();
 
-        tesseract.setDatapath("src/main/resources/tessdata");
+        tesseract.setDatapath(tessDataPath);
         tesseract.setLanguage("eng");
 
         String ocrResult = tesseract.doOCR(imageFile);
