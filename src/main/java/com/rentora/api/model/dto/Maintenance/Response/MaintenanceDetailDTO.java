@@ -58,4 +58,7 @@ public class MaintenanceDetailDTO {
 
     //supply usage
     private List<MaintenanceSupplyResponseDto> suppliesUsage;
+
+    private LocalDate predictedSchedule;
+    private LocalDate predictedRecurringDate;
 }

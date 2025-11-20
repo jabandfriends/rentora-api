@@ -3,6 +3,7 @@ package com.rentora.api.model.dto.Invoice.Response;
 import com.rentora.api.model.entity.AdhocInvoice;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -38,11 +39,12 @@ public class AdhocInvoiceDetailDTO {
     private String email;
 
     //document
-    private String receiptUrls;
+    private URL receiptUrls;
     private String images;
 
     //notes
     private String notes;
+
 
     //Admin detail
     private UUID createdByUserId;

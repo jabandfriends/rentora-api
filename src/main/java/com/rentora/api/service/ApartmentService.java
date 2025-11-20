@@ -139,10 +139,11 @@ public class ApartmentService {
     public Page<ApartmentSummaryDTO> getApartments(UUID userId, String search, Apartment.ApartmentStatus status, Pageable pageable) {
 
         Specification<Apartment> spec = ApartmentSpecification.hasUserId(userId).and(ApartmentSpecification.hasName(search)).and(ApartmentSpecification.hasStatus(status));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Page<Apartment> apartments = apartmentRepository.findAll(spec, pageable);
 
         return apartments.map(apartment -> {
-            ApartmentSummaryDTO dto = toApartmentSummaryDto(apartment);
+            ApartmentSummaryDTO dto = toApartmentSummaryDto(apartment,user);
 
             // Generate GET presigned URL for download if logo exists
             if (apartment.getLogoUrl() != null && !apartment.getLogoUrl().isBlank()) {
@@ -171,7 +172,7 @@ public class ApartmentService {
         Apartment apartment = apartmentRepository.findByIdAndUserId(apartmentId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Apartment not found or access denied"));
 
-        ApartmentDetailDTO dto = toApartmentDetailDto(apartment);
+        ApartmentDetailDTO dto = toApartmentDetailDto(apartment,userId);
 
         if (apartment.getLogoUrl() != null && !apartment.getLogoUrl().isBlank()) {
             try {
@@ -393,7 +394,7 @@ public class ApartmentService {
         log.info("Apartment {} create a service successfully", apartment.getName());
     }
 
-    private ApartmentSummaryDTO toApartmentSummaryDto(Apartment apartment) {
+    private ApartmentSummaryDTO toApartmentSummaryDto(Apartment apartment,User user) {
         ApartmentSummaryDTO dto = new ApartmentSummaryDTO();
         dto.setId(apartment.getId().toString());
         dto.setName(apartment.getName());
@@ -411,6 +412,8 @@ public class ApartmentService {
         dto.setUnitCount(unitRepository.countByApartmentId(apartment.getId()));
         dto.setActiveContractCount(contractRepository.countActiveByApartmentId(apartment.getId()));
 
+        ApartmentUser apartmentUser = apartmentUserRepository.findByApartmentAndUser(apartment,user).orElseThrow(() -> new ResourceNotFoundException("User are not in this apartment."));
+        dto.setUserRole(apartmentUser.getRole());
         return dto;
     }
 
@@ -437,7 +440,7 @@ public class ApartmentService {
                 .build();
     }
 
-    private ApartmentDetailDTO toApartmentDetailDto(Apartment apartment) {
+    private ApartmentDetailDTO toApartmentDetailDto(Apartment apartment,UUID userId) {
         ApartmentDetailDTO dto = new ApartmentDetailDTO();
         dto.setId(apartment.getId().toString());
         dto.setName(apartment.getName());
@@ -458,6 +461,11 @@ public class ApartmentService {
         dto.setStatus(apartment.getStatus());
         dto.setCreatedAt(apartment.getCreatedAt() != null ? apartment.getCreatedAt().toString() : null);
         dto.setUpdatedAt(apartment.getUpdatedAt() != null ? apartment.getUpdatedAt().toString() : null);
+
+        User currentUser = userRepository.findById(userId).orElseThrow(()-> new BadRequestException("User not found"));
+        ApartmentUser apartmentUser = apartmentUserRepository.findByApartmentAndUser(apartment,currentUser)
+                .orElseThrow(()-> new BadRequestException("User are not in apartment."));
+        dto.setUserRole(apartmentUser.getRole());
 
         // Get statistics
         dto.setBuildingCount(buildingRepository.countByApartmentId(apartment.getId()));

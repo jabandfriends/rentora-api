@@ -575,7 +575,7 @@ CREATE TABLE IF NOT EXISTS adhoc_invoices (
     priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
 
     -- Attachments and documentation
-    receipt_urls JSONB DEFAULT '[]', -- Array of receipt/document URLs
+    receipt_urls VARCHAR(200), -- Array of receipt/document URLs
     images JSONB DEFAULT '[]', -- Array of image URLs (for proof of purchase, etc.)
     notes TEXT,
 

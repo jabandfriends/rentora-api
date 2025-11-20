@@ -1,8 +1,10 @@
 package com.rentora.api.service;
 
 import com.rentora.api.exception.ResourceNotFoundException;
+import com.rentora.api.mapper.MaintenanceMapper;
 import com.rentora.api.model.dto.Maintenance.Metadata.MaintenanceMetadataResponseDto;
 import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequest;
+import com.rentora.api.model.dto.Maintenance.Request.CreateMaintenanceRequestByTenant;
 import com.rentora.api.model.dto.Maintenance.Request.MaintenanceSupplyUsageRequest;
 import com.rentora.api.model.dto.Maintenance.Request.UpdateMaintenanceRequest;
 import com.rentora.api.model.dto.Maintenance.Response.ExecuteMaintenanceResponse;
@@ -11,6 +13,7 @@ import com.rentora.api.model.dto.Maintenance.Response.MaintenanceInfoDTO;
 import com.rentora.api.model.dto.Maintenance.Response.MaintenanceSupplyResponseDto;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.*;
+import com.rentora.api.specifications.ContractSpecification;
 import com.rentora.api.specifications.MaintenanceSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,6 +39,10 @@ public class MaintenanceService {
     private final UnitRepository unitRepository;
     private final MaintenanceSupplyRepository  maintenanceSupplyRepository;
     private final SupplyTransactionService supplyTransactionService;
+    private final ContractRepository contractRepository; //
+    private final UserRepository userRepository;
+
+    private final MaintenanceMapper maintenanceMapper;
 
     private final MaintenanceSupplyService maintenanceSupplyService;
 
@@ -55,7 +58,7 @@ public class MaintenanceService {
         }
         Page<Maintenance> maintenance = maintenanceRepository.findAll(spec, pageable);
 
-        return maintenance.map(this::toMaintenanceInfoDto);
+        return maintenance.map(maintenanceMapper::toMaintenanceInfoDto);
     }
 
     public MaintenanceMetadataResponseDto getMaintenanceMetadata(UUID apartmentId) {
@@ -70,6 +73,101 @@ public class MaintenanceService {
                 .pendingCount(totalPendingMaintenances).urgentCount(totalUrgentMaintenance).inProgressCount(totalInprogressMaintenances).build();
 
     }
+
+    public Page<MaintenanceInfoDTO> getMaintenanceByTenant(UUID tenantUserId, UUID apartmentId,
+                                                           Maintenance.Status status, Boolean isRecurring,
+                                                           Maintenance.Priority priority, Pageable pageable) {
+
+        userRepository.findById(tenantUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant user not found with ID: " + tenantUserId));
+
+        Specification<Contract> spec = ContractSpecification.hasApartmentId(apartmentId)
+                .and(ContractSpecification.hasTenantId(tenantUserId))
+                .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+
+        Contract activeContract = contractRepository.findOne(spec)
+                .orElseThrow(() -> new ResourceNotFoundException("Active Contract not found for tenant: " + tenantUserId + " in apartment: " + apartmentId));
+
+        UUID unitId = activeContract.getUnit().getId();
+
+        return this.getMaintenance(
+                apartmentId,
+                null,
+                status,
+                isRecurring,
+                unitId,
+                priority,
+                pageable
+        );
+    }
+
+    public ExecuteMaintenanceResponse createMaintenanceByTenant(UUID tenantUserId, UUID apartmentId, CreateMaintenanceRequestByTenant request) {
+        Specification<Contract> spec = ContractSpecification.hasApartmentId(apartmentId)
+                .and(ContractSpecification.hasTenantId(tenantUserId))
+                .and(ContractSpecification.hasStatus(Contract.ContractStatus.active));
+
+        Contract activeContract = contractRepository.findOne(spec)
+                .orElseThrow(() -> new ResourceNotFoundException("Active Contract not found for tenant: " + tenantUserId + " in apartment: " + apartmentId));
+
+        Unit unit = activeContract.getUnit();
+        User tenant = activeContract.getTenant();
+
+        Maintenance maintenance = new Maintenance();
+
+        maintenance.setUnit(unit);
+        maintenance.setTenantUser(tenant);
+
+        maintenance.setCategory(request.getCategory());
+        maintenance.setTitle(request.getTitle());
+        maintenance.setDescription(request.getDescription());
+        maintenance.setPriority(request.getPriority());
+        maintenance.setAppointmentDate(request.getAppointmentDate());
+        maintenance.setDueDate(request.getDueDate());
+        maintenance.setEstimatedHours(request.getEstimatedHours());
+        maintenance.setEstimatedCost(request.getEstimatedCost());
+        maintenance.setRequestedDate(LocalDate.now());
+        maintenance.setIsEmergency(request.getIsEmergency());
+        maintenance.setIsRecurring(request.getIsRecurring());
+        maintenance.setStatus(Maintenance.Status.pending);
+
+        if(request.getRecurringSchedule() != null ) {
+            maintenance.setRecurringSchedule(request.getRecurringSchedule());
+        }
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        List<MaintenanceSupply> maintenanceSupplyList = new ArrayList<>();
+
+        List<MaintenanceSupplyUsageRequest> suppliesUsage = request.getSuppliesUsage();
+
+        if (suppliesUsage != null) {
+            for (var supply : suppliesUsage) {
+                MaintenanceSupply maintenanceSupply = maintenanceSupplyService.maintenanceUseSupply(
+                        maintenance,
+                        supply.getSupplyId(),
+                        supply.getSupplyUsedQuantity(),
+                        tenantUserId
+                );
+
+                if(maintenanceSupply != null) {
+                    totalPrice = totalPrice.add(maintenanceSupply.getCost());
+                    maintenanceSupplyList.add(maintenanceSupply);
+                }
+            }
+        }
+
+        maintenance.setActualCost(totalPrice);
+        Maintenance savedMaintenance = maintenanceRepository.save(maintenance);
+
+        if (!maintenanceSupplyList.isEmpty()) {
+            for(MaintenanceSupply supply : maintenanceSupplyList) {
+                MaintenanceSupply maintenanceSupply = maintenanceSupplyRepository.save(supply);
+                supplyTransactionService.createMaintenanceUseSupplyTransaction(maintenanceSupply, tenantUserId);
+            }
+        }
+
+        return new ExecuteMaintenanceResponse(savedMaintenance.getId());
+    }
+
 
     public ExecuteMaintenanceResponse createMaintenance(UUID userId, CreateMaintenanceRequest request) {
 
@@ -180,6 +278,10 @@ public class MaintenanceService {
         if (request.getTitle() != null) maintenance.setTitle(request.getTitle());
         if (request.getDescription() != null) maintenance.setDescription(request.getDescription());
         if (request.getStatus() != null) maintenance.setStatus(request.getStatus());
+
+        if(request.getStatus() != null && request.getStatus().equals(Maintenance.Status.completed)){
+            maintenance.setCompletedAt(OffsetDateTime.now());
+        }
         if (request.getCategory() != null) maintenance.setCategory(request.getCategory());
         if (request.getPriority() != null) maintenance.setPriority(request.getPriority());
         if (request.getAppointmentDate() != null) maintenance.setAppointmentDate(request.getAppointmentDate());
@@ -247,137 +349,96 @@ public class MaintenanceService {
     public MaintenanceDetailDTO getMaintenanceById(UUID maintenanceId) {
         Maintenance maintenance = maintenanceRepository.findById(maintenanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Maintenance not found or access denied"));
-        return toMaintenanceDetailDto(maintenance);
-    }
 
-    public MaintenanceSupplyResponseDto toMaintenanceSupply(MaintenanceSupply maintenanceSupply) {
-        return MaintenanceSupplyResponseDto.builder()
-                .maintenanceSupplyId(maintenanceSupply.getId())
-                .supplyUsedQuantity(maintenanceSupply.getQuantityUsed())
+        LocalDate nextMaintenanceRecurringDate = null;
 
-                //supply
-                .supplyId(maintenanceSupply.getSupply().getId())
-                .supplyName(maintenanceSupply.getSupply().getName())
-                .supplyDescription(maintenanceSupply.getSupply().getDescription())
-                .supplyCategory(maintenanceSupply.getSupply().getCategory())
-                .supplyUnitPrice(maintenanceSupply.getSupply().getCostPerUnit())
-                .supplyUnit(maintenanceSupply.getSupply().getUnit())
-                .build();
-    }
-    public MaintenanceDetailDTO toMaintenanceDetailDto(Maintenance maintenance) {
-        MaintenanceDetailDTO dto = new MaintenanceDetailDTO();
+        if (Boolean.TRUE.equals(maintenance.getIsRecurring())
+                && maintenance.getRecurringSchedule() != null
+                && maintenance.getAppointmentDate() != null) {
 
-        if (maintenance == null) {
-            return dto;
-        }
-        List<MaintenanceSupply> maintenanceSupplies = maintenanceSupplyRepository.findByMaintenance(maintenance);
-        List<MaintenanceSupplyResponseDto> maintenanceSupply = maintenanceSupplies.stream().map(this::toMaintenanceSupply).toList();
+            LocalDate lastMaintenance = maintenance.getAppointmentDate().toLocalDate();
+            Maintenance.RecurringSchedule schedule = maintenance.getRecurringSchedule();
 
-        dto.setSuppliesUsage(maintenanceSupply);
+            nextMaintenanceRecurringDate = switch (schedule) {
+                case weekly    -> lastMaintenance.plusWeeks(1);
+                case monthly   -> lastMaintenance.plusMonths(1);
+                case quarterly -> lastMaintenance.plusMonths(3);
+                case yearly    -> lastMaintenance.plusYears(1);
+            };
 
-        // --- Basic Maintenance Info ---
-        dto.setId(maintenance.getId());
-        dto.setTicketNumber(maintenance.getTicketNumber());
-        dto.setTitle(maintenance.getTitle());
-        dto.setDescription(maintenance.getDescription());
-
-        if (maintenance.getCategory() != null)
-            dto.setCategory(maintenance.getCategory());
-
-        if (maintenance.getStatus() != null)
-            dto.setStatus(maintenance.getStatus());
-
-        if (maintenance.getPriority() != null)
-            dto.setPriority(maintenance.getPriority());
-
-        dto.setRequestedDate(maintenance.getRequestedDate());
-
-        if (maintenance.getAppointmentDate() != null)
-            dto.setAppointmentDate(maintenance.getAppointmentDate());
-
-        if (maintenance.getDueDate() != null)
-            dto.setDueDate(maintenance.getDueDate());
-
-        dto.setStartedAt(maintenance.getStartedAt());
-        dto.setCompletedAt(maintenance.getCompletedAt());
-        dto.setEstimatedHours(maintenance.getEstimatedHours());
-        dto.setActualHours(maintenance.getActualHours());
-        dto.setEstimatedCost(maintenance.getEstimatedCost());
-        dto.setActualCost(maintenance.getActualCost());
-        dto.setWorkSummary(maintenance.getWorkSummary());
-        dto.setTenantFeedback(maintenance.getTenantFeedback());
-        dto.setTenantRating(maintenance.getTenantRating());
-        dto.setIsEmergency(maintenance.getIsEmergency());
-        dto.setIsRecurring(maintenance.getIsRecurring());
-
-        if (maintenance.getRecurringSchedule() != null)
-            dto.setRecurringSchedule(maintenance.getRecurringSchedule());
-
-        if (maintenance.getCreatedAt() != null)
-            dto.setCreatedAt(maintenance.getCreatedAt());
-
-        if (maintenance.getUpdatedAt() != null)
-            dto.setUpdatedAt(maintenance.getUpdatedAt());
-
-        // --- Building Info ---
-        if (maintenance.getUnit() != null) {
-            if (maintenance.getUnit().getFloor() != null &&
-                    maintenance.getUnit().getFloor().getBuilding() != null) {
-                dto.setBuildingsName(maintenance.getUnit().getFloor().getBuilding().getName());
+            LocalDate now = LocalDate.now();
+            while (!nextMaintenanceRecurringDate.isAfter(now)) {
+                nextMaintenanceRecurringDate = switch (schedule) {
+                    case weekly    -> nextMaintenanceRecurringDate.plusWeeks(1);
+                    case monthly   -> nextMaintenanceRecurringDate.plusMonths(1);
+                    case quarterly -> nextMaintenanceRecurringDate.plusMonths(3);
+                    case yearly    -> nextMaintenanceRecurringDate.plusYears(1);
+                };
             }
-            dto.setUnitName(maintenance.getUnit().getUnitName());
-            dto.setUnitId(maintenance.getUnit().getId());
         }
 
-        // --- Tenant Info ---
-        if (maintenance.getTenantUser() != null) {
-            dto.setTenantName(maintenance.getTenantUser().getFullName());
-            dto.setTenantEmail(maintenance.getTenantUser().getEmail());
-            dto.setTenantPhoneNumber(maintenance.getTenantUser().getPhoneNumber());
-        }
+        LocalDate predictedMaintenance = predictNextMaintenanceDate(maintenance.getUnit().getId(),maintenance.getCategory());
 
-
-        return dto;
+        return maintenanceMapper.toMaintenanceDetailDto(maintenance, predictedMaintenance,nextMaintenanceRecurringDate );
     }
 
-    public MaintenanceInfoDTO toMaintenanceInfoDto(Maintenance maintenance) {
+    public LocalDate predictNextMaintenanceDate(UUID unitId, Maintenance.Category category) {
 
-        String unitName = maintenance.getUnit().getUnitName();
-        String buildingName = maintenance.getUnit().getFloor().getBuilding().getName();
-
-        MaintenanceInfoDTO dto = new MaintenanceInfoDTO();
-
-        dto.setId(maintenance.getId());
-        dto.setTicketNumber(maintenance.getTicketNumber());
-        dto.setTitle(maintenance.getTitle());
-        dto.setActualCost(maintenance.getActualCost());
-
-        if (unitName != null) {
-            dto.setUnitName(unitName);
-        }
-        if (buildingName != null) {
-            dto.setBuildingsName(buildingName);
-        }
-        if (maintenance.getDueDate() != null) {
-            dto.setDueDate(maintenance.getDueDate());
-        }
-        if (maintenance.getAppointmentDate() != null) {
-            dto.setAppointmentDate(maintenance.getAppointmentDate());
+        List<Maintenance> history =
+                maintenanceRepository.findByUnitIdAndCategoryAndStatusOrderByCompletedAtAsc(
+                        unitId,
+                        category,
+                        Maintenance.Status.completed
+                );
+        log.info("Maintenance history found: {}", history.size());
+        if (history.size() < 2) {
+            return null;
         }
 
+        List<Long> gapsInDays = new ArrayList<>();
 
-        dto.setStatus(maintenance.getStatus());
-        dto.setPriority(maintenance.getPriority());
+        for (int i = 0; i < history.size() - 1; i++) {
+            OffsetDateTime current = history.get(i).getCompletedAt();
+            OffsetDateTime next    = history.get(i + 1).getCompletedAt();
 
-        //recurring
-        dto.setIsRecurring(maintenance.getIsRecurring());
-        dto.setRecurringSchedule(maintenance.getRecurringSchedule());
-        dto.setCreatedAt(maintenance.getCreatedAt());
+            if (current == null || next == null) {
+                continue;
+            }
 
+            long days = Duration.between(current, next).toDays();
 
-        return dto;
+            if (days > 0 && days < 365L * 3) {
+                gapsInDays.add(days);
+            }
+        }
 
+        if (gapsInDays.isEmpty()) {
+            log.info("No gaps in days found");
+            return null;
+        }
+
+        Collections.sort(gapsInDays);
+        int n = gapsInDays.size();
+        long medianDays;
+
+        if (n % 2 == 1) {
+            medianDays = gapsInDays.get(n / 2);
+        } else {
+            long a = gapsInDays.get(n / 2 - 1);
+            long b = gapsInDays.get(n / 2);
+            medianDays = Math.round((a + b) / 2.0);
+        }
+
+        OffsetDateTime lastCompletedAt = history.get(history.size() - 1).getCompletedAt();
+        if (lastCompletedAt == null) {
+            return null;
+        }
+
+        OffsetDateTime predictedDateTime = lastCompletedAt.plusDays(medianDays);
+        return predictedDateTime.toLocalDate();
     }
+
+
 
 
 }

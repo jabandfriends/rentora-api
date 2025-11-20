@@ -6,6 +6,7 @@ import com.rentora.api.model.dto.Contract.Request.TerminateContractRequest;
 import com.rentora.api.model.dto.Contract.Request.UpdateContractRequest;
 import com.rentora.api.model.dto.Contract.Response.ContractDetailDto;
 import com.rentora.api.model.dto.Contract.Response.ContractSummaryDto;
+import com.rentora.api.model.dto.Contract.Response.ContractTenantDetail;
 import com.rentora.api.model.dto.Contract.Response.ContractUpdateResponseDto;
 import com.rentora.api.model.dto.PaginatedResponse;
 import com.rentora.api.model.entity.Contract;
@@ -111,5 +112,15 @@ public class ContractController {
 
         ContractDetailDto contract = contractService.terminateContract(unitId, request, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success("Contract terminated successfully", contract));
+    }
+
+
+    @GetMapping("/tenant")
+    public ResponseEntity<ApiResponse<ContractTenantDetail>> getActiveContractByTenantId(
+            @PathVariable UUID apartmentId,
+            @AuthenticationPrincipal UserPrincipal currentUser
+    ){
+        ContractTenantDetail result = contractService.findActiveContractByTenantIdAndApartmentId(currentUser.getId(), apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

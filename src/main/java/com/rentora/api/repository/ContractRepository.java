@@ -1,5 +1,6 @@
 package com.rentora.api.repository;
 
+import com.rentora.api.model.entity.Apartment;
 import com.rentora.api.model.entity.Contract;
 import com.rentora.api.model.entity.Invoice;
 import com.rentora.api.model.entity.Unit;
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.UUID;
 
