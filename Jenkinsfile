@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REGISTRY = "docker.io/chanathipcha24"
-        IMAGE_NAME = "rentora-backend"
+        IMAGE_NAME = "rentora-api"
         BUILD_VERSION = "${env.BUILD_NUMBER}"
         KUBE_DEPLOYMENT = "k8s/backend-deployment.yaml"
     }
