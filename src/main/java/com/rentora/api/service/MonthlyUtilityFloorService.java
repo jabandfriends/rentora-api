@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.Year;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -125,17 +126,18 @@ public class MonthlyUtilityFloorService {
         String FloorName = floor.getFloorName();
         Integer FloorNumber = floor.getFloorNumber();
 
+        int currentYear = Year.now().getValue();
+
         Map<String, List<MonthlyUtilityFloorUsageSummary>> monthlyBreakdown = aggregatedData.entrySet().stream()
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                utilityGroup -> utilityGroup.getValue().entrySet().stream()
-                                        .map(monthEntry ->
-                                                toMonthlyFloorUsageSummaryDTO(monthEntry.getKey(), monthEntry.getValue())
-                                        )
-                                        .collect(Collectors.toList())
-                        )
-                );
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        utilityGroup -> utilityGroup.getValue().entrySet().stream()
+                                .filter(monthEntry -> monthEntry.getKey().getYear() == currentYear) // <-- filter year
+                                .map(monthEntry ->
+                                        toMonthlyFloorUsageSummaryDTO(monthEntry.getKey(), monthEntry.getValue())
+                                )
+                                .collect(Collectors.toList())
+                ));
 
         // ** INTEGRATE: Zero-fill logic using fillMissingMonths **
         Map<String, List<MonthlyUtilityFloorUsageSummary>> finalBreakdown =
