@@ -116,16 +116,18 @@ public class MonthlyUtilityBuildingService {
         String buildingName = building.getName();
 
         Map<String, List<MonthlyUtilityBuildingUsageSummary>> monthlyBreakdown = aggregatedData.entrySet().stream()
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                utilityGroup -> utilityGroup.getValue().entrySet().stream()
-                                        .map(monthEntry ->
-                                                toMonthlyUtilityUsageSummaryDTO(monthEntry.getKey(), monthEntry.getValue())
-                                        )
-                                        .collect(Collectors.toList())
-                        )
-                );
+                .flatMap(utilityGroup ->
+                        utilityGroup.getValue().entrySet().stream()
+                                .map(monthEntry -> {
+                                    MonthlyUtilityBuildingUsageSummary dto =
+                                            toMonthlyUtilityUsageSummaryDTO(monthEntry.getKey(), monthEntry.getValue());
+                                    return new AbstractMap.SimpleEntry<>(utilityGroup.getKey(), dto);
+                                })
+                )
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                ));
 
         Map<String, List<MonthlyUtilityBuildingUsageSummary>> finalBreakdown =
                 fillMissingMonths(monthlyBreakdown);
