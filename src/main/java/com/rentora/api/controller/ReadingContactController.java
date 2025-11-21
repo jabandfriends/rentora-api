@@ -24,6 +24,7 @@ public class ReadingContactController {
 
     private final ReadingContactService readingContactService;
 
+
     @PostMapping("/readcontact")
     public ResponseEntity<ApiResponse<ContactReadDetailDTO>> uploadAndExtractText(@RequestParam("file") MultipartFile file)
             throws TesseractException, IOException {
