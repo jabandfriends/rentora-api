@@ -100,8 +100,7 @@ public class AdhocInvoice {
     @Column(name = "priority", length = 20)
     private InvoicePriority priority = InvoicePriority.normal;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "receipt_urls", columnDefinition = "jsonb")
+    @Column(name = "receipt_urls")
     private String receiptUrls; // JSON string
 
     @JdbcTypeCode(SqlTypes.JSON)

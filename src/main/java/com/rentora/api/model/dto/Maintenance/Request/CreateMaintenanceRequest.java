@@ -1,6 +1,7 @@
 package com.rentora.api.model.dto.Maintenance.Request;
 
 import com.rentora.api.model.entity.Maintenance;
+import com.rentora.api.model.entity.MaintenanceSupply;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +10,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -51,8 +53,8 @@ public class CreateMaintenanceRequest {
 
     private Maintenance.RecurringSchedule recurringSchedule;
 
-
-
+    //supply system
+    private List<MaintenanceSupplyUsageRequest> suppliesUsage;
 
 }
 

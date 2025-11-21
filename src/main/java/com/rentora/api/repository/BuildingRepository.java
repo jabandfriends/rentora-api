@@ -1,9 +1,12 @@
 package com.rentora.api.repository;
 
 import com.rentora.api.model.entity.Building;
+import com.rentora.api.model.entity.UnitUtilities;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,10 +16,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface BuildingRepository extends JpaRepository<Building, UUID> {
+public interface BuildingRepository extends JpaRepository<Building, UUID>, JpaSpecificationExecutor<Building> {
 
     Page<Building> findByApartmentId(UUID apartmentId, Pageable pageable);
     List<Building> findByApartmentId(UUID apartmentId);
+
 
     @Query("SELECT b FROM Building b WHERE b.apartment.id = :apartmentId AND b.name LIKE %:name%")
     Page<Building> findByApartmentIdAndNameContaining(@Param("apartmentId") UUID apartmentId,

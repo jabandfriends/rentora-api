@@ -13,6 +13,6 @@ public interface UnitServiceRepository extends JpaRepository<UnitServiceEntity, 
 
     List<UnitServiceEntity> findAllByUnitId(UUID UnitId);
 
-    Optional<UnitServiceEntity> findByUnitIdAndServiceEntityId(UUID unitId, UUID serviceId);
+    Optional<UnitServiceEntity> findByUnitIdAndApartmentServiceId(UUID unitId, UUID apartmentServiceId);
 }
 

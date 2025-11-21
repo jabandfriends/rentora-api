@@ -39,15 +39,21 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 """)
     Long countByApartmentIdAndIsActiveTrueWithContractStatus(UUID apartmentId, Contract.ContractStatus contractStatus);
 
+
     @Query("""
     SELECT COUNT(DISTINCT u)
     FROM User u
     JOIN u.apartmentUsers au
-    JOIN u.contracts c
+    LEFT JOIN u.contracts c
     WHERE au.apartment.id = :apartmentId
-    AND u.isActive = true
+      AND u.isActive = true
       AND au.isActive = true
-      AND c.status != :contractStatus
+      AND (c IS NULL OR c.status <> :activeStatus)
 """)
-    Long countByApartmentIdAndIsActiveTrueWithFalseContractStatus(UUID apartmentId, Contract.ContractStatus contractStatus);
+    Long countUsersWithoutOrInactiveContract(
+            UUID apartmentId,
+            Contract.ContractStatus activeStatus
+    );
+
+
 }

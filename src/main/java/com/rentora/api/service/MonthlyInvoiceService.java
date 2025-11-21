@@ -1,9 +1,14 @@
 package com.rentora.api.service;
 
+import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ResourceNotFoundException;
+import com.rentora.api.mapper.AdhocInvoiceMapper;
+import com.rentora.api.mapper.UnitServiceMapper;
 import com.rentora.api.model.dto.MonthlyInvoice.Metadata.MonthlyInvoiceMetadataDto;
 import com.rentora.api.model.dto.MonthlyInvoice.Response.MonthlyInvoiceDetailResponseDto;
 import com.rentora.api.model.dto.MonthlyInvoice.Response.MonthlyInvoiceResponseDto;
+import com.rentora.api.model.dto.MonthlyInvoice.Response.UnitAdhocInvoice;
+import com.rentora.api.model.dto.MonthlyInvoice.Response.UnitServiceList;
 import com.rentora.api.model.entity.*;
 import com.rentora.api.repository.*;
 import com.rentora.api.security.UserPrincipal;
@@ -42,17 +47,28 @@ public class MonthlyInvoiceService {
     private final ApartmentPaymentRepository apartmentPaymentRepository;
     private final PaymentRepository paymentRepository;
 
-    public Page<MonthlyInvoiceResponseDto> getAllMonthlyInvoice(Invoice.PaymentStatus paymentStatus, String unitName,String buildingName,
+    private final UnitServiceMapper unitServiceMapper;
+    private final AdhocInvoiceMapper adhocInvoiceMapper;
+
+    public Page<MonthlyInvoiceResponseDto> getAllMonthlyInvoice(LocalDate genMonth, Invoice.PaymentStatus paymentStatus, String unitName,String buildingName,
                                      UUID apartmentId, Pageable pageable){
         Specification<Invoice> specification = MonthlyInvoiceSpecification.hasApartmentId(apartmentId)
                 .and(MonthlyInvoiceSpecification.hasBuildingName(buildingName)).and(MonthlyInvoiceSpecification.hasUnitName(unitName))
-                .and(MonthlyInvoiceSpecification.hasPaymentStatus(paymentStatus));
+                .and(MonthlyInvoiceSpecification.hasPaymentStatus(paymentStatus)).and(MonthlyInvoiceSpecification.hasContractNotDaily())
+                .and(MonthlyInvoiceSpecification.matchGenerationDate(genMonth));
 
         Page<Invoice> monthlyInvoices = invoiceRepository.findAll(specification,pageable);
 
 
 
         return monthlyInvoices.map(this::toMonthlyInvoiceResponseDto);
+    }
+
+    public List<MonthlyInvoiceDetailResponseDto> getAllMonthlyInvoiceDetail(UUID apartmentId,LocalDate genMonth){
+        Specification<Invoice> specification = MonthlyInvoiceSpecification.hasApartmentId(apartmentId).and(MonthlyInvoiceSpecification.matchGenerationDate(genMonth));
+        List<Invoice> monthlyInvoices = invoiceRepository.findAll(specification);
+
+        return monthlyInvoices.stream().map(this::toMonthlyInvoiceDetailDto).toList();
     }
 
     public MonthlyInvoiceDetailResponseDto getMonthlyInvoiceDetail(String invoiceNumber){
@@ -75,14 +91,17 @@ public class MonthlyInvoiceService {
                 .totalOverdueMonthlyInvoice(totalOverdueMonthlyInvoices).build();
     }
 
-    public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate, Integer paymentDueDays) {
+    //monthly yearly monthly rental invoice
+    public void createMonthlyInvoice(UserPrincipal admin, UUID unitId, LocalDate readingDate) {
         Invoice monthlyInvoice = new Invoice();
-        //find current
+        // find current
         User currentAdmin = userRepository.findById(admin.getId()).orElseThrow(()-> new ResourceNotFoundException("User not found"));
         // Get active contract
         Contract activeContract = contractRepository.findActiveContractByUnitId(unitId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
-
+        //filter contract type filter out daily contract
+        if(activeContract.getRentalType().equals(Contract.RentalType.daily)) throw new BadRequestException("Daily Rental not allowed" +
+                " to create monthly invoice");
         Apartment contractApartment = activeContract.getUnit().getFloor().getBuilding().getApartment();
 
         // Set billing date based on reading month/year
@@ -91,21 +110,29 @@ public class MonthlyInvoiceService {
                 .withMonth(readingDate.getMonthValue())
                 .withDayOfMonth(1);
         LocalDate billEnd = billStart.withDayOfMonth(billStart.lengthOfMonth());
-        LocalDate dueDate = LocalDate.now().plusDays(paymentDueDays);
+        LocalDate dueDate = LocalDate.now().plusDays(contractApartment.getPaymentDueDay());
 
-        // 3️Get latest utility readings (null-safe)
+        // Get latest utility readings
         UnitUtilities latestWaterMeter = getLatestUnitUtilitySafe(activeContract.getUnit().getId(), "water", billStart);
         UnitUtilities latestElectricMeter = getLatestUnitUtilitySafe(activeContract.getUnit().getId(), "electric", billStart);
 
         // Calculate utility amounts
         BigDecimal utilityAmount = calculateUtilityAmountSafe(latestWaterMeter, latestElectricMeter);
 
-        // Calculate adhoc and unit service amounts
-        BigDecimal totalAdhocAmount = adhocInvoiceRepository.findByUnit(activeContract.getUnit()).stream()
-                .filter(AdhocInvoice::getIncludeInMonthly)
+        //adhoc invoice for this unit ( unpaid and monthly include )
+        List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByUnitAndIncludeInMonthlyAndPaymentStatusAndStatus(
+                activeContract.getUnit(),
+                true,
+                AdhocInvoice.PaymentStatus.unpaid,
+                AdhocInvoice.InvoiceStatus.active
+        );
+
+        // Calculate adhoc invoice and unit service amounts
+        BigDecimal totalAdhocAmount = adhocInvoices.stream()
                 .map(AdhocInvoice::getFinalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        //Calculate total unit service amount
         BigDecimal totalUnitServiceAmount = unitServiceRepository.findAllByUnitId(activeContract.getUnit().getId()).stream()
                 .map(UnitServiceEntity::getMonthlyPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -124,13 +151,8 @@ public class MonthlyInvoiceService {
         monthlyInvoice.setGeneratedByUser(currentAdmin);
         monthlyInvoice.setPaymentDueDate(dueDate);
         monthlyInvoice.setUtilAmount(utilityAmount);
-        if(activeContract.getRentalType().equals(Contract.RentalType.daily)) {
-            monthlyInvoice.setBillStart(activeContract.getStartDate());
-            monthlyInvoice.setBillEnd(activeContract.getEndDate());
-        }else{
-            monthlyInvoice.setBillStart(billStart);
-            monthlyInvoice.setBillEnd(billEnd);
-        }
+        monthlyInvoice.setBillStart(billStart);
+        monthlyInvoice.setBillEnd(billEnd);
         monthlyInvoice.setGenMonth(billStart);
         monthlyInvoice.setDueDate(dueDate);
 
@@ -142,10 +164,11 @@ public class MonthlyInvoiceService {
         monthlyInvoice.setTotalAmount(totalAmount);
 
         // Save invoice
-        invoiceRepository.save(monthlyInvoice);
+        Invoice createdMonthlyInvoice = invoiceRepository.save(monthlyInvoice);
 
         //payment
         Payment payment = new Payment();
+        payment.setInvoice(monthlyInvoice);
         payment.setAmount(monthlyInvoice.getTotalAmount());
 
         ApartmentPayment apartmentPayment = apartmentPaymentRepository.findByApartmentAndIsActive(
@@ -153,7 +176,14 @@ public class MonthlyInvoiceService {
         ).orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
         payment.setPaymentMethod(apartmentPayment.getMethodType().toString());
+        payment.setPaymentMethodEntity(apartmentPayment);
         paymentRepository.save(payment);
+
+        //add foreign key to adhoc invoice
+        List<AdhocInvoice> linkAdhocInvoices = adhocInvoices.stream().peek(item->{
+            item.setMonthlyInvoiceId(createdMonthlyInvoice);
+        }).toList();
+        adhocInvoiceRepository.saveAll(linkAdhocInvoices);
 
         log.info("Monthly invoice created for unit {} for month {}-{}", unitId, readingDate, dueDate);
     }
@@ -202,15 +232,28 @@ public class MonthlyInvoiceService {
         ApartmentPayment currentPayment = apartmentPaymentRepository
                 .findByApartmentAndIsActive(apartment, true)
                 .orElse(null);
+
+        Payment payment = paymentRepository.findByInvoice(invoice).orElse(null);
+        //unit
+        Unit currentUnit = invoice.getUnit();
+
+        //find extra service for unit
+        List<UnitServiceEntity> unitServices = unitServiceRepository.findAllByUnitId(currentUnit.getId());
+        List<UnitServiceList> unitServiceListResult = unitServices.stream().map(unitServiceMapper::toUnitServiceList).toList();
+
+        //find adhoc invoice
+        List<AdhocInvoice> adhocInvoices = adhocInvoiceRepository.findByMonthlyInvoiceId(invoice);
+        List<UnitAdhocInvoice> unitAdhocInvoices =  adhocInvoices.stream().map(adhocInvoiceMapper::toUnitAdhocInvoice).toList();
+
         // === find water utility ===
         Specification<UnitUtilities> waterSpec = UnitUtilitySpecification.hasUtilityName("water")
-                .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
+                .and(UnitUtilitySpecification.hasUnitId(currentUnit.getId()))
                 .and(UnitUtilitySpecification.hasUsageMonth(invoice.getGenMonth()));
         UnitUtilities waterUtility = unitUtilityRepository.findOne(waterSpec).orElse(null);
 
         // === find electric utility ===
         Specification<UnitUtilities> electricSpec = UnitUtilitySpecification.hasUtilityName("electric")
-                .and(UnitUtilitySpecification.hasUnitId(invoice.getUnit().getId()))
+                .and(UnitUtilitySpecification.hasUnitId(currentUnit.getId()))
                 .and(UnitUtilitySpecification.hasUsageMonth(invoice.getGenMonth()));
         UnitUtilities electricUtility = unitUtilityRepository.findOne(electricSpec).orElse(null);
 
@@ -224,11 +267,10 @@ public class MonthlyInvoiceService {
                 : BigDecimal.ZERO;
 
         // === get active contract ===
-        Contract activeContract = contractRepository.findActiveContractByUnitId(invoice.getUnit().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+        Contract activeContract = contractRepository.findById(invoice.getContract().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found on this invoice."));
 
         // === build response ===
-
         return MonthlyInvoiceDetailResponseDto.builder()
                 //apartment Payment
                 .apartmentPaymentMethodType(currentPayment != null ? currentPayment.getMethodType(): null)
@@ -236,6 +278,13 @@ public class MonthlyInvoiceService {
                 .bankAccountNumber(currentPayment != null ? currentPayment.getBankAccountNumber():null)
                 .accountHolderName(currentPayment != null ? currentPayment.getAccountHolderName() : null)
                 .promptpayNumber(currentPayment != null ? currentPayment.getPromptpayNumber():null)
+
+                //payment
+                .paymentId(payment != null ? payment.getId() : null)
+                //serviceList
+                .serviceList(unitServiceListResult)
+                //adhoc invoice
+                .unitAdhocInvoices(unitAdhocInvoices)
 
                 //invoice
                 .invoiceId(invoice.getId())

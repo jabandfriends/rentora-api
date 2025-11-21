@@ -12,11 +12,8 @@ public class UnitSummaryDto {
     private String id;
     private String unitName;
     private Unit.UnitType unitType;
-    private Integer bedrooms;
-    private BigDecimal bathrooms;
-    private BigDecimal squareMeters;
+
     private Unit.UnitStatus unitStatus;
-    private Unit.FurnishingStatus furnishingStatus;
     private String floorName;
     private String buildingName;
     private String apartmentName;
@@ -30,6 +27,4 @@ public class UnitSummaryDto {
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
 
-    private Integer balconyCount;
-    private Integer parkingSpaces = 0;
 }

@@ -57,4 +57,17 @@ public final class AdhocInvoiceSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("id"), id);
     }
 
+//    includeInMonthly
+    public static Specification<AdhocInvoice> isIncludeInMonthly(Boolean includeInMonthly) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("includeInMonthly"), includeInMonthly);
+    }
+
+    public static Specification<AdhocInvoice> hasUnitIdForAdhoc(UUID unitId) {
+        return (root, query, criteriaBuilder) -> {
+            if (unitId == null) return null;
+            // ต้องแน่ใจว่า root.get("unit") คือ Unit entity และมี ID
+            return criteriaBuilder.equal(root.get("unit").get("id"), unitId);
+        };
+    }
+
 }

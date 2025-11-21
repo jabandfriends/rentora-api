@@ -55,7 +55,7 @@ public class Payment {
 
     // Dates
     @Column(name = "paid_at", nullable = false)
-    private OffsetDateTime paidAt = OffsetDateTime.now();
+    private OffsetDateTime paidAt;
 
     @Column(name = "processed_at")
     private OffsetDateTime processedAt;

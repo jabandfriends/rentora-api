@@ -8,12 +8,17 @@ api/up:
 	@echo "============= starting backend (api + db) ============="
 	$(DC) up -d 
 
+es/up:
+	$(DC) up es01 -d
+
 db/up:
 	@echo "============= starting db local docker ============="
 	$(DC) up database -d
 
+
 docker/down:
 	$(DC) down
+
 
 ps:
 	$(DC) ps

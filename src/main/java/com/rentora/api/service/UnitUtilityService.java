@@ -157,13 +157,22 @@ public class UnitUtilityService {
 
         log.info("Update utility successfully for {}",electricUtility.getUnit().getUnitName());
     }
+
+    //meter reading
     public void createUnitUtility(UUID apartmentId, @RequestBody @Valid CreateUnitUtilityRequestDto requestDto) {
+        log.info("Creating unit utilities for apartmentId: {}", apartmentId);
+        log.info("Received request: {}", requestDto);
+
         LocalDate usageMonth = LocalDate.now().withMonth(requestDto.getReadingMonth())
                 .withYear(requestDto.getReadingYear()).withDayOfMonth(1);
+        log.info("Calculated usage month: {}", usageMonth);
 
         for (UnitUtility room : requestDto.getRooms()) {
+            log.info("Processing room utility for unitId: {}", room.getUnitId());
+
             Unit unit = unitRepository.findById(room.getUnitId())
                     .orElseThrow(() -> new ResourceNotFoundException("Unit not found"));
+            log.info("Found unit: {}", unit.getUnitName());
 
             // ===== Water Utility =====
             Specification<Utility> waterUtilitySpecification = UtilitySpecification
@@ -171,6 +180,7 @@ public class UnitUtilityService {
                     .and(UtilitySpecification.hasUtilityName("water"));
             Utility waterUtility = utilityRepository.findOne(waterUtilitySpecification)
                     .orElseThrow(() -> new ResourceNotFoundException("Water utility not found"));
+            log.info("Found water utility: {}", waterUtility.getUtilityName());
 
             // ===== Electric Utility =====
             Specification<Utility> electricUtilitySpecification = UtilitySpecification
@@ -178,29 +188,33 @@ public class UnitUtilityService {
                     .and(UtilitySpecification.hasUtilityName("electric"));
             Utility electricUtility = utilityRepository.findOne(electricUtilitySpecification)
                     .orElseThrow(() -> new ResourceNotFoundException("Electric utility not found"));
+            log.info("Found electric utility: {}", electricUtility.getUtilityName());
 
-            // ===== Find Last Water Reading =====
-            UnitUtilities lastWaterReading = findLastReading(unit,"water");
+            // ===== Find Last Readings =====
+            UnitUtilities lastWaterReading = findLastReading(unit, "water");
+            log.info("Last water reading: {}", lastWaterReading != null ? lastWaterReading.getMeterEnd() : "none");
 
-            // ===== Find Last Electric Reading =====
-            UnitUtilities lastElectricReading = findLastReading(unit,"electric");
+            UnitUtilities lastElectricReading = findLastReading(unit, "electric");
+            log.info("Last electric reading: {}", lastElectricReading != null ? lastElectricReading.getMeterEnd() : "none");
 
-            // ===== Prepare new water reading =====
+            // ===== Water Calculation =====
             BigDecimal waterEnd = BigDecimal.valueOf(room.getWaterEnd());
-            BigDecimal waterStart;
-            if (lastWaterReading != null) {
-                waterStart = lastWaterReading.getMeterEnd();
-            } else {
-                Optional<Contract> contractOpt = contractRepository.findActiveContractByUnitId(unit.getId());
-                waterStart = contractOpt.map(Contract::getWaterMeterStartReading)
-                        .orElse(BigDecimal.valueOf(room.getWaterStart()));
-            }
+            BigDecimal waterStart = (lastWaterReading != null)
+                    ? lastWaterReading.getMeterEnd()
+                    : contractRepository.findActiveContractByUnitId(unit.getId())
+                    .map(Contract::getWaterMeterStartReading)
+                    .orElse(BigDecimal.valueOf(room.getWaterStart()));
+
+            log.info("Water start: {}, Water end: {}", waterStart, waterEnd);
 
             if (waterEnd.compareTo(waterStart) < 0) {
+                log.error("Invalid water meter values: end < start");
                 throw new IllegalArgumentException("Water end meter can't be less than water start meter");
             }
 
             BigDecimal waterUsage = waterEnd.subtract(waterStart);
+            log.info("Water usage: {}", waterUsage);
+
             UnitUtilities newWaterUtility = new UnitUtilities();
             newWaterUtility.setUnit(unit);
             newWaterUtility.setReadingDate(LocalDate.now());
@@ -210,34 +224,38 @@ public class UnitUtilityService {
             newWaterUtility.setUsageAmount(waterUsage);
             newWaterUtility.setUsageMonth(usageMonth);
             newWaterUtility.setNotes("Auto-created water reading");
+
             BigDecimal totalWaterCost;
             Utility.UtilityType waterCalculateType = waterUtility.getUtilityType();
-            if(waterCalculateType.equals(Utility.UtilityType.meter)){
-                totalWaterCost = waterUsage.multiply(electricUtility.getUnitPrice());
-                newWaterUtility.setCalculatedCost(totalWaterCost);
-            }
-            if(waterCalculateType.equals(Utility.UtilityType.fixed)){
-                totalWaterCost = waterUtility.getFixedPrice();
-                newWaterUtility.setCalculatedCost(totalWaterCost);
-            }
-            unitUtilityRepository.save(newWaterUtility);
-
-            // ===== Prepare new electric reading =====
-            BigDecimal electricEnd = BigDecimal.valueOf(room.getElectricEnd());
-            BigDecimal electricStart;
-            if (lastElectricReading != null) {
-                electricStart = lastElectricReading.getMeterEnd();
+            if (waterCalculateType.equals(Utility.UtilityType.meter)) {
+                totalWaterCost = waterUsage.multiply(waterUtility.getUnitPrice());
             } else {
-                Optional<Contract> contractOpt = contractRepository.findActiveContractByUnitId(unit.getId());
-                electricStart = contractOpt.map(Contract::getElectricityMeterStartReading)
-                        .orElse(BigDecimal.valueOf(room.getElectricStart()));
+                totalWaterCost = waterUtility.getFixedPrice();
             }
+            newWaterUtility.setCalculatedCost(totalWaterCost);
+            log.info("Water cost calculated: {}", totalWaterCost);
+
+            unitUtilityRepository.save(newWaterUtility);
+            log.info("Saved new water utility record for unit: {}", unit.getUnitName());
+
+            // ===== Electric Calculation =====
+            BigDecimal electricEnd = BigDecimal.valueOf(room.getElectricEnd());
+            BigDecimal electricStart = (lastElectricReading != null)
+                    ? lastElectricReading.getMeterEnd()
+                    : contractRepository.findActiveContractByUnitId(unit.getId())
+                    .map(Contract::getElectricityMeterStartReading)
+                    .orElse(BigDecimal.valueOf(room.getElectricStart()));
+
+            log.info("Electric start: {}, Electric end: {}", electricStart, electricEnd);
 
             if (electricEnd.compareTo(electricStart) < 0) {
+                log.error("Invalid electric meter values: end < start");
                 throw new IllegalArgumentException("Electric end meter can't be less than electric start meter");
             }
 
             BigDecimal electricUsage = electricEnd.subtract(electricStart);
+            log.info("Electric usage: {}", electricUsage);
+
             UnitUtilities newElectricUtility = new UnitUtilities();
             newElectricUtility.setUnit(unit);
             newElectricUtility.setReadingDate(LocalDate.now());
@@ -247,21 +265,22 @@ public class UnitUtilityService {
             newElectricUtility.setUsageAmount(electricUsage);
             newElectricUtility.setUsageMonth(usageMonth);
             newElectricUtility.setNotes("Auto-created electric reading");
-            //set calculated cost
+
             BigDecimal totalElectricCost;
             Utility.UtilityType electricCalculatedType = electricUtility.getUtilityType();
-            if(electricCalculatedType.equals(Utility.UtilityType.meter)){
+            if (electricCalculatedType.equals(Utility.UtilityType.meter)) {
                 totalElectricCost = electricUsage.multiply(electricUtility.getUnitPrice());
-                newElectricUtility.setCalculatedCost(totalElectricCost);
-            }
-            if(electricCalculatedType.equals(Utility.UtilityType.fixed)){
+            } else {
                 totalElectricCost = electricUtility.getFixedPrice();
-                newElectricUtility.setCalculatedCost(totalElectricCost);
             }
-
+            newElectricUtility.setCalculatedCost(totalElectricCost);
+            log.info("Electric cost calculated: {}", totalElectricCost);
 
             unitUtilityRepository.save(newElectricUtility);
+            log.info("Saved new electric utility record for unit: {}", unit.getUnitName());
         }
+
+        log.info("Finished creating all unit utilities for apartmentId: {}", apartmentId);
     }
 
     // Get available years

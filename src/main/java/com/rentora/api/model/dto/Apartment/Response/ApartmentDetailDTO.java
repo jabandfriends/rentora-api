@@ -1,5 +1,6 @@
 package com.rentora.api.model.dto.Apartment.Response;
 
+import com.rentora.api.constant.enums.UserRole;
 import com.rentora.api.model.entity.Apartment;
 import lombok.Data;
 
@@ -27,9 +28,10 @@ public class ApartmentDetailDTO {
     private String createdAt;
     private String updatedAt;
     private String logoPresignedUrl;
-    // Statistics
     private Long buildingCount;
     private Long unitCount;
     private Long activeContractCount;
     private Long totalTenants;
+    //called role
+    private UserRole userRole;
 }
