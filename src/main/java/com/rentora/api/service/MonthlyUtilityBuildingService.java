@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.Year;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -115,18 +116,16 @@ public class MonthlyUtilityBuildingService {
 
         String buildingName = building.getName();
 
+        //current year
+        int currentYear = Year.now().getValue();
+
         Map<String, List<MonthlyUtilityBuildingUsageSummary>> monthlyBreakdown = aggregatedData.entrySet().stream()
-                .flatMap(utilityGroup ->
-                        utilityGroup.getValue().entrySet().stream()
-                                .map(monthEntry -> {
-                                    MonthlyUtilityBuildingUsageSummary dto =
-                                            toMonthlyUtilityUsageSummaryDTO(monthEntry.getKey(), monthEntry.getValue());
-                                    return new AbstractMap.SimpleEntry<>(utilityGroup.getKey(), dto);
-                                })
-                )
-                .collect(Collectors.groupingBy(
+                .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                        utilityGroup -> utilityGroup.getValue().entrySet().stream()
+                                .filter(monthEntry -> monthEntry.getKey().getYear() == currentYear) // <-- filter year
+                                .map(monthEntry -> toMonthlyUtilityUsageSummaryDTO(monthEntry.getKey(), monthEntry.getValue()))
+                                .collect(Collectors.toList())
                 ));
 
         Map<String, List<MonthlyUtilityBuildingUsageSummary>> finalBreakdown =
