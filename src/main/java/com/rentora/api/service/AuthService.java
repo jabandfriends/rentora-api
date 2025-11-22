@@ -96,6 +96,7 @@ public class AuthService {
             throw new BadRequestException("Email is already in use");
         }
 
+
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -105,6 +106,9 @@ public class AuthService {
         user.setNationalId(request.getNationalId());
         user.setEmergencyContactName(request.getEmergencyContactName());
         user.setEmergencyContactPhone(request.getEmergencyContactPhone());
+        if(request.getIsRegistered()){
+            user.setMustChangePassword(false);
+        }
 
         // Parse birth date if provided
         if (request.getBirthDate() != null && !request.getBirthDate().isEmpty()) {
