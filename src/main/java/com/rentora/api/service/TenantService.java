@@ -5,19 +5,19 @@ import com.rentora.api.exception.BadRequestException;
 import com.rentora.api.exception.ForbiddenRoleException;
 import com.rentora.api.exception.ResourceNotFoundException;
 import com.rentora.api.mapper.TenantMapper;
+import com.rentora.api.model.dto.ApartmentUser.Request.InviteUserRequestDto;
 import com.rentora.api.model.dto.Authentication.FirstTimePasswordResetRequestDto;
 import com.rentora.api.model.dto.Authentication.UserInfo;
 import com.rentora.api.model.dto.Tenant.Metadata.TenantsMetadataResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantDetailInfoResponseDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantInfoDto;
 import com.rentora.api.model.dto.Tenant.Response.TenantPageResponse;
-import com.rentora.api.model.entity.ApartmentUser;
-import com.rentora.api.model.entity.Contract;
-import com.rentora.api.model.entity.Unit;
-import com.rentora.api.model.entity.User;
+import com.rentora.api.model.entity.*;
+import com.rentora.api.repository.ApartmentRepository;
 import com.rentora.api.repository.ApartmentUserRepository;
 import com.rentora.api.repository.ContractRepository;
 import com.rentora.api.repository.UserRepository;
+import com.rentora.api.service.elastic.ApartmentUserEsService;
 import com.rentora.api.specifications.ApartmentUserSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,9 +39,10 @@ import java.util.UUID;
 public class TenantService {
 
     private final ApartmentUserRepository apartmentUserRepository;
+    private final ApartmentRepository apartmentRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final ApartmentUserEsService apartmentUserEsService;
     private final TenantMapper tenantMapper;
 
     public Page<TenantInfoDto> getTenants(String status,String name,UUID apartmentId,Pageable pageable) {
@@ -54,6 +56,24 @@ public class TenantService {
 
 
         return apartmentUsers.map(tenantMapper::toTenantInfoDto);
+    }
+
+    public void inviteUser(InviteUserRequestDto request, UUID apartmentId) throws IOException {
+        Apartment apartment = apartmentRepository.findById(apartmentId).orElseThrow(()->new ResourceNotFoundException("Apartment not found"));
+        User user = userRepository.findByEmailAndIsActiveTrue(request.getEmail()).orElseThrow(()->new ResourceNotFoundException("User not found"));
+
+        if(apartmentUserRepository.findByApartmentAndUser(apartment,user).isPresent()){
+            throw new BadRequestException("User is already invited");
+        }
+
+        ApartmentUser apartmentUser = new ApartmentUser();
+        apartmentUser.setApartment(apartment);
+        apartmentUser.setUser(user);
+        if(request.getRole() != null) apartmentUser.setRole(request.getRole());
+
+        ApartmentUser savedUser = apartmentUserRepository.save(apartmentUser);
+        apartmentUserEsService.saveToEs(savedUser);
+
     }
 
     public TenantsMetadataResponseDto getTenantsMetadata(UUID apartmentId) {
