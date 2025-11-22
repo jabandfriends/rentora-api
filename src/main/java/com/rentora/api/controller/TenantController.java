@@ -3,6 +3,7 @@ package com.rentora.api.controller;
 import com.rentora.api.mapper.UserMapper;
 import com.rentora.api.model.dto.ApartmentUser.Request.ApartmentUserCreateRequestDto;
 import com.rentora.api.model.dto.ApartmentUser.Request.ApartmentUserUpdateRequestDto;
+import com.rentora.api.model.dto.ApartmentUser.Request.InviteUserRequestDto;
 import com.rentora.api.model.dto.ApiResponse;
 import com.rentora.api.model.dto.Authentication.CreateUserRequest;
 import com.rentora.api.model.dto.Authentication.FirstTimePasswordResetRequestDto;
@@ -49,6 +50,12 @@ public class TenantController {
     private final ApartmentUserEsService apartmentUserEsService;
     private final UserMapper userMapper;
 
+
+    @PostMapping("/{apartmentId}/invite")
+    public ResponseEntity<ApiResponse<Object>> inviteUser(@RequestBody InviteUserRequestDto request, @PathVariable("apartmentId") UUID apartmentId) throws IOException {
+        tenantService.inviteUser(request,apartmentId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
     @GetMapping("/es/{apartmentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<ApartmentUserDocument>>> getTenantsElasticSearch(@PathVariable UUID apartmentId, @RequestParam(defaultValue = "1") int page,
                                                                                     @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String name, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "asc") String sortDir, @RequestParam(defaultValue="active") String isActive){
