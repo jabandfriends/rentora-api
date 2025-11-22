@@ -38,4 +38,6 @@ public class CreateUserRequest {
 
     @Size(max = 15, message = "Emergency contact phone must not exceed 15 characters")
     private String emergencyContactPhone;
+
+    private Boolean isRegistered = false;
 }
